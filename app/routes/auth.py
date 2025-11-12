@@ -1,21 +1,21 @@
-import os
-
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
+from app.settings import settings
 from app.utils import auth, db
 from app.utils.log import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+CLIENT_ID = settings.COGNITO_AUDIENCE
+REGION = settings.REGION
+DOMAIN = settings.COGNITO_DOMAIN
+REDIRECT_URI = settings.COGNITO_REDIRECT_URI
+
 
 @router.get("/login")
 def auth_login(request: Request):
-    CLIENT_ID = os.getenv("COGNITO_AUDIENCE")
-    REGION = os.getenv("REGION")
-    DOMAIN = os.getenv("COGNITO_DOMAIN")
-    REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
 
     login_url = (
         f"https://{DOMAIN}.auth.{REGION}.amazoncognito.com/oauth2/authorize"
@@ -23,6 +23,10 @@ def auth_login(request: Request):
         f"&redirect_uri={REDIRECT_URI}"
         f"&scope=openid+email+profile"
     )
+    print("Domain: ", DOMAIN)
+    print("Region: ", REGION)
+    print("Redirect uri: ", REDIRECT_URI)
+    print("Client id: ", CLIENT_ID)
     return RedirectResponse(url=login_url)
 
 
@@ -31,11 +35,6 @@ def auth_callback(request: Request, code: str, response: Response):
     if not code:
         logger.error("No authorization code provided in callback")
         raise HTTPException(status_code=400, detail="Missing authorization code")
-
-    CLIENT_ID = os.getenv("COGNITO_AUDIENCE")
-    REDIRECT_URI = os.getenv("COGNITO_REDIRECT_URI")
-    REGION = os.getenv("REGION")
-    DOMAIN = os.getenv("COGNITO_DOMAIN")
 
     # Send token exchange request
     token_endpoint = f"https://{DOMAIN}.auth.{REGION}.amazoncognito.com/oauth2/token"

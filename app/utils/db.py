@@ -1,14 +1,13 @@
-import os
-
 import boto3
 from boto3.dynamodb.types import TypeDeserializer
 
+from app.settings import settings
 from app.utils.log import logger
 
-PROJECT_NAME = os.getenv("PROJECT_NAME", "elbiefit")
-REGION_NAME = os.getenv("REGION_NAME", "eu-west-2")
-ENV = os.getenv("ENV", "dev")
-TABLE_NAME = os.getenv("DDB_TABLE_NAME", f"{PROJECT_NAME}-{ENV}-table")
+PROJECT_NAME = settings.PROJECT_NAME
+REGION_NAME = settings.REGION
+ENV = settings.ENV
+TABLE_NAME = settings.TABLE_NAME
 
 _dynamo = boto3.client("dynamodb", region_name=REGION_NAME)
 _deser = TypeDeserializer()

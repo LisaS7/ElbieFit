@@ -1,10 +1,14 @@
-import os
 from datetime import datetime, timezone
 
 import jwt
-from dotenv import load_dotenv
 from fastapi import HTTPException, Request
 from jwt import PyJWKClient
+
+from app.settings import settings
+
+REGION = settings.REGION
+ISSUER = settings.COGNITO_ISSUER
+AUDIENCE = settings.COGNITO_AUDIENCE
 
 
 def get_jwks_url(region, issuer):
@@ -30,11 +34,6 @@ async def require_auth(request: Request):
         raise HTTPException(
             status_code=401, detail="Access token is missing. Login again."
         )
-
-    load_dotenv()
-    REGION = os.getenv("REGION")
-    ISSUER = os.getenv("COGNITO_ISSUER")
-    AUDIENCE = os.getenv("COGNITO_AUDIENCE")
 
     jwks_url = get_jwks_url(REGION, ISSUER)
     expected_issuer = f"https://cognito-idp.{REGION}.amazonaws.com/{ISSUER}"
