@@ -23,10 +23,6 @@ def auth_login(request: Request):
         f"&redirect_uri={REDIRECT_URI}"
         f"&scope=openid+email+profile"
     )
-    print("Domain: ", DOMAIN)
-    print("Region: ", REGION)
-    print("Redirect uri: ", REDIRECT_URI)
-    print("Client id: ", CLIENT_ID)
     return RedirectResponse(url=login_url)
 
 
@@ -58,7 +54,7 @@ def auth_callback(request: Request, code: str, response: Response):
         raise HTTPException(status_code=400, detail="Invalid token type")
 
     # Redirect to home page after successful authentication
-    response = RedirectResponse("/me", status_code=302)  # TODO: check code
+    response = RedirectResponse("/auth/me", status_code=302)  # TODO: check code
 
     # TODO: tidy repeated arguments
     # Yummy cookies
