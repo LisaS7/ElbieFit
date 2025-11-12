@@ -1,13 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 from fastapi.responses import HTMLResponse, JSONResponse
-
-from app.utils.auth import require_auth
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-def home(user=Depends(require_auth)):
+def home():
     return """
 <html>
       <head><title>ElbieFit</title></head>
