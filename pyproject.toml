@@ -5,3 +5,22 @@ description = "A simple workout logging app"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["fastapi>=0.121.1"]
+
+[dependency-groups]
+dev = [
+    "black>=25.9.0",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = """
+--cov=app
+--cov-report=term
+--cov-report=term-missing
+--cov-report=html
+--cov-fail-under=70
+"""
