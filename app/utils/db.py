@@ -4,10 +4,8 @@ from boto3.dynamodb.types import TypeDeserializer
 from app.settings import settings
 from app.utils.log import logger
 
-PROJECT_NAME = settings.PROJECT_NAME
 REGION_NAME = settings.REGION
-ENV = settings.ENV
-TABLE_NAME = settings.TABLE_NAME
+TABLE_NAME = settings.DDB_TABLE_NAME
 
 _dynamo = boto3.client("dynamodb", region_name=REGION_NAME)
 _deser = TypeDeserializer()

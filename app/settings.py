@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "elbiefit"
     REGION: str = "eu-west-2"
     ENV: str = "dev"
-    TABLE_NAME: str = "elbiefit-dev-table"
+    DDB_TABLE_NAME: str = "elbiefit-dev-table"
     COGNITO_AUDIENCE: str = ""
     COGNITO_DOMAIN: str = ""
     COGNITO_REDIRECT_URI: str = ""
