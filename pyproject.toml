@@ -5,6 +5,7 @@ description = "A simple workout logging app"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "boto3>=1.40.71",
     "fastapi>=0.121.1",
     "mangum>=0.19.0",
     "pydantic-settings>=2.11.0",
