@@ -6,3 +6,6 @@ dist/
 
 # Virtual environments
 .venv
+
+# Trash
+tmp
