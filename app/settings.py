@@ -5,14 +5,14 @@ load_dotenv(find_dotenv(), override=False)
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str
-    REGION: str
-    ENV: str
-    TABLE_NAME: str
-    COGNITO_AUDIENCE: str
-    COGNITO_DOMAIN: str
-    COGNITO_REDIRECT_URI: str
-    COGNITO_ISSUER: str
+    PROJECT_NAME: str = "elbiefit"
+    REGION: str = "eu-west-2"
+    ENV: str = "dev"
+    TABLE_NAME: str = "elbiefit-dev-table"
+    COGNITO_AUDIENCE: str = ""
+    COGNITO_DOMAIN: str = ""
+    COGNITO_REDIRECT_URI: str = ""
+    COGNITO_ISSUER: str = ""
 
     model_config = SettingsConfigDict(env_file=None)
 
