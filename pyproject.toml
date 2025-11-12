@@ -1,0 +1,7 @@
+[project]
+name = "elbiefit"
+version = "0.1.0"
+description = "A simple workout logging app"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["fastapi>=0.121.1"]
