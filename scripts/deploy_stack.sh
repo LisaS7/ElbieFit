@@ -122,13 +122,13 @@ aws s3 cp "$ZIP_PATH" "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGI
 
 
 # --- verify upload ---
-printf "\n\nS3 file:"
+printf "\n\nS3 file uploaded:   "
 aws s3 ls "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
-echo "Upload ${ZIP_NAME} complete"
 }
 
 
 # ====== Main =======
+echo -e "\n\n--------------- DEPLOY S3/DB/IAM ------------------"
 deploy_stack "$PROJECT_NAME-$ENV-s3" "infra/s3.yaml"
 deploy_stack "$PROJECT_NAME-$ENV-data" "infra/data.yaml"
 deploy_stack "$PROJECT_NAME-$ENV-iam" "infra/iam.yaml" \
@@ -136,10 +136,11 @@ deploy_stack "$PROJECT_NAME-$ENV-iam" "infra/iam.yaml" \
   AssetsBucketName="$ASSETS_BUCKET_NAME"
 
 # --- sort out the zip before setting up the lambda---
+echo -e "\n\n--------------- BUILD ZIP ------------------"
 create_zip
 load_zip
 
-
+echo -e "\n\n--------------- DEPLOY APP ------------------"
 deploy_stack "$PROJECT_NAME-$ENV-app" "infra/app.yaml" \
   GitSha="$GIT_SHA"
 
@@ -147,9 +148,17 @@ API_URL=$(aws cloudformation list-exports \
   --query "Exports[?Name=='${PROJECT_NAME}-${ENV}-ApiGatewayUrl'].Value" \
   --output text)
 
-
 echo "API Gateway URL: ${API_URL}"
 
+echo "Forcing update of lambda code whether it wants to or not..."
+aws lambda update-function-code \
+  --function-name elbiefit-dev-app \
+  --s3-bucket "$ARTIFACT_BUCKET_NAME" \
+  --s3-key "$ZIP_NAME" \
+  --publish \
+  --region eu-west-2 >/dev/null
+
+echo -e "\n\n--------------- DEPLOY COGNITO ------------------"
 deploy_stack "$PROJECT_NAME-$ENV-cognito" "infra/cognito.yaml" \
   ApiGatewayUrl="$API_URL"
 
@@ -183,6 +192,7 @@ fi
 
 
 # ====== Set Env Vars =======
+echo -e "\n\n--------------- ENV VARS ------------------"
 aws lambda update-function-configuration \
   --no-cli-pager \
   --function-name "elbiefit-${ENV}-app" \
@@ -192,7 +202,7 @@ LOG_LEVEL=DEBUG,\
 DDB_TABLE_NAME=${DDB_TABLE_NAME},\
 COGNITO_ISSUER=${COGNITO_ISSUER},\
 COGNITO_AUDIENCE=${COGNITO_AUDIENCE},\
-COGNITO_DOMAIN=${COGNITO_DOMAIN}}"
+COGNITO_DOMAIN=${COGNITO_DOMAIN}}" > /dev/null
 
 echo "✅ Environment variables set for Lambda elbiefit-${ENV}-app:"
 echo "------------------------------------------------------------"
