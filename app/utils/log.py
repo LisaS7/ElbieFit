@@ -1,15 +1,11 @@
 import logging
 import os
+import sys
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+
+logging.basicConfig(level=LOG_LEVEL, format=FORMAT, stream=sys.stdout, force=True)
 
 logger = logging.getLogger("elbiefit")
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%SZ",
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    logger.setLevel(LOG_LEVEL)
