@@ -67,14 +67,30 @@ deploy_stack() {
 }
 
 create_zip() {
+VENVDIR="${ROOT_DIR}/.venv"
+if [ -x "${VENVDIR}/bin/python" ]; then
+  PY="${VENVDIR}/bin/python"
+else
+  echo "❌ No venv at ${VENVDIR}. Create one with: python3.12 -m venv .venv" >&2
+  exit 1
+fi
+
+
   # --- export and install dependencies using uv ---
 mkdir -p "$TMP_DIR" "$BUILD_DIR"
 echo "Exporting dependencies from uv.lock..."
-uv export --no-hashes -q -o "$TMP_DIR/requirements.txt"
+uv pip compile "$ROOT_DIR/pyproject.toml" -o "$TMP_DIR/requirements.txt" -q
 
 echo "Installing dependencies into build folder..."
 rm -rf "$BUILD_DIR"/*
-pip install -r "$TMP_DIR/requirements.txt" --target "$BUILD_DIR" >/dev/null
+uv pip install \
+  --python "$PY" \
+  --target "$BUILD_DIR" \
+  --python-platform x86_64-manylinux2014 \
+  --python-version 3.12 \
+  --only-binary :all: \
+  -r "$TMP_DIR/requirements.txt" \
+  -q
 
 # --- copy FastAPI app code ---
 echo "Copying FastAPI app code..."
@@ -101,11 +117,12 @@ rsync -a \
 
 load_zip() {
   local ZIP_PATH="$TMP_DIR/$ZIP_NAME"
-  echo "☁️  Uploading to s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}"
+  echo "☁️  Uploading..."
 aws s3 cp "$ZIP_PATH" "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
 
 
 # --- verify upload ---
+printf "\n\nS3 file:"
 aws s3 ls "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
 echo "Upload ${ZIP_NAME} complete"
 }
