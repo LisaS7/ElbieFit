@@ -68,7 +68,7 @@ def auth_callback(request: Request, code: str, response: Response):
         max_age=response_data["expires_in"],
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
     )
     response.set_cookie(
         key="access_token",
@@ -76,7 +76,7 @@ def auth_callback(request: Request, code: str, response: Response):
         max_age=response_data["expires_in"],
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
     )
     response.set_cookie(
         key="refresh_token",
@@ -84,7 +84,7 @@ def auth_callback(request: Request, code: str, response: Response):
         max_age=60 * 60 * 24 * 7,
         httponly=True,
         secure=True,
-        samesite="Lax",
+        samesite="lax",
     )
 
     return response
