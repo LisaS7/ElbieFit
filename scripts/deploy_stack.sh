@@ -184,8 +184,8 @@ DDB_TABLE_NAME=$(aws cloudformation list-exports \
   --output text)
 
 # Build cognito domain
-COGNITO_DOMAIN="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-auth.auth.${REGION}.amazoncognito.com"
-
+COGNITO_DOMAIN="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-auth"
+COGNITO_REDIRECT_URI="${API_URL}/auth/callback"
 
 if [[ -z "$USER_POOL_ID" || -z "$COGNITO_AUDIENCE" ]]; then
   echo "Failed to resolve Cognito exports. Check the cognito stack outputs."
@@ -202,6 +202,7 @@ aws lambda update-function-configuration \
 ENV_NAME=${ENV},\
 LOG_LEVEL=DEBUG,\
 DDB_TABLE_NAME=${DDB_TABLE_NAME},\
+COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}, \
 COGNITO_ISSUER=${COGNITO_ISSUER},\
 COGNITO_AUDIENCE=${COGNITO_AUDIENCE},\
 COGNITO_DOMAIN=${COGNITO_DOMAIN}}" > /dev/null
@@ -211,6 +212,7 @@ echo "------------------------------------------------------------"
 echo "ENV_NAME=${ENV}"
 echo "LOG_LEVEL=DEBUG"
 echo "DDB_TABLE_NAME=${DDB_TABLE_NAME}"
+echo "COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}"
 echo "COGNITO_ISSUER=${COGNITO_ISSUER}"
 echo "COGNITO_AUDIENCE=${COGNITO_AUDIENCE}"
 echo "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
