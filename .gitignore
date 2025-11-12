@@ -9,3 +9,6 @@ dist/
 
 # Trash
 tmp
+
+# Secrets
+.env
