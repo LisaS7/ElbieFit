@@ -64,10 +64,6 @@ async def require_auth(request: Request):
         return decoded_token
 
     except jwt.ExpiredSignatureError:
-        return {"error": "JWT token has expired"}
-    except jwt.InvalidSignatureError:
-        return {"error": "Invalid signature"}
-    except jwt.InvalidTokenError as e:
-        return {"error": f"Invalid token: {str(e)}"}
-    except Exception as e:
-        return {"error": f"An error occurred: {str(e)}"}
+        raise HTTPException(status_code=401, detail="Token expired")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
