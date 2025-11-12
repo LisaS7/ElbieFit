@@ -17,6 +17,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 TMP_DIR="$ROOT_DIR/tmp"
 BUILD_DIR="$ROOT_DIR/build"
+ZIP_PATH="${TMP_DIR}/${ZIP_NAME}"
 
 # ====== Functions ======
 get_status() {
@@ -79,7 +80,7 @@ fi
   # --- export and install dependencies using uv ---
 mkdir -p "$TMP_DIR" "$BUILD_DIR"
 echo "Exporting dependencies from uv.lock..."
-uv pip compile "$ROOT_DIR/pyproject.toml" -o "$TMP_DIR/requirements.txt" -q
+uv pip compile "${ROOT_DIR}/pyproject.toml" -o "${TMP_DIR}/requirements.txt" -q
 
 echo "Installing dependencies into build folder..."
 rm -rf "$BUILD_DIR"/*
@@ -89,7 +90,7 @@ uv pip install \
   --python-platform x86_64-manylinux2014 \
   --python-version 3.12 \
   --only-binary :all: \
-  -r "$TMP_DIR/requirements.txt" \
+  -r "${TMP_DIR}/requirements.txt" \
   -q
 
 # --- copy FastAPI app code ---
@@ -101,24 +102,23 @@ rsync -a \
   --exclude '.venv' \
   --exclude 'tmp' \
   --exclude 'build' \
-  "$ROOT_DIR/app/" "$BUILD_DIR/app/"
+  "${ROOT_DIR}/app/" "${BUILD_DIR}/app/"
 
 
 # --- zip it up ---
  echo "Creating zip archive ${ZIP_NAME}..."
   (
     cd "$BUILD_DIR"
-    zip -r9 "$TMP_DIR/$ZIP_NAME" . >/dev/null
+    zip -r9 "$ZIP_PATH" . >/dev/null
   )
 
   # sanity check
-  test -s "$TMP_DIR/$ZIP_NAME" || { echo "❌ Zip not created"; exit 1; }
+  test -s "$ZIP_PATH" || { echo "❌ Zip not created"; exit 1; }
 }
 
 load_zip() {
-  local ZIP_PATH="$TMP_DIR/$ZIP_NAME"
   echo "☁️  Uploading..."
-aws s3 cp "$ZIP_PATH" "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
+aws s3 cp "${ZIP_PATH}" "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
 
 
 # --- verify upload ---
@@ -129,9 +129,9 @@ aws s3 ls "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
 
 # ====== Main =======
 echo -e "\n\n--------------- DEPLOY S3/DB/IAM ------------------"
-deploy_stack "$PROJECT_NAME-$ENV-s3" "infra/s3.yaml"
-deploy_stack "$PROJECT_NAME-$ENV-data" "infra/data.yaml"
-deploy_stack "$PROJECT_NAME-$ENV-iam" "infra/iam.yaml" \
+deploy_stack "${PROJECT_NAME}-${ENV}-s3" "infra/s3.yaml"
+deploy_stack "${PROJECT_NAME}-${ENV}-data" "infra/data.yaml"
+deploy_stack "${PROJECT_NAME}-${ENV}-iam" "infra/iam.yaml" \
   ArtifactBucketName="$ARTIFACT_BUCKET_NAME" \
   AssetsBucketName="$ASSETS_BUCKET_NAME"
 
@@ -141,7 +141,7 @@ create_zip
 load_zip
 
 echo -e "\n\n--------------- DEPLOY APP ------------------"
-deploy_stack "$PROJECT_NAME-$ENV-app" "infra/app.yaml" \
+deploy_stack "${PROJECT_NAME}-${ENV}-app" "infra/app.yaml" \
   GitSha="$GIT_SHA"
 
 API_URL=$(aws cloudformation list-exports \
@@ -152,15 +152,17 @@ echo "API Gateway URL: ${API_URL}"
 
 echo "Forcing update of lambda code whether it wants to or not..."
 aws lambda update-function-code \
-  --function-name elbiefit-dev-app \
+  --function-name "${PROJECT_NAME}-${ENV}-app" \
   --s3-bucket "$ARTIFACT_BUCKET_NAME" \
   --s3-key "$ZIP_NAME" \
   --publish \
   --region eu-west-2 >/dev/null
+aws lambda wait function-updated --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
+aws lambda wait function-active  --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
 
 echo -e "\n\n--------------- DEPLOY COGNITO ------------------"
-deploy_stack "$PROJECT_NAME-$ENV-cognito" "infra/cognito.yaml" \
-  ApiGatewayUrl="$API_URL"
+deploy_stack "${PROJECT_NAME}-${ENV}-cognito" "infra/cognito.yaml" \
+  ApiGatewayUrl="${API_URL}"
 
 
 # ====== Grab App Env Variables =======
@@ -169,7 +171,7 @@ USER_POOL_ID=$(aws cloudformation list-exports \
   --output text)
 
 COGNITO_ISSUER=$(aws cloudformation list-exports \
-  --query "Exports[?Name=='elbiefit-${ENV}-IssuerUrl'].Value" \
+  --query "Exports[?Name=='${PROJECT_NAME}-${ENV}-IssuerUrl'].Value" \
   --output text)
 
 # aka user pool client id
@@ -178,11 +180,11 @@ COGNITO_AUDIENCE=$(aws cloudformation list-exports \
   --output text)
 
 DDB_TABLE_NAME=$(aws cloudformation list-exports \
-  --query "Exports[?Name=='elbiefit-${ENV}-DynamoTableName'].Value" \
+  --query "Exports[?Name=='${PROJECT_NAME}-${ENV}-DynamoTableName'].Value" \
   --output text)
 
 # Build cognito domain
-COGNITO_DOMAIN="elbiefit-${ENV}-${ACCOUNT_ID}-auth.auth.${REGION}.amazoncognito.com"
+COGNITO_DOMAIN="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-auth.auth.${REGION}.amazoncognito.com"
 
 
 if [[ -z "$USER_POOL_ID" || -z "$COGNITO_AUDIENCE" ]]; then
@@ -195,7 +197,7 @@ fi
 echo -e "\n\n--------------- ENV VARS ------------------"
 aws lambda update-function-configuration \
   --no-cli-pager \
-  --function-name "elbiefit-${ENV}-app" \
+  --function-name "$PROJECT_NAME-${ENV}-app" \
   --environment "Variables={\
 ENV_NAME=${ENV},\
 LOG_LEVEL=DEBUG,\
