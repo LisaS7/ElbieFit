@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for Lambda Function
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: elbiefit
+  EnvName:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+  GitSha:
+    Type: String
+    Default: latest
+    Description: S3 key suffix for the deployment artifact (e.g., GITHUB_SHA)
+
+Resources:
+  AppFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub '${ProjectName}-${EnvName}-app'
+      Role:
+        Fn::ImportValue: !Sub '${ProjectName}-${EnvName}-LambdaExecutionRoleArn'
+      Runtime: python3.12
+      Handler: app.handler.handler
+      Architectures: [x86_64]
+      MemorySize: 512
+      Timeout: 10
+      Code:
+        S3Bucket:
+          Fn::ImportValue: !Sub '${ProjectName}-${EnvName}-ArtifactBucketName'
+        S3Key: !Sub 'app-${GitSha}.zip'
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+
+  APIGateway:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${EnvName}-api'
+      ProtocolType: HTTP
+      CorsConfiguration:
+        AllowOrigins: ['*']
+        AllowMethods: [GET, POST, PUT, DELETE, OPTIONS, HEAD]
+        AllowHeaders: ['*']
+      Tags:
+        ProjectName: ElbieFit
+
+  APIGatewayIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref APIGateway
+      IntegrationType: AWS_PROXY
+      PayloadFormatVersion: '2.0'
+      IntegrationUri: !GetAtt AppFunction.Arn
+
+  # Direct all other requests to the lambda
+  RouteDefault:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGateway
+      RouteKey: '$default'
+      Target: !Sub 'integrations/${APIGatewayIntegration}'
+      AuthorizationType: NONE
+
+  # Deploy the API automatically
+  DefaultStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref APIGateway
+      StageName: '$default'
+      AutoDeploy: true
+      AccessLogSettings:
+        DestinationArn: !GetAtt ApiAccessLogGroup.Arn
+        Format: >-
+          {"requestId":"$context.requestId","ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime","httpMethod":"$context.httpMethod",
+          "path":"$context.path","routeKey":"$context.routeKey","status":$context.status,
+          "integrationStatus":$context.integrationStatus,
+          "integrationError":"$context.integrationErrorMessage",
+          "responseLength":$context.responseLength,
+          "jwtSub":"$context.authorizer.claims.sub",
+          "userAgent":"$context.identity.userAgent"}
+
+  # Allow API Gateway to invoke the Lambda across all ARN shapes it might use.
+  LambdaPermissionApiBare:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AppFunction
+      Principal: apigateway.amazonaws.com
+      # e.g. arn:aws:execute-api:eu-west-2:123456789012:abc123defg
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${APIGateway}'
+
+  LambdaPermissionApiStar:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AppFunction
+      Principal: apigateway.amazonaws.com
+      # e.g. arn:aws:execute-api:eu-west-2:123456789012:abc123defg/*
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${APIGateway}/*'
+
+  LambdaPermissionApiTriple:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AppFunction
+      Principal: apigateway.amazonaws.com
+      # e.g. arn:aws:execute-api:eu-west-2:123456789012:abc123defg/*/*/*
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${APIGateway}/*/*/*'
+
+  LambdaPermissionApiDefaultStage:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AppFunction
+      Principal: apigateway.amazonaws.com
+      # Explicitly allow the literal $default stage (some invokes use this shape)
+      SourceArn: !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${APIGateway}/$default/*/*'
+
+  # Only retain cloudwatch logs for 14 days
+  AppFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/lambda/${ProjectName}-${EnvName}-app'
+      RetentionInDays: 14
+
+  ApiAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub '/aws/apigwv2/access-logs/${ProjectName}-${EnvName}'
+      RetentionInDays: 7
+
+Outputs:
+  ApiBaseUrl:
+    Description: Invoke URL for the HTTP API
+    Value: !Sub 'https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com'
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-ApiGatewayUrl'
+  FunctionName:
+    Value: !Ref AppFunction

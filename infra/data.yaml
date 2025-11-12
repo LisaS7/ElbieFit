@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for DynamoDB
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: elbiefit
+    Description: Base name of the project (used for exports)
+  EnvName:
+    Description: Environment name for the application dev/prod
+    Type: String
+    AllowedValues: [dev, prod]
+
+Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+
+    # Retain database if CF stack is deleted or a replace operation is performed
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+
+    Properties:
+      TableName: !Sub '${ProjectName}-${EnvName}-table'
+      BillingMode: PAY_PER_REQUEST
+      DeletionProtectionEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+        - Key: Env
+          Value: !Ref EnvName
+
+      AttributeDefinitions:
+        # PK / SK
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+
+        # GSI
+        - AttributeName: ExercisePK
+          AttributeType: S
+        - AttributeName: ExerciseSK
+          AttributeType: S
+
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+
+      # --- GSI for exercise progress/history ---
+      GlobalSecondaryIndexes:
+        - IndexName: ExerciseIndex
+          KeySchema:
+            - AttributeName: ExercisePK # EXERCISE#<exercise_id>
+              KeyType: HASH
+            - AttributeName: ExerciseSK # <date>#<workout_id>#<set_idx>
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+
+Outputs:
+  DynamoTableName:
+    Description: DynamoDB table name
+    Value: !Ref DynamoDBTable
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-DynamoTableName'
+
+  DynamoTableArn:
+    Description: DynamoDB table ARN
+    Value: !GetAtt DynamoDBTable.Arn

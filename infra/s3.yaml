@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for S3
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: elbiefit
+    Description: Base name of the project (used for names/exports)
+  EnvName:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+    Description: Deployment environment (dev/prod)
+
+Resources:
+  S3ArtifactsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${ProjectName}-${EnvName}-${AWS::AccountId}-${AWS::Region}-artifacts'
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      # Guarantees this bucket stays private even if someone tries to set a public ACL or bucket policy
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+
+  S3PublicAssetsBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${ProjectName}-${EnvName}-${AWS::AccountId}-${AWS::Region}-frontend'
+
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: false
+
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+      CorsConfiguration:
+        CorsRules:
+          - AllowedOrigins: ['*']
+            AllowedMethods: ['GET']
+            AllowedHeaders: ['*']
+            MaxAge: 3000
+
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+
+  S3PublicAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3PublicAssetsBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:GetObject'
+            Resource:
+              - !Sub '${S3PublicAssetsBucket.Arn}/*'
+
+Outputs:
+  ArtifactBucketName:
+    Description: S3 bucket for Lambda artifacts
+    Value: !Ref S3ArtifactsBucket
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-ArtifactBucketName'
+
+  AssetsBucketName:
+    Description: Name of the public assets bucket
+    Value: !Ref S3PublicAssetsBucket
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-AssetsBucketName'

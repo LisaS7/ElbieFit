@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for Lambda Function
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: elbiefit
+  EnvName:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+
+  ArtifactBucketName:
+    Type: String
+  AssetsBucketName:
+    Type: String
+
+Resources:
+  OIDCProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: ['sts.amazonaws.com']
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: elbiefit-github-actions-deploy-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref OIDCProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringLike:
+                'token.actions.githubusercontent.com:sub': 'repo:LisaS7/ElbieFit:ref:refs/heads/main'
+              StringEquals:
+                'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
+      Policies:
+        - PolicyName: CloudWatchLogsForCfn
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                  - logs:PutRetentionPolicy
+                  - logs:PutLogEvents
+                  - logs:DeleteLogGroup
+                Resource:
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigwv2/access-logs/*'
+                  - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
+        - PolicyName: elbiefit-github-actions-deploy-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:GetTemplate
+                  - cloudformation:ValidateTemplate
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DescribeChangeSet
+                Resource: '*' # TODO: tighten to specific stack ARNs
+
+              # Push artifacts to S3
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${ArtifactBucketName}'
+                  - !Sub 'arn:aws:s3:::${AssetsBucketName}'
+
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${ArtifactBucketName}/*'
+                  - !Sub 'arn:aws:s3:::${AssetsBucketName}/*'
+
+              # Update Lambda code/config (edit ARNs)
+              - Effect: Allow
+                Action:
+                  - lambda:UpdateFunctionCode
+                  - lambda:UpdateFunctionConfiguration
+                  - lambda:PublishVersion
+                  - lambda:CreateAlias
+                  - lambda:UpdateAlias
+                  - lambda:GetFunction
+                Resource:
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-${EnvName}-*'
+
+              - Effect: Allow
+                Action:
+                  - apigateway:GET
+                  - apigateway:POST
+                  - apigateway:PATCH
+                  - apigateway:DELETE
+                Resource:
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/apis/*
+                  - !Sub arn:aws:apigateway:${AWS::Region}::/apis/*/*
+              # Let CloudFormation/lambda assume its execution role
+              - Effect: Allow
+                Action: iam:PassRole
+                Resource: !GetAtt LambdaExecutionRole.Arn
+
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${EnvName}-lambda-role'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+      Policies:
+        - PolicyName: !Sub '${ProjectName}-${EnvName}-lambda-dynamodb-policy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: TableRW
+                Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:BatchWriteItem
+                  - dynamodb:TransactWriteItems
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  # the table itself
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-${EnvName}-table'
+                  # any GSIs on that table (needed for Query on GSI)
+                  - !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${ProjectName}-${EnvName}-table/index/*'
+
+      Tags:
+        - Key: ProjectName
+          Value: ElbieFit
+
+Outputs:
+  LambdaExecutionRoleArn:
+    Value: !GetAtt LambdaExecutionRole.Arn
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-LambdaExecutionRoleArn'

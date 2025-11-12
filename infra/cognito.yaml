@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: AWS CloudFormation Template for Cognito User Pool
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: elbiefit
+    Description: Base name of the project (used for exports)
+
+  EnvName:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+    Description: Deployment environment
+
+  ApiGatewayUrl:
+    Type: String
+    Default: ''
+    Description: Base URL of the API Gateway (imported from app stack)
+
+Resources:
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      UserPoolName: !Sub ${ProjectName}-${EnvName}-user-pool
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      MfaConfiguration: 'OFF'
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+      UserPoolTags:
+        ProjectName: ElbieFit
+        Env: !Ref EnvName
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub ${ProjectName}-${EnvName}-user-pool-client
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+
+      # OAuth for Hosted UI
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+      AllowedOAuthScopes:
+        - openid
+        - email
+        - profile
+      SupportedIdentityProviders:
+        - COGNITO
+
+      # Build URLs based on API Gateway URL
+      CallbackURLs:
+        - !Sub '${ApiGatewayUrl}/auth/callback'
+      LogoutURLs:
+        - !Sub '${ApiGatewayUrl}/'
+
+      # Authentication settings (optional but handy)
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+      # Token lifetimes
+      AccessTokenValidity: 60 # minutes
+      IdTokenValidity: 60 # minutes
+      RefreshTokenValidity: 30 # days
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub '${ProjectName}-${EnvName}-${AWS::AccountId}-auth'
+      UserPoolId: !Ref CognitoUserPool
+
+Outputs:
+  UserPoolId:
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-UserPoolId'
+  UserPoolClientId:
+    Value: !Ref CognitoUserPoolClient
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-UserPoolClientId'
+  IssuerUrl:
+    Value: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPool}'
+    Export:
+      Name: !Sub '${ProjectName}-${EnvName}-IssuerUrl'
