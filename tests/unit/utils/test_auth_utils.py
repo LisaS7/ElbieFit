@@ -1,7 +1,6 @@
 import pytest
 from fastapi import HTTPException
 
-from app.settings import settings
 from app.utils import auth
 
 # The functions under test expect a FastAPI `Request` object, but for unit tests
@@ -16,10 +15,8 @@ from app.utils import auth
 
 
 def test_get_jwks_url_success():
-    issuer = settings.COGNITO_ISSUER
-
+    issuer = "fake_issuer"
     result = auth.get_jwks_url("eu-west-2", issuer)
-
     assert result == f"{issuer}/.well-known/jwks.json"
 
 
