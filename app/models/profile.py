@@ -1,7 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, EmailStr
+
+from app.utils.dates import dt_to_iso
 
 
 class Preferences(BaseModel):
@@ -25,7 +27,6 @@ class UserProfile(BaseModel):
 
     def to_ddb_item(self) -> dict:
         data = self.model_dump()
-        data["created_at"] = (
-            self.created_at.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
-        )
+        data["created_at"] = dt_to_iso(self.created_at)
+        data["updated_at"] = dt_to_iso(self.updated_at)
         return data

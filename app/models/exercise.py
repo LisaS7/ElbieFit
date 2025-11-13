@@ -3,6 +3,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel
 
+from app.utils.dates import dt_to_iso
+
 
 class Exercise(BaseModel):
     PK: str
@@ -16,4 +18,7 @@ class Exercise(BaseModel):
     updated_at: datetime
 
     def to_ddb_item(self) -> dict:
-        return self.model_dump()
+        data = self.model_dump()
+        data["created_at"] = dt_to_iso(self.created_at)
+        data["updated_at"] = dt_to_iso(self.updated_at)
+        return data
