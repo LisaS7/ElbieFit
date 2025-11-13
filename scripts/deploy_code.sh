@@ -21,7 +21,11 @@ VENVDIR="${ROOT_DIR}/.venv"
 if [ -x "${VENVDIR}/bin/python" ]; then
   PY="${VENVDIR}/bin/python"
 else
-  echo "❌ No venv at ${VENVDIR}. Create one with: python3.12 -m venv .venv" >&2
+  echo "⚠️ No venv at ${VENVDIR}, falling back to system Python"
+  PY="$(command -v python3 || command -v python)"
+fi
+if [ -z "$PY" ]; then
+  echo "❌ Could not find a Python interpreter" >&2
   exit 1
 fi
 
