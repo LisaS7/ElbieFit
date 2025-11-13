@@ -1,9 +1,8 @@
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.settings import settings
-from app.utils import auth, db
 from app.utils.log import logger
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -54,7 +53,7 @@ def auth_callback(request: Request, code: str, response: Response):
         raise HTTPException(status_code=400, detail="Invalid token type")
 
     # Redirect to home page after successful authentication
-    response = RedirectResponse("/auth/me", status_code=302)  # TODO: check code
+    response = RedirectResponse("/", status_code=302)  # TODO: check code
 
     # TODO: tidy repeated arguments
     # Yummy cookies
@@ -84,27 +83,6 @@ def auth_callback(request: Request, code: str, response: Response):
     )
 
     return response
-
-
-@router.get("/me")
-def me(claims=Depends(auth.require_auth)):
-    """Get the profile of the current authenticated user."""
-    user_sub = claims["sub"]
-
-    logger.info(f"Fetching profile for user_sub={user_sub}")
-
-    try:
-        profile = db.get_user_profile(user_sub)
-    except Exception as e:
-        logger.exception(f"Error fetching user profile: {e}")
-        raise HTTPException(status_code=500, detail="Internal error reading profile")
-
-    if not profile:
-        logger.warning(f"No profile found for user_sub={user_sub}")
-        raise HTTPException(status_code=404, detail="User profile not found")
-
-    logger.debug(f"Profile retrieved: {profile}")
-    return {"id": user_sub, "profile": profile}
 
 
 @router.get("/logout")

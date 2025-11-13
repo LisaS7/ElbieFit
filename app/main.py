@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import RedirectResponse
 
-from .routes import auth, home
+from .routes import auth, home, profile
 
 app = FastAPI(title="ElbieFit")
 
@@ -17,3 +17,4 @@ async def auth_exception_handler(request: Request, exc: HTTPException):
 
 app.include_router(home.router)
 app.include_router(auth.router)
+app.include_router(profile.router)
