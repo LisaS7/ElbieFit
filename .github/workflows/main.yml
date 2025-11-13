@@ -74,3 +74,32 @@ jobs:
 
       - name: Update Lambda code from artifact
         run: ./scripts/update_lambda_code.sh
+
+  smoke:
+      needs: deploy
+      runs-on: ubuntu-latest
+      environment: dev
+  
+      steps:
+        - name: Hit health endpoint
+          run: |
+            echo "Pinging ${{ vars.API_BASE_URL }}/healthz ..."
+            RESPONSE=$(curl -s -o /tmp/resp -w "%{http_code}" "${{ vars.API_BASE_URL }}/healthz")
+  
+            echo "Status code: $RESPONSE"
+            echo "Body:"
+            cat /tmp/resp
+  
+            # Fail if status code is not 200
+            if [ "$RESPONSE" -ne 200 ]; then
+              echo "❌ Smoke test failed: non-200 response"
+              exit 1
+            fi
+  
+            # Fail if JSON doesn't contain {"status":"ok"}
+            if ! grep -q '"status"[[:space:]]*:[[:space:]]*"ok"' /tmp/resp; then
+              echo "❌ Smoke test failed: health check didn't return status ok"
+              exit 1
+            fi
+  
+            echo "✅ Smoke test passed!"
