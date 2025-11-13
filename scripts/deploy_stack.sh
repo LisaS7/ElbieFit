@@ -1,20 +1,27 @@
 #!/bin/bash
 
 # ====== Params =======
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ENV_FILE="${ROOT_DIR}/.env"
+
+if [ ! -f "$ENV_FILE" ]; then
+  echo "Env file not found: $ENV_FILE"
+  exit 1
+fi
+
+set -a
+source "$ENV_FILE"
+set +a
+
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-REGION="eu-west-2"
-BUCKET="elbiefit-eu-west-2-cloudformation-templates"
-PROJECT_NAME="elbiefit"
-ENV="dev"
 
 ARTIFACT_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-artifacts"
 ASSETS_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-frontend"
 
 GIT_SHA="${GITSHA:-$(git rev-parse HEAD)}"
-ZIP_NAME="app-${GIT_SHA}.zip"
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ZIP_NAME="app-${GIT_SHA}.zip"
 TMP_DIR="$ROOT_DIR/tmp"
 BUILD_DIR="$ROOT_DIR/build"
 ZIP_PATH="${TMP_DIR}/${ZIP_NAME}"
@@ -67,64 +74,6 @@ deploy_stack() {
 
 }
 
-create_zip() {
-VENVDIR="${ROOT_DIR}/.venv"
-if [ -x "${VENVDIR}/bin/python" ]; then
-  PY="${VENVDIR}/bin/python"
-else
-  echo "❌ No venv at ${VENVDIR}. Create one with: python3.12 -m venv .venv" >&2
-  exit 1
-fi
-
-
-  # --- export and install dependencies using uv ---
-mkdir -p "$TMP_DIR" "$BUILD_DIR"
-echo "Exporting dependencies from uv.lock..."
-uv pip compile "${ROOT_DIR}/pyproject.toml" -o "${TMP_DIR}/requirements.txt" -q
-
-echo "Installing dependencies into build folder..."
-rm -rf "$BUILD_DIR"/*
-uv pip install \
-  --python "$PY" \
-  --target "$BUILD_DIR" \
-  --python-platform x86_64-manylinux2014 \
-  --python-version 3.12 \
-  --only-binary :all: \
-  -r "${TMP_DIR}/requirements.txt" \
-  -q
-
-# --- copy FastAPI app code ---
-echo "Copying FastAPI app code..."
-# Adjust "app" if your module lives elsewhere
-rsync -a \
-  --exclude '__pycache__' \
-  --exclude '.pytest_cache' \
-  --exclude '.venv' \
-  --exclude 'tmp' \
-  --exclude 'build' \
-  "${ROOT_DIR}/app/" "${BUILD_DIR}/app/"
-
-
-# --- zip it up ---
- echo "Creating zip archive ${ZIP_NAME}..."
-  (
-    cd "$BUILD_DIR"
-    zip -r9 "$ZIP_PATH" . >/dev/null
-  )
-
-  # sanity check
-  test -s "$ZIP_PATH" || { echo "❌ Zip not created"; exit 1; }
-}
-
-load_zip() {
-  echo "☁️  Uploading..."
-aws s3 cp "${ZIP_PATH}" "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
-
-
-# --- verify upload ---
-printf "\n\nS3 file uploaded:   "
-aws s3 ls "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
-}
 
 
 # ====== Main =======
@@ -135,10 +84,11 @@ deploy_stack "${PROJECT_NAME}-${ENV}-iam" "infra/iam.yaml" \
   ArtifactBucketName="$ARTIFACT_BUCKET_NAME" \
   AssetsBucketName="$ASSETS_BUCKET_NAME"
 
-# --- sort out the zip before setting up the lambda---
-echo -e "\n\n--------------- BUILD ZIP ------------------"
-create_zip
-load_zip
+
+echo -e "\n\n--------------- DEPLOY CODE ------------------"
+echo "Summoning the code deploy script..."
+./scripts/deploy_code.sh "$ARTIFACT_BUCKET_NAME"
+
 
 echo -e "\n\n--------------- DEPLOY APP ------------------"
 deploy_stack "${PROJECT_NAME}-${ENV}-app" "infra/app.yaml" \
@@ -150,15 +100,9 @@ API_URL=$(aws cloudformation list-exports \
 
 echo "API Gateway URL: ${API_URL}"
 
-echo "Forcing update of lambda code whether it wants to or not..."
-aws lambda update-function-code \
-  --function-name "${PROJECT_NAME}-${ENV}-app" \
-  --s3-bucket "$ARTIFACT_BUCKET_NAME" \
-  --s3-key "$ZIP_NAME" \
-  --publish \
-  --region eu-west-2 >/dev/null
-aws lambda wait function-updated --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
-aws lambda wait function-active  --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
+# LAMBDA PUSH HERE
+./scripts/update_lambda_code.sh "$ARTIFACT_BUCKET_NAME" "$ZIP_NAME"
+
 
 echo -e "\n\n--------------- DEPLOY COGNITO ------------------"
 deploy_stack "${PROJECT_NAME}-${ENV}-cognito" "infra/cognito.yaml" \
@@ -197,7 +141,7 @@ fi
 echo -e "\n\n--------------- ENV VARS ------------------"
 aws lambda update-function-configuration \
   --no-cli-pager \
-  --function-name "$PROJECT_NAME-${ENV}-app" \
+  --function-name "${PROJECT_NAME}-${ENV}-app" \
   --environment "Variables={\
 ENV_NAME=${ENV},\
 LOG_LEVEL=DEBUG,\
@@ -207,7 +151,7 @@ COGNITO_ISSUER=${COGNITO_ISSUER},\
 COGNITO_AUDIENCE=${COGNITO_AUDIENCE},\
 COGNITO_DOMAIN=${COGNITO_DOMAIN}}" > /dev/null
 
-echo "✅ Environment variables set for Lambda elbiefit-${ENV}-app:"
+echo "✅ Environment variables set for Lambda ${PROJECT_NAME}-${ENV}-app:"
 echo "------------------------------------------------------------"
 echo "ENV_NAME=${ENV}"
 echo "LOG_LEVEL=DEBUG"
