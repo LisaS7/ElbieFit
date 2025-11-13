@@ -1,11 +1,15 @@
-{% extends "base.html" %} {% block title %}My Profile - ElbieFit{% endblock %} {% block content %}
-{% if profile %}
-<h2>{{ profile.display_name or "Your Profile" }}</h2>
-<p>Email: {{ profile.email }}</p>
-<p>Member since: {{ profile.created_at }}</p>
-<!-- whatever else -->
-{% else %}
-<h2>Profile not found</h2>
-<p>We couldn’t find a profile for this user. 🙃</p>
-<p><a href="/auth/logout">Log out</a> and try a different account.</p>
-{% endif %} {% endblock %}
+{% extends "base.html" %}
+{% block title %}My Profile - ElbieFit{% endblock %}
+
+{% block content %}
+    {% if profile %}
+        <h2>{{ profile.display_name or "Your Profile" }}</h2>
+        <p>Email: {{ profile.email }}</p>
+        <p>Member since: {{ profile.created_at_readable }}</p>
+        <!-- whatever else -->
+    {% else %}
+        <h2>Profile not found</h2>
+        <p>We couldn’t find a profile for this user. 🙃</p>
+        <p><a href="/auth/logout">Log out</a> and try a different account.</p>
+    {% endif %}
+{% endblock %}

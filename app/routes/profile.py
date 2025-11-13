@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.templates.templates import templates
@@ -8,7 +10,7 @@ router = APIRouter(prefix="/profile", tags=["auth"])
 
 
 @router.get("/")
-def me(request: Request, claims=Depends(auth.require_auth)):
+def profile(request: Request, claims=Depends(auth.require_auth)):
     """Get the profile of the current authenticated user."""
     user_sub = claims["sub"]
 
@@ -31,6 +33,11 @@ def me(request: Request, claims=Depends(auth.require_auth)):
             },
             status_code=404,
         )
+
+    raw = profile.get("created_at")
+    if raw:
+        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        profile["created_at_readable"] = dt.strftime("%d %B %Y")
 
     logger.debug(f"Profile retrieved: {profile}")
     return templates.TemplateResponse(
