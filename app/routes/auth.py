@@ -53,7 +53,7 @@ def auth_callback(request: Request, code: str, response: Response):
         raise HTTPException(status_code=400, detail="Invalid token type")
 
     # Redirect to home page after successful authentication
-    response = RedirectResponse("/", status_code=302)  # TODO: check code
+    response = RedirectResponse("/", status_code=302)
 
     # TODO: tidy repeated arguments
     # Yummy cookies
