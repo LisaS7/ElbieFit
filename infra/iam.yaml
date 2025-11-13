@@ -35,7 +35,7 @@ Resources:
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringLike:
-                'token.actions.githubusercontent.com:sub': 'repo:LisaS7/ElbieFit:ref:refs/heads/main'
+                'token.actions.githubusercontent.com:sub': 'repo:LisaS7/ElbieFit:*'
               StringEquals:
                 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
       Policies:
