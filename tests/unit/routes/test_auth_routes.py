@@ -1,9 +1,4 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
 from app.routes import auth
-
-client = TestClient(app)
 
 
 def _patch_cognito_config(monkeypatch):
@@ -23,7 +18,7 @@ def _patch_cognito_config(monkeypatch):
 # --------------- Login ---------------
 
 
-def test_auth_login_redirects_to_cognito(monkeypatch):
+def test_auth_login_redirects_to_cognito(monkeypatch, client):
     _patch_cognito_config(monkeypatch)
 
     response = client.get("/auth/login", follow_redirects=False)
@@ -42,7 +37,7 @@ def test_auth_login_redirects_to_cognito(monkeypatch):
 
 
 # --------------- Callback ---------------
-def test_auth_callback_missing_code_returns_400(monkeypatch):
+def test_auth_callback_missing_code_returns_400(monkeypatch, client):
     _patch_cognito_config(monkeypatch)
 
     # The `code` param is required, but `?code=` gives us an empty string,
@@ -55,7 +50,7 @@ def test_auth_callback_missing_code_returns_400(monkeypatch):
     assert "ElbieFit" in body
 
 
-def test_auth_callback_token_exchange_failure(monkeypatch, dummy_response):
+def test_auth_callback_token_exchange_failure(monkeypatch, dummy_response, client):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
@@ -75,7 +70,7 @@ def test_auth_callback_token_exchange_failure(monkeypatch, dummy_response):
     assert "ElbieFit" in body
 
 
-def test_auth_callback_invalid_token_type(monkeypatch, dummy_response):
+def test_auth_callback_invalid_token_type(monkeypatch, dummy_response, client):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
@@ -100,7 +95,9 @@ def test_auth_callback_invalid_token_type(monkeypatch, dummy_response):
     assert "ElbieFit" in body
 
 
-def test_auth_callback_success_sets_cookies_and_redirects(monkeypatch, dummy_response):
+def test_auth_callback_success_sets_cookies_and_redirects(
+    monkeypatch, dummy_response, client
+):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
@@ -123,7 +120,7 @@ def test_auth_callback_success_sets_cookies_and_redirects(monkeypatch, dummy_res
     assert response.status_code == 302
     assert response.headers["location"] == "/"
 
-    # Cookies are set – TestClient merges multiple Set-Cookie headers into one string
+    # Cookies are set – Test Client merges multiple Set-Cookie headers into one string
     set_cookie_header = response.headers.get("set-cookie", "")
     assert "id_token=id123" in set_cookie_header
     assert "access_token=access123" in set_cookie_header
@@ -136,7 +133,7 @@ def test_auth_callback_success_sets_cookies_and_redirects(monkeypatch, dummy_res
 # --------------- Logout ---------------
 
 
-def test_logout_clears_cookies_and_redirects(monkeypatch):
+def test_logout_clears_cookies_and_redirects(monkeypatch, client):
     _patch_cognito_config(monkeypatch)
 
     response = client.get("/auth/logout", follow_redirects=False)
