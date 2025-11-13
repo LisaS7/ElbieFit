@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.exception_handlers import http_exception_handler
 from fastapi.responses import RedirectResponse
+
+from app.templates.templates import templates
+from app.utils.log import logger
 
 from .routes import auth, home, profile
 
@@ -12,7 +14,30 @@ app = FastAPI(title="ElbieFit")
 async def auth_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/auth/login")
-    return await http_exception_handler(request, exc)
+    return templates.TemplateResponse(
+        "error.html",
+        {
+            "request": request,
+            "status_code": exc.status_code,
+            "message": exc.detail,
+        },
+        status_code=exc.status_code,
+    )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.exception("Unhandled exception", exc_info=exc)
+
+    return templates.TemplateResponse(
+        "error.html",
+        {
+            "request": request,
+            "status_code": 500,
+            "message": "Gremlins.",
+        },
+        status_code=500,
+    )
 
 
 app.include_router(home.router)

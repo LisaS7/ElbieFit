@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Error {{ status_code }} - ElbieFit{% endblock %}
+
+{% block content %}
+  <h2>Error {{ status_code }}</h2>
+  <p>{{ message or "Something went wrong." }}</p>
+
+  {% if status_code == 404 %}
+    <p>The page you were looking for has wandered off into the forest.</p>
+  {% elif status_code == 500 %}
+    <p>Our server had an existential crisis. Please try again later.</p>
+  {% endif %}
+
+  <p><a href="/">Back to home</a></p>
+{% endblock %}
