@@ -1,4 +1,8 @@
-ARTIFACT_BUCKET_NAME="$1"
+#!/bin/bash
+set -euo pipefail
+
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+ARTIFACT_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-artifacts"
 
 GIT_SHA="${GITSHA:-$(git rev-parse HEAD)}"
 ZIP_NAME="app-${GIT_SHA}.zip"

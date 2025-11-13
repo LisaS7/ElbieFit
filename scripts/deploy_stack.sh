@@ -87,7 +87,7 @@ deploy_stack "${PROJECT_NAME}-${ENV}-iam" "infra/iam.yaml" \
 
 echo -e "\n\n--------------- DEPLOY CODE ------------------"
 echo "Summoning the code deploy script..."
-./scripts/deploy_code.sh "$ARTIFACT_BUCKET_NAME"
+./scripts/deploy_code.sh
 
 
 echo -e "\n\n--------------- DEPLOY APP ------------------"
@@ -101,7 +101,7 @@ API_URL=$(aws cloudformation list-exports \
 echo "API Gateway URL: ${API_URL}"
 
 # LAMBDA PUSH HERE
-./scripts/update_lambda_code.sh "$ARTIFACT_BUCKET_NAME" "$ZIP_NAME"
+./scripts/update_lambda_code.sh
 
 
 echo -e "\n\n--------------- DEPLOY COGNITO ------------------"
