@@ -25,6 +25,7 @@ def profile(request: Request, claims=Depends(auth.require_auth)):
     if not profile:
         logger.warning(f"No profile found for user_sub={user_sub}")
         return templates.TemplateResponse(
+            request,
             "profile.html",
             {
                 "request": request,
@@ -41,6 +42,7 @@ def profile(request: Request, claims=Depends(auth.require_auth)):
 
     logger.debug(f"Profile retrieved: {profile}")
     return templates.TemplateResponse(
+        request,
         "profile.html",
         {"request": request, "profile": profile, "user_sub": user_sub},
         status_code=200,

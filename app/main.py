@@ -15,6 +15,7 @@ async def auth_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/auth/login")
     return templates.TemplateResponse(
+        request,
         "error.html",
         {
             "request": request,
@@ -27,9 +28,10 @@ async def auth_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.exception("Unhandled exception", exc_info=exc)
+    logger.exception("Unhandled exception")
 
     return templates.TemplateResponse(
+        request,
         "error.html",
         {
             "request": request,
