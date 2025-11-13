@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any, Dict
 
 import jwt
 from fastapi import HTTPException, Request
@@ -12,7 +13,7 @@ ISSUER = settings.COGNITO_ISSUER
 AUDIENCE = settings.COGNITO_AUDIENCE
 
 
-def get_jwks_url(region, issuer):
+def get_jwks_url(region, issuer) -> str:
     """
     Build and return the JWKS (JSON Web Key Set) endpoint URL for a Cognito user pool.
 
@@ -35,58 +36,72 @@ def get_jwks_url(region, issuer):
     return jwks_url
 
 
-async def require_auth(request: Request):
-    """
-    Validate ID token from cookies and return decoded claims.
-    """
-
-    # Extract the access token
+def get_id_token(request: Request) -> str:
+    """Extract ID token from cookies or raise 401"""
     id_token = request.cookies.get("id_token")
     if not id_token:
         logger.warning("ID token missing from cookies")
         raise HTTPException(status_code=401, detail="ID token is missing. Login again.")
 
     logger.debug("ID token found in cookies")
+    return id_token
+
+
+def decode_and_validate_id_token(
+    id_token: str, jwks_url, issuer: str, audience: str
+) -> Dict[str, Any]:
+    """
+    Decode the ID token, verify signature and claims, return decoded
+    """
+    jwks_client = PyJWKClient(jwks_url)
+    signing_key = jwks_client.get_signing_key_from_jwt(id_token).key
+
+    decoded_token = jwt.decode(
+        id_token,
+        signing_key,
+        algorithms=["RS256"],
+        issuer=issuer,
+        audience=audience,
+    )
+
+    logger.debug("JWT successfully decoded and verified")
+
+    token_use = decoded_token.get("token_use")
+    if token_use != "id":
+        logger.error(
+            f"Token 'token_use' mismatch: expected 'id', got {decoded_token.get('token_use')}"
+        )
+        raise HTTPException(status_code=401, detail="Wrong token type")
+
+    return decoded_token
+
+
+def log_sub_and_exp(decoded_token: Dict[str, Any]):
+    """ """
+    exp = decoded_token.get("exp")
+    exp_time = (
+        datetime.fromtimestamp(exp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        if exp
+        else None
+    )
+    sub = decoded_token.get("sub")
+    logger.info(f"Authenticated user sub={sub}, token exp={exp_time}")
+
+
+async def require_auth(request: Request):
+    """
+    Validate ID token from cookies and return decoded claims.
+    """
+    id_token = get_id_token(request)
 
     jwks_url = get_jwks_url(REGION, ISSUER)
 
     try:
-        # Decode headers and get the kid
-        unverified_headers = jwt.get_unverified_header(id_token)
-        kid = unverified_headers.get("kid")
-        logger.debug(f"Token header KID: {kid}")
-
-        # Fetch signing key
-        jwks_client = PyJWKClient(jwks_url)
-        signing_key = jwks_client.get_signing_key_from_jwt(id_token).key
-
-        decoded_token = jwt.decode(
-            id_token,
-            signing_key,
-            algorithms=["RS256"],
-            issuer=ISSUER,
-            audience=AUDIENCE,
+        decoded_token = decode_and_validate_id_token(
+            id_token=id_token, jwks_url=jwks_url, issuer=ISSUER, audience=AUDIENCE
         )
 
-        if decoded_token.get("token_use") != "id":
-            logger.error(
-                f"Token 'token_use' mismatch: expected 'id', got {decoded_token.get('token_use')}"
-            )
-            raise HTTPException(status_code=401, detail="Wrong token type")
-
-        exp = decoded_token.get("exp")
-        exp_time = (
-            datetime.fromtimestamp(exp, tz=timezone.utc).strftime(
-                "%Y-%m-%d %H:%M:%S UTC"
-            )
-            if exp
-            else None
-        )
-
-        decoded_token["_exp_str"] = exp_time
-
-        sub = decoded_token.get("sub")
-        logger.info(f"Authenticated user sub={sub}, token exp={exp_time}")
+        log_sub_and_exp(decoded_token)
 
         return decoded_token
 
