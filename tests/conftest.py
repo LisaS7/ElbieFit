@@ -3,10 +3,20 @@ from fastapi import Request
 
 from app.utils import auth as auth_utils
 
+# --------------- Request ---------------
+
 
 class DummyRequest:
     def __init__(self, cookies):
         self.cookies = cookies
+
+
+@pytest.fixture
+def dummy_request():
+    def _make(cookies):
+        return DummyRequest(cookies)
+
+    return _make
 
 
 @pytest.fixture
@@ -29,14 +39,6 @@ def make_request_with_cookies():
 
 
 @pytest.fixture
-def dummy_request():
-    def _make(cookies):
-        return DummyRequest(cookies)
-
-    return _make
-
-
-@pytest.fixture
 def stub_basic_auth_helpers(monkeypatch):
     def fake_get_id_token(request):
         return "fake-token"
@@ -46,3 +48,30 @@ def stub_basic_auth_helpers(monkeypatch):
 
     monkeypatch.setattr(auth_utils, "get_id_token", fake_get_id_token)
     monkeypatch.setattr(auth_utils, "get_jwks_url", fake_get_jwks_url)
+
+
+# --------------- Response ---------------
+
+
+class DummyResponse:
+    def __init__(self, status_code=200, json_data=None, text=""):
+        self.status_code = status_code
+        self._json = json_data or {}
+        self.text = text
+
+    def json(self):
+        return self._json
+
+
+@pytest.fixture
+def dummy_response():
+    """
+    Factory fixture that returns a function to build DummyResponse objects.
+    Example:
+        resp = dummy_response(status_code=400, text="boom")
+    """
+
+    def _make(status_code=200, json_data=None, text=""):
+        return DummyResponse(status_code=status_code, json_data=json_data, text=text)
+
+    return _make
