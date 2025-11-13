@@ -7,8 +7,15 @@ dist/
 # Virtual environments
 .venv
 
+# Secrets
+.env
+
+# Coverage
+htmlcov
+.coverage
+
 # Trash
 tmp
 
-# Secrets
-.env
+
+
