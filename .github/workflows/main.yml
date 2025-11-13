@@ -1,0 +1,76 @@
+name: CI - Test, Deploy, Smoke
+
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv sync --dev
+
+      - name: Run tests
+        run: uv run pytest --maxfail=1 --disable-warnings -q
+
+        
+  deploy:
+    # Only deploy on pushes to main, not PRs
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: test         
+    runs-on: ubuntu-latest
+    environment: dev 
+
+    permissions:
+      id-token: write    # required for OIDC → AWS
+      contents: read
+
+    env:
+      PROJECT_NAME: ${{ vars.PROJECT_NAME }}
+      ENV: dev
+      REGION: ${{ vars.REGION }}
+      LOG_LEVEL: DEBUG
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Ensure deploy scripts are executable
+        run: |
+          chmod +x scripts/deploy_code.sh
+          chmod +x scripts/update_lambda_code.sh
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Build & upload code zip to S3
+        run: ./scripts/deploy_code.sh
+
+      - name: Update Lambda code from artifact
+        run: ./scripts/update_lambda_code.sh
