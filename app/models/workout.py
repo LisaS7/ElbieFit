@@ -1,9 +1,10 @@
 from datetime import date, datetime
+from decimal import Decimal
 from typing import Literal, Optional
 
 from pydantic import BaseModel
 
-from app.utils.dates import dt_to_iso
+from app.utils.dates import date_to_iso, dt_to_iso
 
 
 class Workout(BaseModel):
@@ -18,6 +19,7 @@ class Workout(BaseModel):
 
     def to_ddb_item(self) -> dict:
         data = self.model_dump()
+        data["date"] = date_to_iso(self.date)
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
         return data
@@ -30,7 +32,7 @@ class WorkoutSet(BaseModel):
     exercise_id: str
     set_number: int
     reps: int
-    weight_kg: float
+    weight_kg: Decimal
     rpe: int
     created_at: datetime
     updated_at: datetime
