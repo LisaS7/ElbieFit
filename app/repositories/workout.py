@@ -18,9 +18,7 @@ class DynamoWorkoutRepository:
     def __init__(self, table=None):
         self._table = table or db.get_table()
 
-    def _to_model(
-        self, item: dict
-    ):  # TODO: decide on return type - include sets or not?
+    def _to_model(self, item: dict):
         """
         Map a DynamoDB item (from the resource API) into a Workout model.
         """
@@ -36,6 +34,9 @@ class DynamoWorkoutRepository:
         raise ValueError(f"Unknown item type: {item_type}")
 
     def get_all_for_user(self, user_sub: str) -> List[Workout]:
+        """
+        Return only workout items, sorted by date desc, Sets are filtered out.
+        """
         pk = f"USER#{user_sub}"
 
         response = self._table.query(
@@ -46,6 +47,7 @@ class DynamoWorkoutRepository:
         workouts = [
             self._to_model(item) for item in items if item.get("type") == "workout"
         ]
-        workouts.sort(key=lambda w: w.date, reverse=True)
-
-        return workouts
+        # ignore type hint: we're filtering out sets in the previous step
+        # so all items will have a date attribute
+        workouts.sort(key=lambda w: w.date, reverse=True)  # type: ignore[arg-type]
+        return workouts  # type: ignore[arg-type]

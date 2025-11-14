@@ -8,7 +8,7 @@ from app.utils.dates import dt_to_iso
 
 class Exercise(BaseModel):
     PK: str
-    SK: str  # "EXERCISE#E_PUSHUP"
+    SK: str  # "EXERCISE#PUSHUP"
     type: Literal["exercise"]
     name: str
     muscles: list[str]
