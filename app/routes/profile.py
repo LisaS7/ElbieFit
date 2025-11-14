@@ -1,21 +1,30 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.repositories.profile import DynamoProfileRepository, ProfileRepository
 from app.templates.templates import templates
-from app.utils import auth, dates, db
+from app.utils import auth, dates
 from app.utils.log import logger
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
+def get_profile_repo() -> ProfileRepository:
+    return DynamoProfileRepository()
+
+
 @router.get("/")
-def profile(request: Request, claims=Depends(auth.require_auth)):
+def profile(
+    request: Request,
+    claims=Depends(auth.require_auth),
+    repo: ProfileRepository = Depends(get_profile_repo),
+):
     """Get the profile of the current authenticated user."""
     user_sub = claims["sub"]
 
     logger.info(f"Fetching profile for user_sub={user_sub}")
 
     try:
-        profile = db.get_user_profile(user_sub)
+        profile = repo.get_for_user(user_sub)
     except Exception as e:
         logger.exception(f"Error fetching user profile: {e}")
         raise HTTPException(status_code=500, detail="Internal error reading profile")
