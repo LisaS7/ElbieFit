@@ -5,17 +5,29 @@ def _patch_cognito_config(monkeypatch):
     """
     Make sure we don't depend on real env/settings for URL building.
     """
-    monkeypatch.setattr(auth, "CLIENT_ID", "fake-client-id")
-    monkeypatch.setattr(
-        auth,
-        "REDIRECT_URI",
-        "https://example.com/auth/callback",
-    )
 
-    def fake_base_url() -> str:
-        return "https://fake-domain.auth.eu-west-2.amazoncognito.com"
+    class FakeSettings:
+        PROJECT_NAME = "elbiefit"
+        REGION = "eu-west-2"
+        ENV = "test"
+        COGNITO_AUDIENCE = "fake-aud"
+        COGNITO_DOMAIN = "fake-domain"
+        COGNITO_REDIRECT_URI = "https://example.com/auth/callback"
+        COGNITO_ISSUER = "fake-iss"
 
-    monkeypatch.setattr(auth, "cognito_base_url", fake_base_url)
+        def cognito_base_url(self) -> str:
+            return f"https://{self.COGNITO_DOMAIN}.auth.{self.REGION}.amazoncognito.com"
+
+        def auth_url(self) -> str:
+            return f"{self.cognito_base_url()}/oauth2/authorize"
+
+        def token_url(self) -> str:
+            return f"{self.cognito_base_url()}/oauth2/token"
+
+    fake_settings = FakeSettings()
+    monkeypatch.setattr(auth, "settings", fake_settings)
+    monkeypatch.setattr(auth, "CLIENT_ID", fake_settings.COGNITO_AUDIENCE)
+    monkeypatch.setattr(auth, "REDIRECT_URI", fake_settings.COGNITO_REDIRECT_URI)
 
 
 # --------------- Login ---------------
@@ -34,7 +46,7 @@ def test_auth_login_redirects_to_cognito(monkeypatch, client):
         "https://fake-domain.auth.eu-west-2.amazoncognito.com/oauth2/authorize"
     )
     assert "response_type=code" in location
-    assert "client_id=fake-client-id" in location
+    assert "client_id=fake-aud" in location
     assert "redirect_uri=https://example.com/auth/callback" in location
     assert "scope=openid+email+profile" in location
 

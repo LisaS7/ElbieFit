@@ -17,18 +17,6 @@ COMMON_COOKIE_OPTS = {
 }
 
 
-def cognito_base_url() -> str:
-    return f"https://{settings.COGNITO_DOMAIN}.auth.{settings.REGION}.amazoncognito.com"
-
-
-def auth_url() -> str:
-    return f"{cognito_base_url()}/oauth2/authorize"
-
-
-def token_url() -> str:
-    return f"{cognito_base_url()}/oauth2/token"
-
-
 def set_cookies(response: Response, token_data: dict) -> None:
     response.set_cookie(
         key="id_token",
@@ -54,7 +42,7 @@ def set_cookies(response: Response, token_data: dict) -> None:
 def auth_login(request: Request):
 
     login_url = (
-        f"{auth_url()}"
+        f"{settings.auth_url()}"
         f"?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&scope=openid+email+profile"
@@ -76,7 +64,7 @@ def auth_callback(request: Request, code: str):
         "redirect_uri": REDIRECT_URI,
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response_token = requests.post(token_url(), data=data, headers=headers)
+    response_token = requests.post(settings.token_url(), data=data, headers=headers)
 
     if response_token.status_code != 200:
         logger.error(f"Token exchange failed: {response_token.text}")

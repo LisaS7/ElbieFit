@@ -16,5 +16,14 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=None)
 
+    def cognito_base_url(self) -> str:
+        return f"https://{self.COGNITO_DOMAIN}.auth.{self.REGION}.amazoncognito.com"
+
+    def auth_url(self) -> str:
+        return f"{self.cognito_base_url()}/oauth2/authorize"
+
+    def token_url(self) -> str:
+        return f"{self.cognito_base_url()}/oauth2/token"
+
 
 settings = Settings()
