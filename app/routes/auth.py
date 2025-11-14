@@ -10,6 +10,12 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 CLIENT_ID = settings.COGNITO_AUDIENCE
 REDIRECT_URI = settings.COGNITO_REDIRECT_URI
 
+COMMON_COOKIE_OPTS = {
+    "httponly": True,
+    "secure": True,
+    "samesite": "none",
+}
+
 
 def cognito_base_url() -> str:
     return f"https://{settings.COGNITO_DOMAIN}.auth.{settings.REGION}.amazoncognito.com"
@@ -21,6 +27,27 @@ def auth_url() -> str:
 
 def token_url() -> str:
     return f"{cognito_base_url()}/oauth2/token"
+
+
+def set_cookies(response: Response, token_data: dict) -> None:
+    response.set_cookie(
+        key="id_token",
+        value=token_data["id_token"],
+        max_age=token_data["expires_in"],
+        **COMMON_COOKIE_OPTS,
+    )
+    response.set_cookie(
+        key="access_token",
+        value=token_data["access_token"],
+        max_age=token_data["expires_in"],
+        **COMMON_COOKIE_OPTS,
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=token_data["refresh_token"],
+        max_age=60 * 60 * 24 * 7,
+        **COMMON_COOKIE_OPTS,
+    )
 
 
 @router.get("/login")
@@ -36,7 +63,7 @@ def auth_login(request: Request):
 
 
 @router.get("/callback", name="auth_callback")
-def auth_callback(request: Request, code: str, response: Response):
+def auth_callback(request: Request, code: str):
     if not code:
         logger.error("No authorization code provided in callback")
         raise HTTPException(status_code=400, detail="Missing authorization code")
@@ -55,41 +82,17 @@ def auth_callback(request: Request, code: str, response: Response):
         logger.error(f"Token exchange failed: {response_token.text}")
         raise HTTPException(status_code=400, detail="Token exchange failed")
 
-    response_data = response_token.json()
+    token_data = response_token.json()
 
-    if response_data["token_type"] != "Bearer":
+    if token_data["token_type"] != "Bearer":
         logger.error("Invalid token type received")
         raise HTTPException(status_code=400, detail="Invalid token type")
 
     # Redirect to home page after successful authentication
     response = RedirectResponse("/", status_code=302)
 
-    # TODO: tidy repeated arguments
     # Yummy cookies
-    response.set_cookie(
-        key="id_token",
-        value=response_data["id_token"],
-        max_age=response_data["expires_in"],
-        httponly=True,
-        secure=True,
-        samesite="none",
-    )
-    response.set_cookie(
-        key="access_token",
-        value=response_data["access_token"],
-        max_age=response_data["expires_in"],
-        httponly=True,
-        secure=True,
-        samesite="none",
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=response_data["refresh_token"],
-        max_age=60 * 60 * 24 * 7,
-        httponly=True,
-        secure=True,
-        samesite="none",
-    )
+    set_cookies(response, token_data)
 
     return response
 
@@ -97,8 +100,7 @@ def auth_callback(request: Request, code: str, response: Response):
 @router.get("/logout")
 async def protected_route(response: Response):
     response = RedirectResponse(url="/", status_code=303)
-    # delete cookies here
-    response.delete_cookie("id_token")
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+
+    for cookie in ["id_token", "access_token", "refresh_token"]:
+        response.delete_cookie(cookie)
     return response
