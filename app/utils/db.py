@@ -10,6 +10,15 @@ _dynamo = boto3.resource("dynamodb", region_name=REGION_NAME)
 _table = _dynamo.Table(TABLE_NAME)  # type: ignore
 
 
+def get_dynamo_resource():
+    return boto3.resource("dynamodb", region_name=REGION_NAME)
+
+
+def get_table():
+    resource = get_dynamo_resource
+    return resource.Table(TABLE_NAME)
+
+
 def get_user_profile(user_sub: str) -> dict | None:
     """
     Fetch user profile from the database based on user_sub.
