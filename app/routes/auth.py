@@ -8,16 +8,26 @@ from app.utils.log import logger
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 CLIENT_ID = settings.COGNITO_AUDIENCE
-REGION = settings.REGION
-DOMAIN = settings.COGNITO_DOMAIN
 REDIRECT_URI = settings.COGNITO_REDIRECT_URI
+
+
+def cognito_base_url() -> str:
+    return f"https://{settings.COGNITO_DOMAIN}.auth.{settings.REGION}.amazoncognito.com"
+
+
+def auth_url() -> str:
+    return f"{cognito_base_url()}/oauth2/authorize"
+
+
+def token_url() -> str:
+    return f"{cognito_base_url()}/oauth2/token"
 
 
 @router.get("/login")
 def auth_login(request: Request):
 
     login_url = (
-        f"https://{DOMAIN}.auth.{REGION}.amazoncognito.com/oauth2/authorize"
+        f"{auth_url()}"
         f"?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URI}"
         f"&scope=openid+email+profile"
@@ -32,7 +42,6 @@ def auth_callback(request: Request, code: str, response: Response):
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
     # Send token exchange request
-    token_endpoint = f"https://{DOMAIN}.auth.{REGION}.amazoncognito.com/oauth2/token"
     data = {
         "grant_type": "authorization_code",
         "client_id": CLIENT_ID,
@@ -40,7 +49,7 @@ def auth_callback(request: Request, code: str, response: Response):
         "redirect_uri": REDIRECT_URI,
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response_token = requests.post(token_endpoint, data=data, headers=headers)
+    response_token = requests.post(token_url(), data=data, headers=headers)
 
     if response_token.status_code != 200:
         logger.error(f"Token exchange failed: {response_token.text}")

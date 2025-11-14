@@ -6,13 +6,16 @@ def _patch_cognito_config(monkeypatch):
     Make sure we don't depend on real env/settings for URL building.
     """
     monkeypatch.setattr(auth, "CLIENT_ID", "fake-client-id")
-    monkeypatch.setattr(auth, "REGION", "eu-west-2")
-    monkeypatch.setattr(auth, "DOMAIN", "fake-domain")
     monkeypatch.setattr(
         auth,
         "REDIRECT_URI",
         "https://example.com/auth/callback",
     )
+
+    def fake_base_url() -> str:
+        return "https://fake-domain.auth.eu-west-2.amazoncognito.com"
+
+    monkeypatch.setattr(auth, "cognito_base_url", fake_base_url)
 
 
 # --------------- Login ---------------
