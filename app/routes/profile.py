@@ -1,12 +1,10 @@
-from datetime import datetime
-
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.templates.templates import templates
-from app.utils import auth, db
+from app.utils import auth, dates, db
 from app.utils.log import logger
 
-router = APIRouter(prefix="/profile", tags=["auth"])
+router = APIRouter(prefix="/profile", tags=["profile"])
 
 
 @router.get("/")
@@ -37,7 +35,7 @@ def profile(request: Request, claims=Depends(auth.require_auth)):
 
     raw = profile.get("created_at")
     if raw:
-        dt = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        dt = dates.iso_to_dt(raw)
         profile["created_at_readable"] = dt.strftime("%d %B %Y")
 
     logger.debug(f"Profile retrieved: {profile}")

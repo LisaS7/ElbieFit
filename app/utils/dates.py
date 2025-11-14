@@ -12,9 +12,15 @@ def dt_to_iso(dt: datetime) -> str:
 def date_to_iso(d: date) -> str:
     """
     Convert a date object (YYYY-MM-DD) to ISO8601 string.
-    DynamoDB and JSON both expect strings, not date objects.
     """
     return d.isoformat()
+
+
+def iso_to_dt(d: str) -> datetime:
+    """
+    Convert an ISO8601 string to a date object.
+    """
+    return datetime.fromisoformat(d.replace("Z", "+00:00"))
 
 
 def now() -> datetime:
