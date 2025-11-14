@@ -1,5 +1,4 @@
 import boto3
-from boto3.dynamodb.types import TypeDeserializer
 
 from app.settings import settings
 from app.utils.log import logger
@@ -7,12 +6,8 @@ from app.utils.log import logger
 REGION_NAME = settings.REGION
 TABLE_NAME = settings.DDB_TABLE_NAME
 
-_dynamo = boto3.client("dynamodb", region_name=REGION_NAME)
-_deser = TypeDeserializer()
-
-
-def _unmarshal(item: dict) -> dict:
-    return {k: _deser.deserialize(v) for k, v in item.items()}
+_dynamo = boto3.resource("dynamodb", region_name=REGION_NAME)
+_table = _dynamo.Table(TABLE_NAME)  # type: ignore
 
 
 def get_user_profile(user_sub: str) -> dict | None:
@@ -20,14 +15,13 @@ def get_user_profile(user_sub: str) -> dict | None:
     Fetch user profile from the database based on user_sub.
     """
     key = {
-        "PK": {"S": f"USER#{user_sub}"},
-        "SK": {"S": "PROFILE"},
+        "PK": f"USER#{user_sub}",
+        "SK": "PROFILE",
     }
 
     # Use consistent read to ensure the data is up-to-date. This forces the db to use
     # the latest copy of the data rather than potentially stale replicas.
-    response = _dynamo.get_item(
-        TableName=TABLE_NAME,
+    response = _table.get_item(
         Key=key,
         ConsistentRead=True,
     )
@@ -41,4 +35,4 @@ def get_user_profile(user_sub: str) -> dict | None:
         )
         return None
 
-    return _unmarshal(profile)
+    return profile
