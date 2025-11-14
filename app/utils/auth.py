@@ -13,7 +13,7 @@ ISSUER = settings.COGNITO_ISSUER
 AUDIENCE = settings.COGNITO_AUDIENCE
 
 
-def get_jwks_url(region, issuer) -> str:
+def get_jwks_url(region: str, issuer: str) -> str:
     """
     Build and return the JWKS (JSON Web Key Set) endpoint URL for a Cognito user pool.
 
@@ -77,7 +77,7 @@ def decode_and_validate_id_token(
 
 
 def log_sub_and_exp(decoded_token: Dict[str, Any]):
-    """ """
+    """Logging the user sub and token expiry to help with debugging"""
     exp = decoded_token.get("exp")
     exp_time = (
         datetime.fromtimestamp(exp, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
