@@ -12,6 +12,7 @@ class Workout(BaseModel):
     SK: str  # "WORKOUT#2025-11-04#W1"
     type: Literal["workout"]
     date: date
+    name: str
     tags: list[str]
     notes: Optional[str] = None
     created_at: datetime

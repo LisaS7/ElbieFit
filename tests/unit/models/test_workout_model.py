@@ -15,6 +15,7 @@ def make_example_workout(**overrides) -> Workout:
         "SK": "WORKOUT#2025-11-04#W1",
         "type": "workout",
         "date": date(2025, 11, 4),
+        "name": "Workout A",
         "tags": ["push", "upper"],
         "notes": "Felt strong",
         "created_at": datetime(2025, 11, 4, 18, 0, 0),
