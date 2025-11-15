@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" content="width=device-width, initial-scale=1"/>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}ElbieFit{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,9 +11,22 @@
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
   </head>
   <body>
-    <header id="page-header">
-      <h1>ElbieFit</h1>
-      <!-- nav / logo / etc -->
+    <header id="app-header">
+      <div id="brand">
+        <p>ElbieFit</p>
+        <img src="/static/images/elbie_header.webp"/>
+      </div>
+      <button
+      class="menu-toggle"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+      aria-controls="main-nav"
+      >☰</button>
+
+      <nav id="main-nav">
+        <a href="/profile">Profile</a>
+        <a href="/workout/all">Workouts</a>
+      </nav>
     </header>
 
     <main>{% block content %}{% endblock %}</main>
@@ -20,5 +34,6 @@
     <footer id="page-footer">
       <p>&copy; {{ current_year or "2025" }} ElbieFit</p>
     </footer>
+    <script src="/static/js/menu.js"></script>
   </body>
 </html>
