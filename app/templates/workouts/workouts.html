@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}All Workouts{% endblock %}
+
+{% block content %}
+<div id="page-container">
+<header><h1>All Workouts</h1></header>
+<section id="workouts-container">
+    {% if workouts and workouts|length %}
+        <table id="workouts-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Tags</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for workout in workouts %}
+                    <tr>
+                        <td>{{workout.date}}</td>
+                        <td>{{workout.tags}}</td>
+                        <td>{{workout.notes}}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No workouts logged yet. The barbell is waiting!</p>
+    {% endif %}
+</section>
+</div>
+
