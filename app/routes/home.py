@@ -1,20 +1,14 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse
+
+from app.templates.templates import templates
 
 router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse)
-def home():
-    return """
-<html>
-      <head><title>ElbieFit</title></head>
-      <body>
-        <h1>Welcome to ElbieFit</h1>
-        <p>Login successful! You’ve reached the home page. Well done.</p>
-      </body>
-    </html>
-"""
+def home(request: Request):
+    return templates.TemplateResponse(request, "home.html")
 
 
 @router.get("/healthz", response_class=JSONResponse)
