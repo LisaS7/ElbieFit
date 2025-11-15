@@ -67,6 +67,7 @@ Resources:
       # Build URLs based on API Gateway URL
       CallbackURLs:
         - !Sub '${ApiGatewayUrl}/auth/callback'
+        - 'http://localhost:8000/auth/callback'
       LogoutURLs:
         - !Sub '${ApiGatewayUrl}/'
 
