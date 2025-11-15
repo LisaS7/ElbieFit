@@ -1,0 +1,64 @@
+:root {
+  --color-bg: #f3f1df;
+  --color-card: #fffdf4;
+  --color-borders: #b5b37a;
+  --color-heading-dark: #3a8e95;
+  --color-heading-light: #79c76f;
+  --color-button: #157e78;
+  --color-tag: #729bbd;
+}
+
+/* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
+
+* {
+  border-radius: 10px;
+  font-size: 16px;
+}
+
+.bubblegum-sans-regular {
+  font-family: 'Bubblegum Sans', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+body {
+  font-family: 'Bubblegum Sans', sans-serif;
+  background-color: var(--color-bg);
+}
+
+#page-header {
+  width: 80%;
+  margin: 2rem auto;
+}
+
+main {
+  width: 80%;
+  margin: 2rem auto;
+  padding: 1rem;
+}
+
+#page-footer {
+  width: 80%;
+  margin: 2rem auto;
+}
+
+.page-container {
+  border: 2px solid var(--color-borders);
+  padding: 1rem;
+}
+
+/* ──────────────────────────────── Text ──────────────────────────────── */
+
+h1 {
+  color: var(--color-heading-dark);
+}
+
+/* ──────────────────────────────── Cards & Tags ──────────────────────────────── */
+
+.tag {
+  background-color: var(--color-tag);
+  margin: 1rem;
+  padding: 0.2rem 1rem;
+}
+
+/* ──────────────────────────────── Table ──────────────────────────────── */

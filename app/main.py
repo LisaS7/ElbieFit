@@ -1,9 +1,11 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from .error_handlers import register_error_handlers
 from .routes import auth, home, profile, workout
 
 app = FastAPI(title="ElbieFit")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 register_error_handlers(app)
 
