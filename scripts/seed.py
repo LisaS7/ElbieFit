@@ -85,6 +85,7 @@ def seed_workout_with_sets(table, pk: str):
         SK="WORKOUT#2025-11-04#W1",
         type="workout",
         date=date(2025, 11, 4),
+        name="Workout A",
         tags=["push", "pull", "upper_body"],
         notes="Push/pull day",
         created_at=ts,
