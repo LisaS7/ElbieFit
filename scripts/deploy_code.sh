@@ -5,14 +5,14 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="${ROOT_DIR}/.env"
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "Env file not found: $ENV_FILE"
-  exit 1
+if [ -f "$ENV_FILE" ]; then
+  echo "Loading env vars from $ENV_FILE"
+  set -a
+  source "$ENV_FILE"
+  set +a
+else
+  echo "No .env file found at $ENV_FILE, assuming env vars are already set"
 fi
-
-set -a
-source "$ENV_FILE"
-set +a
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 ARTIFACT_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-artifacts"
