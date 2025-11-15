@@ -70,6 +70,15 @@ rsync -a \
   --exclude 'build' \
   "${ROOT_DIR}/app/" "${BUILD_DIR}/app/"
 
+# --- add the static files ---
+  echo "Copying static assets..."
+if [ -d "${ROOT_DIR}/static" ]; then
+  rsync -a "${ROOT_DIR}/static/" "${BUILD_DIR}/static/"
+else
+  echo "⚠️ No static directory found at ${ROOT_DIR}/static, skipping"
+fi
+
+
 
 # --- zip it up ---
  echo "Creating zip archive ${ZIP_NAME}..."
