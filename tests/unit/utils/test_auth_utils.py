@@ -17,19 +17,22 @@ from app.utils import auth
 def test_get_jwks_url_success():
     issuer = "fake_issuer"
     result = auth.get_jwks_url("eu-west-2", issuer)
-    assert result == f"{issuer}/.well-known/jwks.json"
+    assert (
+        result
+        == f"https://cognito-idp.eu-west-2.amazonaws.com/{issuer}/.well-known/jwks.json"
+    )
 
 
 def test_get_jwks_url_missing_params():
     # missing region
     with pytest.raises(HTTPException) as err:
-        auth.get_jwks_url(None, "issuer")
+        auth.get_jwks_url("", "issuer")
 
     assert err.value.status_code == 500
 
     # missing issuer
     with pytest.raises(HTTPException) as err2:
-        auth.get_jwks_url("eu-west-2", None)
+        auth.get_jwks_url("eu-west-2", "")
 
     assert err2.value.status_code == 500
 

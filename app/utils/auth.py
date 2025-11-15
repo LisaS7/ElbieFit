@@ -31,7 +31,8 @@ def get_jwks_url(region: str, issuer: str) -> str:
         )
 
     # Construct JWKS URL
-    jwks_url = f"{issuer}/.well-known/jwks.json"
+    base_issuer_url = f"https://cognito-idp.{region}.amazonaws.com/{issuer}"
+    jwks_url = f"{base_issuer_url}/.well-known/jwks.json"
 
     return jwks_url
 
@@ -94,11 +95,12 @@ async def require_auth(request: Request):
     """
     id_token = get_id_token(request)
 
+    issuer_url = f"https://cognito-idp.{REGION}.amazonaws.com/{ISSUER}"
     jwks_url = get_jwks_url(REGION, ISSUER)
 
     try:
         decoded_token = decode_and_validate_id_token(
-            id_token=id_token, jwks_url=jwks_url, issuer=ISSUER, audience=AUDIENCE
+            id_token=id_token, jwks_url=jwks_url, issuer=issuer_url, audience=AUDIENCE
         )
 
         log_sub_and_exp(decoded_token)
