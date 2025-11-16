@@ -51,6 +51,7 @@
   border: none;
   font-size: 1.5rem;
   background: none;
+  color: black;
 }
 
 @media (max-width: 768px) {
@@ -128,6 +129,35 @@ a {
   text-decoration: none;
 }
 
+/* ──────────────────────────────── Buttons ──────────────────────────────── */
+button {
+  margin: 0.5rem;
+  background: var(--color-button);
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+
+  /* ── Button Text ── */
+  font-family: 'Bubblegum Sans', sans-serif;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  color: whitesmoke;
+
+  /* ── Shadow & Transition ── */
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: rgba(60, 64, 67, 0.35) 0px 3px 4px 0px, rgba(60, 64, 67, 0.2) 0px 4px 10px 3px;
+}
+
+button:active {
+  transform: translateY(1px);
+  box-shadow: rgba(60, 64, 67, 0.25) 0px 0px 1px 0px, rgba(60, 64, 67, 0.12) 0px 1px 3px 1px;
+}
+
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */
 
 .workout-card {
@@ -176,4 +206,9 @@ a {
   font-size: 0.8rem;
 }
 
-/* ──────────────────────────────── Table ──────────────────────────────── */
+/* ──────────────────────────────── Workout Page ──────────────────────────────── */
+
+#workout-header {
+  display: flex;
+  justify-content: space-between;
+}
