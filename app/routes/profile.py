@@ -8,7 +8,7 @@ from app.utils.log import logger
 router = APIRouter(prefix="/profile", tags=["profile"])
 
 
-def get_profile_repo() -> ProfileRepository:
+def get_profile_repo() -> ProfileRepository:  # pragma: no cover
     return DynamoProfileRepository()
 
 

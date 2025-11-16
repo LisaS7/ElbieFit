@@ -14,7 +14,7 @@ from app.utils.log import logger
 router = APIRouter(prefix="/workout", tags=["workout"])
 
 
-def get_workout_repo() -> WorkoutRepository:
+def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
     """Fetch the workout repo"""
     return DynamoWorkoutRepository()
 
