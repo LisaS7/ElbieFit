@@ -1,8 +1,11 @@
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from app.models.workout import Workout
 from app.repositories.workout import DynamoWorkoutRepository
+from app.utils import dates
 
 user_sub = "abc-123"
 fake_table_response = {
@@ -44,6 +47,8 @@ fake_table_response = {
     ]
 }
 
+# --------------- Get All ---------------
+
 
 def test_get_all_for_user_returns_sorted_workouts_only(fake_table):
     fake_table.response = fake_table_response
@@ -84,3 +89,28 @@ def test_to_model_raises_for_unknown_type(fake_table):
         repo._to_model(wrong_type_item)
 
     assert "Unknown item type" in str(err.value)
+
+
+# --------------- Create ---------------
+
+
+def test_create_workout_does_put_item_and_returns_workout(fake_table):
+    repo = DynamoWorkoutRepository(fake_table)
+
+    workout = Workout(
+        PK="USER#test-user-sub",
+        SK="WORKOUT#2025-11-16#W1",
+        type="workout",
+        date=date(2025, 11, 16),
+        name="Leg Day for Lizards",
+        tags=["legs"],
+        notes="Squats until extinction",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    expected_item = workout.to_ddb_item()
+    returned_item = repo.create_workout(workout)
+
+    assert fake_table.last_put_kwargs == {"Item": expected_item}
+    assert returned_item is workout
