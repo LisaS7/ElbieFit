@@ -13,7 +13,7 @@ class Workout(BaseModel):
     type: Literal["workout"]
     date: date
     name: str
-    tags: list[str]
+    tags: list[str] | None = None
     notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
