@@ -1,3 +1,4 @@
 [run]
 omit =
     app/handler.py
+    app/settings.py
