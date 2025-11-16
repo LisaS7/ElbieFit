@@ -1,0 +1,15 @@
+<form hx-post="/workouts/create" hx-target="#new-workout-form-container" hx-swap="innerHTML">
+    <label>Date</label>
+    <input type="date" name="date">
+
+    <label>Name</label>
+    <input type="text" name="name">
+
+    <button type="submit">Save</button>
+    <button
+    type="button"
+    hx-on="click: document.querySelector('#new-workout-form-container').innerHTML = ''"
+>
+    Cancel
+</button>
+</form>

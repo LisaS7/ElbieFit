@@ -35,3 +35,8 @@ def get_all_workouts(
         {"request": request, "workouts": workouts},
         status_code=200,
     )
+
+
+@router.get("/new-form")
+def get_new_form(request: Request):
+    return templates.TemplateResponse(request, "workouts/new-form.html")

@@ -3,27 +3,34 @@
 {% block title %}All Workouts{% endblock %}
 
 {% block content %}
-<header id="workout-header"><h1>Workout Log</h1><button>New</button></header>
-<div id="page-container">
-    <section>
-        {% if workouts and workouts|length %}
-            {% for workout in workouts %}
-                <div class="workout-card">
-                    <div class="workout-date">{{ workout.date }}</div>
-                    <div class="workout-name">{{ workout.name }}</div>
-                    <div class="workout-tags">
-                        {% for tag in workout.tags %}
-                            <span class="tag">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
-                    <div class="workout-notes">{{ workout.notes }}</div>
-
+<header id="workout-header">
+    <h1>Workout Log</h1>
+    <button
+        hx-get="/workout/new-form"
+        hx-target="#new-workout-form-container"
+        hx-swap="innerHTML"
+        >New</button>
+</header>
+<section id="new-workout-form-container"></section>
+<section id="page-container">
+    {% if workouts and workouts|length %}
+        {% for workout in workouts %}
+            <div class="workout-card">
+                <div class="workout-date">{{ workout.date }}</div>
+                <div class="workout-name">{{ workout.name }}</div>
+                <div class="workout-tags">
+                    {% for tag in workout.tags %}
+                        <span class="tag">{{ tag }}</span>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        {% else %}
-            <p>No workouts logged yet. The barbell is waiting!</p>
-        {% endif %}
-    {% endblock %}
-    </section>
-</div>
+                <div class="workout-notes">{{ workout.notes }}</div>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No workouts logged yet. The barbell is waiting!</p>
+    {% endif %}
+{% endblock %}
+</section>
+
 
