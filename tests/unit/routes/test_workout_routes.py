@@ -16,6 +16,9 @@ class FakeWorkoutRepo:
         self.workouts_to_return = []
         self.created_workouts = []
         self.should_raise_on_get_all = False
+        self.workout_to_return = None
+        self.sets_to_return = []
+        self.should_raise_on_get_one = False
 
     # Used by GET /workout/all
     def get_all_for_user(self, user_sub: str):
@@ -28,6 +31,12 @@ class FakeWorkoutRepo:
     def create_workout(self, workout):
         self.created_workouts.append(workout)
         return workout
+
+    # Used by GET /workout/{workout_date}/{workout_id}
+    def get_workout_with_sets(self, user_sub, workout_date, workout_id):
+        if self.should_raise_on_get_one:
+            raise KeyError("Workout not found")
+        return self.workout_to_return, self.sets_to_return
 
 
 @pytest.fixture
@@ -108,3 +117,44 @@ def test_create_workout_creates_item_and_redirects(
     assert created.date == workout_date
     assert created.created_at == fixed_now
     assert created.updated_at == fixed_now
+
+
+# ──────────────────────────── /workout/{date}/{id} ────────────────────────────
+
+
+def test_view_workout_renders_template(authenticated_client, fake_workout_repo):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    class DummyWorkout:
+        def __init__(self):
+            self.name = "Test Workout"
+
+    class DummySet:
+        def __init__(self, n):
+            self.set_number = n
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet(1), DummySet(2)]
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}"
+    )
+
+    assert response.status_code == 200
+    assert "<html" in response.text
+
+
+def test_view_workout_returns_404_when_not_found(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "NOPE"
+
+    fake_workout_repo.should_raise_on_get_one = True
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}"
+    )
+
+    assert response.status_code == 404

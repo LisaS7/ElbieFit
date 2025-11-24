@@ -38,7 +38,7 @@ def get_all_workouts(
     return templates.TemplateResponse(
         request,
         "workouts/workouts.html",
-        {"request": request, "workouts": workouts},
+        {"workouts": workouts},
         status_code=200,
     )
 
@@ -73,4 +73,26 @@ def create_workout(
 
     return RedirectResponse(
         url=f"/workout/{date.isoformat()}/{new_id}", status_code=303
+    )
+
+
+@router.get("/{workout_date}/{workout_id}")
+def view_workout(
+    request: Request,
+    workout_date: date,
+    workout_id: str,
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+
+    try:
+        workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Workout not found")
+
+    return templates.TemplateResponse(
+        request,
+        "workouts/workout_detail.html",
+        {"workout": workout, "sets": sets},
     )
