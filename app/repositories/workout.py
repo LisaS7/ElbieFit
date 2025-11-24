@@ -1,3 +1,4 @@
+from datetime import date
 from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
@@ -9,6 +10,9 @@ from app.utils import db
 class WorkoutRepository(Protocol):
     def get_all_for_user(self, user_sub: str) -> List[Workout]: ...
     def create_workout(self, workout: Workout) -> Workout: ...
+    def get_workout_with_sets(
+        self, user_sub: str, date: date, workout_id: str
+    ) -> tuple[Workout, List[WorkoutSet]]: ...
 
 
 class DynamoWorkoutRepository:
@@ -61,3 +65,27 @@ class DynamoWorkoutRepository:
         item = workout.to_ddb_item()
         self._table.put_item(Item=item)
         return workout
+
+    def get_workout_with_sets(
+        self, user_sub: str, workout_date: date, workout_id: str
+    ) -> tuple[Workout, List[WorkoutSet]]:
+        """
+        Fetch a single workout and its sets for the given user/date/id
+        """
+        pk = f"USER#{user_sub}"
+        sk = f"WORKOUT#{workout_date.isoformat()}#{workout_id}"
+
+        response = self._table.query(
+            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
+        )
+        items = response.get("Items", [])
+
+        models = [self._to_model(item) for item in items]
+
+        workout = [w for w in models if isinstance(w, Workout)]
+        sets = [s for s in models if isinstance(s, WorkoutSet)]
+
+        if not workout:
+            raise KeyError("Workout not found")
+
+        return workout[0], sets
