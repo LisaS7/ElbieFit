@@ -2,13 +2,16 @@
   --color-bg: #f3f1df;
   --color-card: #fffdf4;
   --color-borders: #b5b37a;
-  --color-heading-dark: #3a8e95;
+  --color-heading-dark: #4a3e2e;
   --color-heading-light: #79c76f;
   --color-button: #157e78;
   --color-tag: #729bbd;
 
   --color-button-secondary: #d4a16a; /* warm clay-stone */
   --color-button-secondary-dark: #b8854f; /* shadow shade */
+
+  --color-nav-stone: #e2d7b3;
+  --color-nav-stone-shadow: #b3a574;
 }
 
 /* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
@@ -30,6 +33,13 @@ html {
   align-items: center;
   justify-content: space-between;
   padding: 3rem;
+  margin-bottom: 2rem;
+
+  background: var(--color-nav-stone);
+  border: 2px solid var(--color-borders);
+  border-radius: 14px 14px 8px 8px;
+
+  box-shadow: 0 4px 0 var(--color-nav-stone-shadow), 0 7px 10px rgba(0, 0, 0, 0.18);
 }
 
 #app-header #brand p {
@@ -46,7 +56,12 @@ html {
 #app-header nav {
   display: flex;
   gap: 1rem;
+  padding: 0.5rem 1rem;
   justify-content: flex-end;
+  border-radius: 14px 14px 8px 8px;
+  background: var(--color-nav-stone);
+  border: 2px solid var(--color-borders);
+  max-width: 50%;
 }
 
 #app-header .menu-toggle {
@@ -55,6 +70,20 @@ html {
   font-size: 1.5rem;
   background: none;
   color: black;
+}
+
+#app-header nav a {
+  position: relative;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--color-heading-dark);
+  border-radius: 999px;
+}
+
+#app-header nav a:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 @media (max-width: 768px) {
@@ -71,23 +100,16 @@ html {
   /* Hide nav by default on mobile */
   #app-header nav {
     position: absolute;
-    top: calc(100% - 2rem);
+    top: 100%;
     right: 0;
-    left: 0;
+    left: 50%;
     display: none;
     flex-direction: column;
-    gap: 0;
-    background-color: var(--color-card);
+    gap: 1;
   }
 
   #app-header nav.is-open {
     display: flex;
-  }
-
-  #app-header nav a {
-    padding: 0.75rem 1rem;
-    text-align: right;
-    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
   #app-header nav a:hover {
