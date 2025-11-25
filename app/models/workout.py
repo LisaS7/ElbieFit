@@ -18,6 +18,10 @@ class Workout(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+    @property
+    def workout_id(self) -> str:
+        return self.SK.split("#")[-1]
+
     def to_ddb_item(self) -> dict:
         data = self.model_dump()
         data["date"] = date_to_iso(self.date)
@@ -28,7 +32,7 @@ class Workout(BaseModel):
 
 class WorkoutSet(BaseModel):
     PK: str
-    SK: str  # "WORKOUT#...#SET#001"
+    SK: str  # "WORKOUT#2025-11-04#W1#SET#001"
     type: Literal["set"]
     exercise_id: str
     set_number: int

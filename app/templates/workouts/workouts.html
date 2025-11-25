@@ -23,8 +23,14 @@
                         <span class="tag">{{ tag }}</span>
                     {% endfor %}
                 </div>
-                <div class="workout-notes">{{ workout.notes }}</div>
-
+                <div class="workout-notes">
+                    <a
+                    class="button small"
+                    href="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+                    >
+                        View
+                    </a>
+                </div>
             </div>
         {% endfor %}
     {% else %}
