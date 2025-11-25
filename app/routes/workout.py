@@ -91,8 +91,20 @@ def view_workout(
     except KeyError:
         raise HTTPException(status_code=404, detail="Workout not found")
 
+    sets.sort(key=lambda s: s.created_at)
+
+    defaults = {"exercise": "", "reps": "", "weight": ""}
+
+    if sets:
+        last = sets[-1]
+        defaults = {
+            "exercise": last.exercise_id,
+            "reps": last.reps,
+            "weight": last.weight_kg,
+        }
+
     return templates.TemplateResponse(
         request,
         "workouts/workout_detail.html",
-        {"workout": workout, "sets": sets},
+        {"workout": workout, "sets": sets, "defaults": defaults},
     )
