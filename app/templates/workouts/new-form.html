@@ -1,16 +1,22 @@
 <form method="post" action="/workout/create">
-    <label>Date</label>
-    <input type="date" name="date">
+    <div class="form-field">
+        <label>Date</label>
+        <input type="date" name="date">
+    </div>
 
-    <label>Name</label>
-    <input type="text" name="name">
+    <div class="form-field">
+        <label>Name</label>
+        <input type="text" name="name">
+    </div>
 
-    <button type="submit" class="small">Save</button>
-    <button
-    type="button"
-    hx-on="click: document.querySelector('#new-workout-form-container').innerHTML = ''"
-    class="small"
->
-    Cancel
-</button>
+    <div class="form-actions">
+        <button type="submit" class="small">Save</button>
+        <button
+        type="button"
+        hx-on="click: document.querySelector('#new-workout-form-container').innerHTML = ''"
+        class="small"
+        >
+        Cancel
+        </button>
+    </div>
 </form>

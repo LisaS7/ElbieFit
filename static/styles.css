@@ -263,6 +263,24 @@ a.button.small:active {
 
 /* ──────────────────────────────── Forms ──────────────────────────────── */
 
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
 input[type='text'],
 input[type='date'],
 input[type='number'],
