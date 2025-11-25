@@ -129,10 +129,15 @@ def test_view_workout_renders_template(authenticated_client, fake_workout_repo):
     class DummyWorkout:
         def __init__(self):
             self.name = "Test Workout"
+            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
 
     class DummySet:
         def __init__(self, n):
             self.set_number = n
+            self.exercise_id = "EX-" + str(n)
+            self.reps = 8
+            self.weight_kg = 60
+            self.created_at = datetime(2025, 1, 1, 12, n, tzinfo=timezone.utc)
 
     fake_workout_repo.workout_to_return = DummyWorkout()
     fake_workout_repo.sets_to_return = [DummySet(1), DummySet(2)]
