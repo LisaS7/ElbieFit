@@ -3,13 +3,13 @@
 {% block title %}All Workouts{% endblock %}
 
 {% block content %}
-<header id="workout-header">
+<header id="workout-list-header">
     <h1>Workout Log</h1>
     <button
         hx-get="/workout/new-form"
         hx-target="#new-workout-form-container"
         hx-swap="innerHTML"
-        >New</button>
+        >🌿 New</button>
 </header>
 <section id="new-workout-form-container"></section>
 <section id="page-container">

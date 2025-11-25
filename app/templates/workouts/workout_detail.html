@@ -3,13 +3,16 @@
 {% block title %}Workout - {{workout.name}} {% endblock %}
 
 {% block content %}
-<header id="workout-header">
-    <h2>{{workout.name}}</h2>
-    <p class="">
-        {{ workout.date.strftime("%A %d %B %Y")  }}
-    </p>
-    <a href="/workout/all" class="button small">Back to All Workouts</a>
+<header id="workout-detail-header">
+    <div class="workout-title">
+        <h2>{{workout.name}}</h2>
+        <p class="">
+            {{ workout.date.strftime("%A %d %B %Y")  }}
+        </p>
+    </div>
+    <a href="/workout/all" class="button small">Back to List</a>
 
+</header>
 
 
 {# tags #}
