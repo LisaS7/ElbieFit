@@ -19,7 +19,7 @@
                 <div class="workout-date">{{ workout.date }}</div>
                 <div class="workout-name">{{ workout.name }}</div>
                 <div class="workout-tags">
-                    {% for tag in workout.tags %}
+                    {% for tag in workout.tags or [] %}
                         <span class="tag">{{ tag }}</span>
                     {% endfor %}
                 </div>
@@ -30,7 +30,8 @@
     {% else %}
         <p>No workouts logged yet. The barbell is waiting!</p>
     {% endif %}
-{% endblock %}
 </section>
+{% endblock %}
+
 
 
