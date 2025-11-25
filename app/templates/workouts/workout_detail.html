@@ -1,8 +1,17 @@
 {% extends "base.html" %}
 
-{# link back to workout list #}
+{% block title %}Workout - {{workout.name}} {% endblock %}
 
-{# workout date and description #}
+{% block content %}
+<header id="workout-header">
+    <h2>{{workout.name}}</h2>
+    <p class="">
+        {{ workout.date.strftime("%A %d %B %Y")  }}
+    </p>
+    <a href="/workout/all" class="button small">Back to All Workouts</a>
+
+
+
 {# tags #}
 
 {# inline edit form? submit with htmx, swap for updated details on submit? #}
@@ -16,4 +25,6 @@
 {# reps / weight / RPE #}
 
 {# workout notes #}
+
+{% endblock %}
 
