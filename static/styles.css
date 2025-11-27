@@ -10,8 +10,7 @@
   --color-button-secondary: #d4a16a; /* warm clay-stone */
   --color-button-secondary-dark: #b8854f; /* shadow shade */
 
-  --color-nav-stone: #e2d7b3;
-  --color-nav-stone-shadow: #b3a574;
+  --color-nav-stone: #f0ebe5;
 
   --font-decorative: 'Caesar Dressing', system-ui;
   --font-plain: 'Passero One', sans-serif;
@@ -31,20 +30,17 @@ html {
 
 /* ── Header & Menu ── */
 
-.nav-panel {
-  background: var(--color-nav-stone);
-  border: 2px solid var(--color-borders);
-  border-radius: 14px 14px 8px 8px;
-}
-
 #app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 3rem;
+  padding: 4rem 2rem;
   margin-bottom: 2rem;
 
-  box-shadow: 0 4px 0 var(--color-nav-stone-shadow), 0 7px 10px rgba(0, 0, 0, 0.18);
+  background-image: url('/static/images/header_bg.png');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-position: center;
 }
 
 #app-header #brand p {
@@ -52,11 +48,11 @@ html {
   font-family: var(--font-decorative);
   font-weight: bold;
   color: var(--color-heading-dark);
-  font-size: 2rem;
+  font-size: 1.5rem;
 }
 
 #app-header #brand img {
-  width: 70px;
+  width: 60px;
 }
 
 #app-header nav {
@@ -65,6 +61,12 @@ html {
   padding: 0.5rem 1rem;
   justify-content: flex-end;
   max-width: 50%;
+}
+
+.nav-panel {
+  background: var(--color-nav-stone);
+  border: 2px solid var(--color-borders);
+  border-radius: 14px 14px 8px 8px;
 }
 
 #app-header .menu-toggle {
@@ -87,7 +89,7 @@ html {
 @media (max-width: 768px) {
   #app-header {
     position: relative;
-    padding: 1rem;
+    padding: 2rem 3rem;
   }
 
   /* Show the hamburger on small screens */
