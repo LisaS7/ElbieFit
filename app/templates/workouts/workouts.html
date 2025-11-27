@@ -18,7 +18,7 @@
             <div class="card">
                 <div class="workout-date">{{ workout.date }}</div>
                 <div class="workout-name">{{ workout.name }}</div>
-                <div class="workout-tags">
+                <div class="tags-group ">
                     {% for tag in workout.tags or [] %}
                         <span class="tag">{{ tag }}</span>
                     {% endfor %}
