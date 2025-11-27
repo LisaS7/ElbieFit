@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}All Exercises{% endblock %}
+
+{% block content %}
+<header id="workout-list-header">
+    <h1>Exercises</h1>
+</header>
+<section id="new-exercise-form-container"></section>
+<section id="page-container">
+    {% if exercises and exercises|length %}
+        {% for exercise in exercises %}
+            <div class="card">
+                <div class="exercise-name">{{ exercise.name }}</div>
+                {# TODO: finsih styling for equipment and category #}
+                <div class="exercise-">{{ exercise.equipment }}</div>
+                <div class="exercise-">{{ exercise.category }}</div>
+                <div class="tags-group">
+                    {% for muscle in exercise.muscles or [] %}
+                        <span class="tag">{{ muscle }}</span>
+                    {% endfor %}
+                </div>
+                {# TODO: make edit button work #}
+                <div class="exercise-button">
+                    <a
+                    class="button small"
+                    href=""
+                    >
+                        Edit
+                    </a>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No exercises found!</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+
+

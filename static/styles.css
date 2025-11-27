@@ -218,6 +218,25 @@ a.button.small:active {
   border-radius: 10px;
 }
 
+/* ── Tag ── */
+
+.tags-group {
+  grid-column: 2 / 4;
+  grid-row: 2;
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background-color: var(--color-tag);
+  color: var(--color-card);
+  margin: 0.1rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+}
+
 /* ── Workout card elements ── */
 
 .workout-date {
@@ -235,23 +254,14 @@ a.button.small:active {
   grid-column: 3;
 }
 
-/* ── Tag ── */
-
-.workout-tags {
-  grid-column: 2 / 4;
-  grid-row: 2;
-  display: flex;
-  gap: 0.3rem;
-  flex-wrap: wrap;
+/* ── Exercise card elements ── */
+.exercise-name {
+  grid-row: 1;
+  grid-column: 1;
 }
 
-.tag {
-  background-color: var(--color-tag);
-  color: var(--color-card);
-  margin: 0.1rem;
-  padding: 0.2rem 0.4rem;
-  border-radius: 9999px;
-  font-size: 0.8rem;
+.exercise-button {
+  grid-column: 4;
 }
 
 /* ──────────────────────────────── Forms ──────────────────────────────── */
