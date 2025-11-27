@@ -209,7 +209,7 @@ a.button.small:active {
 
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */
 
-.workout-card {
+.card {
   display: grid;
   grid-template-columns: 80px 1fr 1fr;
   gap: 0.5rem 1rem;
