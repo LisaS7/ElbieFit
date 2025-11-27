@@ -170,7 +170,7 @@ a {
 /* ──────────────────────────────── Workout List ──────────────────────────────── */
 
 .workout-card {
-  grid-template-columns: 80px 1fr 1fr;
+  grid-template-columns: 80px 1fr auto;
 }
 
 /* ── Workout card elements ── */
@@ -211,7 +211,7 @@ a {
 
 /* ──────────────────────────────── Exercise List ──────────────────────────────── */
 
-.workout-card {
+.exercise-card {
   grid-template-columns: 80px 1fr 1fr auto;
 }
 
