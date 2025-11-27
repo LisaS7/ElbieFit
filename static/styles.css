@@ -12,6 +12,9 @@
 
   --color-nav-stone: #e2d7b3;
   --color-nav-stone-shadow: #b3a574;
+
+  --font-decorative: 'Caesar Dressing', system-ui;
+  --font-plain: 'Passero One', sans-serif;
 }
 
 /* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
@@ -46,7 +49,7 @@ html {
 
 #app-header #brand p {
   margin: 0px;
-  font-family: 'Caesar Dressing', system-ui;
+  font-family: var(--font-decorative);
   font-weight: bold;
   color: var(--color-heading-dark);
   font-size: 2rem;
@@ -116,7 +119,7 @@ html {
 /* ── Body ── */
 
 body {
-  font-family: 'Passero One', sans-serif;
+  font-family: var(--font-plain);
   background-color: var(--color-bg);
 }
 
@@ -163,7 +166,7 @@ button {
   padding: 0.5rem 1rem;
 
   /* ── Button Text ── */
-  font-family: 'Bubblegum Sans', sans-serif;
+  font-family: var(--font-decorative);
   font-size: 1.3rem;
   letter-spacing: 1px;
   color: whitesmoke;
@@ -298,7 +301,7 @@ textarea {
   border: 2px solid var(--color-borders);
   border-radius: 10px;
   padding: 0.5rem 0.75rem;
-  font-family: 'Bubblegum Sans', sans-serif;
+  font-family: var(--font-plain);
   font-size: 1.1rem;
   color: #333;
 
