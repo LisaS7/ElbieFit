@@ -130,6 +130,11 @@ main {
   padding: 0.5rem;
 }
 
+.horizontal-divider {
+  max-height: 1rem;
+  width: 100%;
+}
+
 /* ── Footer ── */
 
 #page-footer {
