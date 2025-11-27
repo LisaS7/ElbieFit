@@ -46,6 +46,7 @@ html {
 
 #app-header #brand p {
   margin: 0px;
+  font-family: 'Caesar Dressing', system-ui;
   font-weight: bold;
   color: var(--color-heading-dark);
   font-size: 2rem;
@@ -75,7 +76,7 @@ html {
   position: relative;
   padding: 1rem;
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: var(--color-heading-dark);
   border-radius: 999px;
 }
@@ -115,7 +116,7 @@ html {
 /* ── Body ── */
 
 body {
-  font-family: 'Bubblegum Sans', sans-serif;
+  font-family: 'Passero One', sans-serif;
   background-color: var(--color-bg);
 }
 
