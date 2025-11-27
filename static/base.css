@@ -28,6 +28,17 @@ html {
   font-size: 16px;
 }
 
+body {
+  margin: 0;
+  font-family: var(--font-plain);
+  background-color: var(--color-bg);
+}
+
+main {
+  width: 90%;
+  margin: 0rem auto;
+}
+
 /* ── Header & Menu ── */
 
 #app-header {
@@ -121,17 +132,7 @@ html {
   }
 }
 
-/* ── Body ── */
-
-body {
-  font-family: var(--font-plain);
-  background-color: var(--color-bg);
-}
-
-main {
-  width: 98%;
-  margin: 0rem auto;
-}
+/* ── Page Layout ── */
 
 #page-header {
   display: flex;
