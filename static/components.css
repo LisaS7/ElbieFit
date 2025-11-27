@@ -101,6 +101,7 @@ a.button.small:active {
   padding: 1rem;
   border: 1px solid var(--color-borders);
   border-radius: 10px;
+  background-color: var(--color-stone);
 }
 
 /* ── Tag ── */

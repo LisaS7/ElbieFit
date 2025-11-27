@@ -10,7 +10,7 @@
   --color-button-secondary: #d4a16a; /* warm clay-stone */
   --color-button-secondary-dark: #b8854f; /* shadow shade */
 
-  --color-nav-stone: #f0ebe5;
+  --color-stone: #f0ebe5;
 
   --font-decorative: 'Caesar Dressing', system-ui;
   --font-plain: 'Passero One', sans-serif;
@@ -64,7 +64,7 @@ html {
 }
 
 .nav-panel {
-  background: var(--color-nav-stone);
+  background: var(--color-stone);
   border: 2px solid var(--color-borders);
   border-radius: 14px 14px 8px 8px;
 }
@@ -139,9 +139,9 @@ main {
 }
 
 #page-container {
-  border: 2px solid var(--color-borders);
   border-radius: 10px;
-  padding: 0.5rem;
+  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
+    rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
 }
 
 .horizontal-divider {
