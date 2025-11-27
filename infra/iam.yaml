@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: AWS CloudFormation Template for Lambda Function
+Description: AWS CloudFormation Template for IAM Roles
 
 Parameters:
   ProjectName:
