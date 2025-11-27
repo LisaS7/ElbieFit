@@ -14,20 +14,33 @@
 
 </header>
 
+<section id="workout-meta">
+    {# tags #}    {# display edit button to far right of tags #}
+    {# inline edit form. submit with htmx, swap for updated details on submit. #}
+    {# and it needs a cancel button #}
 
-{# tags #}
+    <div id="workout-notes">
+        {% if workout.notes %}
+            {{ workout.notes}}
+        {% else %}
+            "No notes yet...fossilize your thoughts here."
+        {% endif %}
+    </div>
+    {# workout notes #}
+</section>
 
-{# inline edit form? submit with htmx, swap for updated details on submit? #}
-{# and it needs a cancel button #}
+{# Exercise Name #}             {# Muscle group label - like a sticky label at the side #}
 
-{# display workout set list #}
-
+{# TABLE kind of thing #}
 {# group by exercise #}
-{# big ADD button - inline form? on save htmx swap whole set list #}
-{# this form also needs a cancel button #}
-{# reps / weight / RPE #}
+{# set number |  reps  |  weight  | RPE  | actions (E/D) #}
+{# add set button #}
+<img class="horizontal-divider" src="{{ url_for('static', path='images/horizontal_divider.png') }}" alt="horizontal divider">
 
-{# workout notes #}
+{# big ADD EXERCISE button - inline form? on save htmx swap whole set list #}
+{# this form also needs a cancel button #}
+
+
 
 {% endblock %}
 
