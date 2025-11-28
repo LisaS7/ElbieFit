@@ -1,58 +1,9 @@
 import uuid
 from datetime import date, datetime, timezone
 
-import pytest
-
 from app.routes import workout as workout_routes
 
-
-class FakeWorkoutRepo:
-    """
-    Tiny fake to stand in for DynamoWorkoutRepository in route tests.
-    """
-
-    def __init__(self):
-        self.user_subs = []
-        self.workouts_to_return = []
-        self.created_workouts = []
-        self.should_raise_on_get_all = False
-        self.workout_to_return = None
-        self.sets_to_return = []
-        self.should_raise_on_get_one = False
-
-    # Used by GET /workout/all
-    def get_all_for_user(self, user_sub: str):
-        self.user_subs.append(user_sub)
-        if self.should_raise_on_get_all:
-            raise RuntimeError("boom")
-        return self.workouts_to_return
-
-    # Used by POST /workout/create
-    def create_workout(self, workout):
-        self.created_workouts.append(workout)
-        return workout
-
-    # Used by GET /workout/{workout_date}/{workout_id}
-    def get_workout_with_sets(self, user_sub, workout_date, workout_id):
-        if self.should_raise_on_get_one:
-            raise KeyError("Workout not found")
-        return self.workout_to_return, self.sets_to_return
-
-
-@pytest.fixture
-def fake_workout_repo(app_instance):
-    """
-    Override get_workout_repo() for the duration of a test.
-    """
-    repo = FakeWorkoutRepo()
-    app_instance.dependency_overrides[workout_routes.get_workout_repo] = lambda: repo
-    try:
-        yield repo
-    finally:
-        app_instance.dependency_overrides.pop(workout_routes.get_workout_repo, None)
-
-
-# ──────────────────────────── /workout/all ────────────────────────────
+# ──────────────────────────── GET /workout/all ────────────────────────────
 
 
 def test_get_all_workouts_success_renders_template(
@@ -81,7 +32,7 @@ def test_get_new_form_renders_form(client):
     assert 'name="name"' in response.text
 
 
-# ──────────────────────────── /workout/create ────────────────────────────
+# ──────────────────────────── POST /workout/create ────────────────────────────
 
 
 def test_create_workout_creates_item_and_redirects(
@@ -119,7 +70,7 @@ def test_create_workout_creates_item_and_redirects(
     assert created.updated_at == fixed_now
 
 
-# ──────────────────────────── /workout/{date}/{id} ────────────────────────────
+# ──────────────────────────── GET /workout/{date}/{id} ────────────────────────────
 
 
 def test_view_workout_renders_template(authenticated_client, fake_workout_repo):
@@ -163,3 +114,119 @@ def test_view_workout_returns_404_when_not_found(
     )
 
     assert response.status_code == 404
+
+
+# ──────────────────────────── POST /workout/{date}/{id}/meta ────────────────────────────
+
+
+def test_get_sorted_sets_and_defaults_empty_list():
+    sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults([])
+
+    assert sorted_sets == []
+    assert defaults == {"exercise": "", "reps": "", "weight": ""}
+
+
+def test_get_sorted_sets_and_defaults_sorts_and_builds_defaults():
+    class DummySet:
+        def __init__(self, minute, exercise_id):
+            self.exercise_id = exercise_id
+            self.reps = 8
+            self.weight_kg = 60
+            self.created_at = datetime(2025, 1, 1, 12, minute, tzinfo=timezone.utc)
+
+    sets = [DummySet(5, "EX-2"), DummySet(3, "EX-1")]
+
+    sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults(sets)
+
+    # sorted by created_at
+    assert [s.exercise_id for s in sorted_sets] == ["EX-1", "EX-2"]
+
+    # defaults use the last (most recent) set
+    assert defaults["exercise"] == "EX-2"
+    assert defaults["reps"] == 8
+    assert defaults["weight"] == 60
+
+
+def test_update_workout_meta_updates_workout_and_renders(
+    authenticated_client, fake_workout_repo, monkeypatch
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
+
+    class DummyWorkout:
+        def __init__(self):
+            self.name = "Edit Me"
+            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+            self.tags = None
+            self.notes = None
+            self.updated_at = None
+
+    class DummySet:
+        def __init__(self):
+            self.exercise_id = "EX-1"
+            self.reps = 8
+            self.weight_kg = 60
+            self.created_at = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet()]
+
+    response = authenticated_client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data={"tags": "push, legs, heavy", "notes": "Felt strong"},
+    )
+
+    assert response.status_code == 200
+    assert "<html" in response.text
+
+    # Check workout was updated and passed to repo.update_workout
+    assert len(fake_workout_repo.updated_workouts) == 1
+    updated = fake_workout_repo.updated_workouts[0]
+
+    assert updated.tags == ["push", "legs", "heavy"]
+    assert updated.notes == "Felt strong"
+    assert updated.updated_at == fixed_now
+
+
+def test_update_workout_meta_returns_404_when_not_found(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "NOPE"
+
+    fake_workout_repo.should_raise_on_get_one = True
+
+    response = authenticated_client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data={"tags": "", "notes": ""},
+    )
+
+    assert response.status_code == 404
+
+
+# ──────────────────────────── GET /workout/{date}/{id}/edit-meta ────────────────────────────
+def test_edit_workout_meta_renders_form(authenticated_client, fake_workout_repo):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    class DummyWorkout:
+        def __init__(self):
+            self.name = "Edit Me"
+            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+            self.tags = ["push"]
+            self.notes = "Old notes"
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = []
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/edit-meta"
+    )
+
+    assert response.status_code == 200
+    # sanity check that we're actually seeing the edit form
+    assert 'name="tags"' in response.text
+    assert 'name="notes"' in response.text

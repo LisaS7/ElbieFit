@@ -95,31 +95,6 @@ def test_to_model_raises_for_unknown_type(fake_table):
     assert "Unknown item type" in str(err.value)
 
 
-# --------------- Create ---------------
-
-
-def test_create_workout_does_put_item_and_returns_workout(fake_table):
-    repo = DynamoWorkoutRepository(fake_table)
-
-    workout = Workout(
-        PK="USER#test-user-sub",
-        SK="WORKOUT#2025-11-16#W1",
-        type="workout",
-        date=date(2025, 11, 16),
-        name="Leg Day for Lizards",
-        tags=["legs"],
-        notes="Squats until extinction",
-        created_at=dates.now(),
-        updated_at=dates.now(),
-    )
-
-    expected_item = workout.to_ddb_item()
-    returned_item = repo.create_workout(workout)
-
-    assert fake_table.last_put_kwargs == {"Item": expected_item}
-    assert returned_item is workout
-
-
 # --------------- Get workout and sets ---------------
 
 
@@ -163,3 +138,53 @@ def test_get_workout_with_sets_raises_keyerror_when_not_found(fake_table):
         repo.get_workout_with_sets(user_sub, workout_date, workout_id)
 
     assert "Workout not found" in str(excinfo.value)
+
+
+# --------------- Create ---------------
+
+
+def test_create_workout_does_put_item_and_returns_workout(fake_table):
+    repo = DynamoWorkoutRepository(fake_table)
+
+    workout = Workout(
+        PK="USER#test-user-sub",
+        SK="WORKOUT#2025-11-16#W1",
+        type="workout",
+        date=date(2025, 11, 16),
+        name="Leg Day for Lizards",
+        tags=["legs"],
+        notes="Squats until extinction",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    expected_item = workout.to_ddb_item()
+    returned_item = repo.create_workout(workout)
+
+    assert fake_table.last_put_kwargs == {"Item": expected_item}
+    assert returned_item is workout
+
+
+# --------------- Update ---------------
+
+
+def test_update_workout_does_put_item_and_returns_workout(fake_table):
+    repo = DynamoWorkoutRepository(fake_table)
+
+    workout = Workout(
+        PK="USER#test-user-sub",
+        SK="WORKOUT#2025-11-16#W1",
+        type="workout",
+        date=date(2025, 11, 16),
+        name="Updated Lizard Leg Day",
+        tags=["legs", "updated"],
+        notes="Now with extra squats",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    expected_item = workout.to_ddb_item()
+    returned_item = repo.update_workout(workout)
+
+    assert fake_table.last_put_kwargs == {"Item": expected_item}
+    assert returned_item is workout
