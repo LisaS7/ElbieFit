@@ -4,8 +4,10 @@
   --color-borders: #b5b37a;
   --color-heading-dark: #4a3e2e;
   --color-heading-light: #79c76f;
-  --color-button: #157e78;
   --color-tag: #729bbd;
+
+  --color-button: #157e78;
+  --color-button-dark: #0f5e58;
 
   --color-button-secondary: #d4a16a; /* warm clay-stone */
   --color-button-secondary-dark: #b8854f; /* shadow shade */
@@ -208,6 +210,18 @@ a {
 
 .workout-title h2 {
   margin: 0;
+}
+
+#workout-meta #tags-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#workout-notes {
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 2px solid var(--color-borders);
 }
 
 /* ──────────────────────────────── Exercise List ──────────────────────────────── */
