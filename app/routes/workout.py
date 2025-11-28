@@ -19,6 +19,9 @@ def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
     return DynamoWorkoutRepository()
 
 
+# ---------------------- List all ---------------------------
+
+
 @router.get("/all")
 def get_all_workouts(
     request: Request,
@@ -41,6 +44,9 @@ def get_all_workouts(
         {"workouts": workouts},
         status_code=200,
     )
+
+
+# ---------------------- Create ---------------------------
 
 
 @router.get("/new-form")
@@ -76,6 +82,9 @@ def create_workout(
     )
 
 
+# ---------------------- Detail ---------------------------
+
+
 @router.get("/{workout_date}/{workout_id}")
 def view_workout(
     request: Request,
@@ -107,4 +116,23 @@ def view_workout(
         request,
         "workouts/workout_detail.html",
         {"workout": workout, "sets": sets, "defaults": defaults},
+    )
+
+
+# ---------------------- Edit ---------------------------
+
+
+@router.get("/{workout_date}/{workout_id}/edit-meta")
+def edit_workout_meta(
+    request: Request,
+    workout_date: date,
+    workout_id: str,
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+    workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+
+    return templates.TemplateResponse(
+        request, "workouts/edit_meta_form.html", {"workout": workout}
     )

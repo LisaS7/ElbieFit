@@ -14,12 +14,23 @@
 
 </header>
 
+
 <section id="workout-meta">
-    {# tags #}    {# display edit button to far right of tags #}
+    <div id="tags-actions">
+        <div class="tags-group ">
+        Tags:
+            {% for tag in workout.tags or [] %}
+                <span class="tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        <a class="button small" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/edit-meta" hx-target="#workout-meta" hx-swap="outerHTML">Edit</a>
+    </div>
+
     {# inline edit form. submit with htmx, swap for updated details on submit. #}
     {# and it needs a cancel button #}
 
     <div id="workout-notes">
+    Notes:<br>
         {% if workout.notes %}
             {{ workout.notes}}
         {% else %}

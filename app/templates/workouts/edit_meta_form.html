@@ -1,0 +1,33 @@
+<section id="workout-meta">
+    <form>
+        <div class="field-group">
+            <label for="tags">Tags</label>
+            <input
+                type="text"
+                id="tags"
+                name="tags"
+                value="{% if workout.tags %}{{ workout.tags | join(',') }}{% endif %}"
+            >
+            <p class="field-help">Comma-separated, e.g.: push, legs, heavy</p>
+        </div>
+
+        <div class="field-group">
+            <label for="notes">Notes</label><br>
+            <textarea id="notes" name="notes" rows="3">{{ workout.notes or "" }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="button small">Save</button>
+            <button
+                type="button"
+                class="button small secondary"
+                hx-get="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+                hx-target="#workout-meta"
+                hx-swap="outerHTML"
+                hx-select="#workout-meta"
+            >
+                Cancel
+            </button>
+        </div>
+    </form>
+</section>
