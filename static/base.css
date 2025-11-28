@@ -3,14 +3,15 @@
   --color-card: #fffdf4;
   --color-borders: #b5b37a;
   --color-heading-dark: #4a3e2e;
-  --color-heading-light: #79c76f;
-  --color-tag: #729bbd;
+  --color-tag: #ac834c;
 
-  --color-button: #157e78;
-  --color-button-dark: #0f5e58;
+  --color-nav-hover: #6d583f;
 
-  --color-button-secondary: #d4a16a; /* warm clay-stone */
-  --color-button-secondary-dark: #b8854f; /* shadow shade */
+  --color-button: #86912c;
+  --color-button-dark: #5f6620;
+
+  --color-button-secondary: #d4a16a;
+  --color-button-secondary-dark: #b8854f;
 
   --color-stone: #f0ebe5;
 
@@ -129,7 +130,7 @@ main {
   }
 
   #app-header nav a:hover {
-    background-color: var(--color-heading-light);
+    background-color: var(--color-nav-hover);
     color: white;
   }
 }
