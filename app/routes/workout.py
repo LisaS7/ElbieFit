@@ -45,7 +45,7 @@ def get_all_workouts(
 
 @router.get("/new-form")
 def get_new_form(request: Request):
-    return templates.TemplateResponse(request, "workouts/new-form.html")
+    return templates.TemplateResponse(request, "workouts/new_form.html")
 
 
 @router.post("/create")
