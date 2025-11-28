@@ -148,6 +148,7 @@ main {
 }
 
 .horizontal-divider {
+  margin: 1.5rem 0rem;
   max-height: 1rem;
   width: 100%;
 }
@@ -222,6 +223,22 @@ a {
   margin: 0.5rem;
   padding: 0.5rem 1rem;
   border: 2px solid var(--color-borders);
+}
+
+.sets-table-header,
+.set-row {
+  display: grid;
+  grid-template-columns: 50px 60px 80px 60px 1fr;
+  padding: 0.4rem 0;
+}
+
+.set-row span {
+  display: flex;
+  align-items: center;
+}
+
+.sets-table-header {
+  border-bottom: 2px solid var(--color-borders);
 }
 
 /* ──────────────────────────────── Exercise List ──────────────────────────────── */
