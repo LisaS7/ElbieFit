@@ -6,10 +6,13 @@
 <header id="page-header">
     <h1>Workout Log</h1>
     <button
+        class="icon-button"
         hx-get="/workout/new-form"
         hx-target="#new-workout-form-container"
         hx-swap="innerHTML"
-        >🌿 New</button>
+        >
+        <img src="{{ url_for('static', path='images/add.png') }}" alt="New">
+    </button>
 </header>
 <section id="new-workout-form-container"></section>
 <section id="page-container">
@@ -23,14 +26,13 @@
                         <span class="tag">{{ tag }}</span>
                     {% endfor %}
                 </div>
-                <div class="workout-button">
-                    <a
-                    class="button small"
-                    href="/workout/{{ workout.date }}/{{ workout.workout_id }}"
-                    >
-                        View
-                    </a>
-                </div>
+
+                <a class="icon-button"
+                href="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+                >
+                    <img src="{{ url_for('static', path='images/view.png') }}" alt="View">
+                </a>
+
             </div>
         {% endfor %}
     {% else %}

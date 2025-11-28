@@ -42,65 +42,8 @@ a.button.secondary {
     inset 1px 1px 2px rgba(255, 255, 255, 0.25), inset -1px -1px 2px rgba(0, 0, 0, 0.15);
 }
 
-/* ── Links disguised as buttons ── */
-a.button.small {
-  background: var(--color-button);
-  color: #fffdf4;
-  border-radius: 8px;
-  border: 2px solid var(--color-borders);
+/* ── Tiny icon buttons── */
 
-  box-shadow: 2px 3px 0 var(--color-button-dark), inset 1px 1px 2px rgba(255, 255, 255, 0.25),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
-}
-
-a.button.small:hover {
-  /* ──────────────────────────────── Buttons ──────────────────────────────── */
-  button {
-    margin: 0.5rem;
-    background: var(--color-button);
-    border: none;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-
-    /* ── Button Text ── */
-    font-family: var(--font-decorative);
-    font-size: 1.3rem;
-    letter-spacing: 1px;
-    color: whitesmoke;
-
-    /* ── Shadow & Transition ── */
-    box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-
-  button:hover {
-    transform: translateY(-2px);
-    box-shadow: rgba(60, 64, 67, 0.35) 0px 3px 4px 0px, rgba(60, 64, 67, 0.2) 0px 4px 10px 3px;
-  }
-
-  button:active {
-    transform: translateY(1px);
-    box-shadow: rgba(60, 64, 67, 0.25) 0px 0px 1px 0px, rgba(60, 64, 67, 0.12) 0px 1px 3px 1px;
-  }
-
-  /* ── Small Buttons ── */
-  button.small,
-  a.button.small {
-    margin: 0.3rem;
-    padding: 0.2rem 0.5rem;
-    font-size: 1rem;
-  }
-  transform: translateY(-1px);
-  box-shadow: 3px 4px 0 var(--color-button-dark), inset 1px 1px 2px rgba(255, 255, 255, 0.25),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
-}
-
-a.button.small:active {
-  transform: translateY(1px);
-  box-shadow: 1px 2px 0 var(--color-button-dark) inset;
-}
-
-/* ── Icon Buttons ── */
 .icon-button {
   background: none;
   border: none;
@@ -109,12 +52,25 @@ a.button.small:active {
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 30px;
+  box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
 }
 
 .icon-button img {
   width: 30px;
   height: 30px;
   object-fit: contain;
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 3px 4px 0 var(--color-button-dark), inset 1px 1px 2px rgba(255, 255, 255, 0.25),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.icon-button:active {
+  transform: translateY(1px);
+  box-shadow: rgba(60, 64, 67, 0.25) 0px 0px 1px 0px, rgba(60, 64, 67, 0.12) 0px 1px 3px 1px;
 }
 
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */

@@ -10,7 +10,9 @@
             {{ workout.date.strftime("%A %d %B %Y")  }}
         </p>
     </div>
-    <a href="/workout/all" class="button small">Back to List</a>
+    <a href="/workout/all" class="icon-button" title="Back to list">
+        <img src="{{ url_for('static', path='images/back.png') }}" alt="Back">
+    </a>
 
 </header>
 
@@ -23,7 +25,9 @@
                 <span class="tag">{{ tag }}</span>
             {% endfor %}
         </div>
-        <a class="button small" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/edit-meta" hx-target="#workout-meta" hx-swap="outerHTML">Edit</a>
+        <a class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/edit-meta" hx-target="#workout-meta" hx-swap="outerHTML">
+            <img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit">
+        </a>
     </div>
 
     <div id="workout-notes">

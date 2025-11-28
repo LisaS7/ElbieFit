@@ -21,14 +21,7 @@
                     {% endfor %}
                 </div>
                 {# TODO: make edit button work #}
-                <div class="exercise-button">
-                    <a
-                    class="button small"
-                    href=""
-                    >
-                        Edit
-                    </a>
-                </div>
+                <button class="icon-button"><img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit"></button>
             </div>
         {% endfor %}
     {% else %}
