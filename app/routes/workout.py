@@ -1,6 +1,6 @@
 import uuid
 from datetime import date
-from typing import Annotated, List
+from typing import Annotated, Sequence
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
@@ -20,7 +20,7 @@ def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
 
 
 def get_sorted_sets_and_defaults(
-    sets: List[WorkoutSet],
+    sets: Sequence[WorkoutSet],
 ) -> tuple[list[WorkoutSet], dict]:
     """
     Return sets sorted by created_at, and the defaults for the "add set" form.
