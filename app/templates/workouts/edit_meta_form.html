@@ -1,5 +1,11 @@
 <section id="workout-meta">
-    <form>
+    <form
+        method="post"
+        hx-post="/workout/{{workout.date}}/{{workout.workout_id}}/meta"
+        hx-target="#workout-meta"
+        hx-swap="outerHTML"
+        hx-select="#workout-meta"
+    >
         <div class="field-group">
             <label for="tags">Tags</label>
             <input

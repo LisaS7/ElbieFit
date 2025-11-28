@@ -38,6 +38,8 @@ class DynamoWorkoutRepository:
 
         raise ValueError(f"Unknown item type: {item_type}")
 
+    # ----------------------- Get -----------------------------
+
     def get_all_for_user(self, user_sub: str) -> List[Workout]:
         """
         Return only workout items, sorted by date desc, Sets are filtered out.
@@ -56,15 +58,6 @@ class DynamoWorkoutRepository:
         # so all items will have a date attribute
         workouts.sort(key=lambda w: w.date, reverse=True)  # type: ignore[arg-type]
         return workouts  # type: ignore[arg-type]
-
-    def create_workout(self, workout: Workout) -> Workout:
-        """
-        Persist a new workout item to DynamoDB.
-        Expects PK/SK/created_at/updated_at to be set on the model.
-        """
-        item = workout.to_ddb_item()
-        self._table.put_item(Item=item)
-        return workout
 
     def get_workout_with_sets(
         self, user_sub: str, workout_date: date, workout_id: str
@@ -89,3 +82,25 @@ class DynamoWorkoutRepository:
             raise KeyError("Workout not found")
 
         return workout[0], sets
+
+    # ----------------------- Add -----------------------------
+
+    def create_workout(self, workout: Workout) -> Workout:
+        """
+        Persist a new workout item to DynamoDB.
+        Expects PK/SK/created_at/updated_at to be set on the model.
+        """
+        item = workout.to_ddb_item()
+        self._table.put_item(Item=item)
+        return workout
+
+    # ----------------------- Update -----------------------------
+
+    def update_workout(self, workout: Workout) -> Workout:
+        """
+        Persist changes to an existing workout.
+        """
+
+        item = workout.to_ddb_item()
+        self._table.put_item(Item=item)
+        return workout
