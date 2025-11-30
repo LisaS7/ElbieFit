@@ -159,6 +159,21 @@ def test_view_workout_returns_500_when_repo_error(
 # ──────────────────────────── POST /workout/{date}/{id}/meta ────────────────────────────
 
 
+def post_meta(client, workout_date, workout_id, **overrides):
+    data = {
+        "name": "Edit Me",
+        "date": workout_date.isoformat(),
+        "tags": "",
+        "notes": "",
+    }
+    data.update(overrides)
+
+    return client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data=data,
+    )
+
+
 def test_get_sorted_sets_and_defaults_empty_list():
     sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults([])
 
@@ -202,14 +217,12 @@ def test_update_workout_meta_updates_workout_and_renders(
     fake_workout_repo.workout_to_return = DummyWorkout()
     fake_workout_repo.sets_to_return = [DummySet()]
 
-    response = authenticated_client.post(
-        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/meta",
-        data={
-            "name": "Edit Me",  # required now
-            "date": WORKOUT_DATE.isoformat(),
-            "tags": "push, legs, heavy",
-            "notes": "Felt strong",
-        },
+    response = post_meta(
+        authenticated_client,
+        WORKOUT_DATE,
+        WORKOUT_ID,
+        tags="push, legs, heavy",
+        notes="Felt strong",
     )
 
     assert response.status_code == 200
@@ -231,15 +244,7 @@ def test_update_workout_meta_returns_404_when_not_found(
 
     fake_workout_repo.should_raise_on_get_one = True
 
-    response = authenticated_client.post(
-        f"/workout/{WORKOUT_DATE.isoformat()}/{workout_id}/meta",
-        data={
-            "name": "Does not matter",
-            "date": WORKOUT_DATE.isoformat(),
-            "tags": "",
-            "notes": "",
-        },
-    )
+    response = post_meta(authenticated_client, WORKOUT_DATE, workout_id)
 
     assert response.status_code == 404
 
@@ -250,14 +255,10 @@ def test_update_workout_meta_returns_500_when_repo_error_on_fetch(
 
     fake_workout_repo.should_raise_repo_error_on_get_one = True
 
-    response = authenticated_client.post(
-        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/meta",
-        data={
-            "name": "Does not matter",
-            "date": WORKOUT_DATE.isoformat(),
-            "tags": "push",
-            "notes": "Broken",
-        },
+    response = post_meta(
+        authenticated_client,
+        WORKOUT_DATE,
+        WORKOUT_ID,
     )
 
     assert response.status_code == 500
@@ -274,15 +275,7 @@ def test_update_workout_meta_returns_500_when_update_fails(
     fake_workout_repo.sets_to_return = [DummySet()]
     fake_workout_repo.should_raise_on_update = True
 
-    response = authenticated_client.post(
-        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/meta",
-        data={
-            "name": "Does not matter",
-            "date": WORKOUT_DATE.isoformat(),
-            "tags": "push, legs",
-            "notes": "update fails",
-        },
-    )
+    response = post_meta(authenticated_client, WORKOUT_DATE, WORKOUT_ID)
 
     assert response.status_code == 500
 
@@ -306,15 +299,7 @@ def test_update_workout_meta_returns_500_when_move_date_fails(
 
     fake_workout_repo.move_workout_date = broken_move  # monkeypatch the method
 
-    response = authenticated_client.post(
-        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/meta",
-        data={
-            "name": "Edit Me",
-            "date": new_date.isoformat(),  # different from old date
-            "tags": "push",
-            "notes": "Broken move",
-        },
-    )
+    response = post_meta(authenticated_client, new_date, WORKOUT_ID)
 
     assert response.status_code == 500
 
