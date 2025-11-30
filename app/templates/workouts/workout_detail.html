@@ -89,6 +89,17 @@
 {# big ADD EXERCISE button - inline form? on save htmx swap whole set list #}
 {# this form also needs a cancel button #}
 
+<section id="delete-workout">
+    <span>Delete entire workout:</span>
+    <button
+        class="icon-button"
+        hx-delete="/workout/{{workout.date}}/{{workout.workout_id}}"
+        hx-confirm="Delete workout? (This cannot be undone)"
+        hx-target="body"
+        hx-swap="outerHTML">
+            <img src="{{ url_for('static', path='images/delete.png') }}" alt="Delete">
+    </button>
+</section>
 
 
 {% endblock %}

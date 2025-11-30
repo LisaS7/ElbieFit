@@ -2,21 +2,24 @@
   --color-bg: #f3f1df;
   --color-card: #fffdf4;
   --color-borders: #b5b37a;
-  --color-heading-dark: #4a3e2e;
   --color-tag: #ac834c;
 
-  --color-nav-hover: #6d583f;
+  /* Text */
+  --font-decorative: 'Caesar Dressing', system-ui;
+  --font-plain: 'Passero One', sans-serif;
+  --color-heading-dark: #4a3e2e;
+  --color-font-light: #6e614d;
 
+  /* Buttons */
   --color-button: #86912c;
   --color-button-dark: #5f6620;
 
   --color-button-secondary: #d4a16a;
   --color-button-secondary-dark: #b8854f;
 
+  /* nav panel & cards */
   --color-stone: #f0ebe5;
-
-  --font-decorative: 'Caesar Dressing', system-ui;
-  --font-plain: 'Passero One', sans-serif;
+  --color-nav-hover: #6d583f;
 }
 
 /* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
@@ -183,7 +186,7 @@ a {
 .workout-card .workout-date {
   grid-row: 1;
   grid-column: 1;
-  font-weight: bold;
+  color: var(--color-font-light);
 }
 
 .workout-card .workout-name {
@@ -191,7 +194,7 @@ a {
   grid-row: 1;
 }
 
-.workout-card .workout-button {
+.workout-card .icon-button {
   grid-column: 3;
 }
 
@@ -240,6 +243,13 @@ a {
 
 .sets-table-header {
   border-bottom: 2px solid var(--color-borders);
+}
+
+section#delete-workout {
+  margin: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 /* ──────────────────────────────── Exercise List ──────────────────────────────── */
