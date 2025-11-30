@@ -4,6 +4,9 @@ class RepoError(Exception):
     pass
 
 
+# ------------------------- WORKOUT -------------------------
+
+
 class WorkoutRepoError(RepoError):
     """Generic workout repository error."""
 
@@ -12,5 +15,12 @@ class WorkoutRepoError(RepoError):
 
 class WorkoutNotFoundError(WorkoutRepoError):
     """Raised when a workout cannot be found for the given key."""
+
+    pass
+
+
+# ------------------------- EXERCISE -------------------------
+class ExerciseRepoError(RepoError):
+    """Generic exercise repository error"""
 
     pass

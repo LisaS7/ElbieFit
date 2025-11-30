@@ -3,6 +3,8 @@ from typing import List, Protocol
 from boto3.dynamodb.conditions import Key
 
 from app.models.exercise import Exercise
+from app.repositories.base import DynamoRepository
+from app.repositories.errors import ExerciseRepoError
 from app.utils import db
 
 
@@ -16,7 +18,7 @@ class ExerciseRepository(Protocol):
     # get exercise by id
 
 
-class DynamoExerciseRepository:
+class DynamoExerciseRepository(DynamoRepository[Exercise]):
     """
     Implementation for DynamoExerciseRepository
     """
@@ -37,11 +39,12 @@ class DynamoExerciseRepository:
 
         pk = db.build_user_pk(user_sub)
 
-        response = self._table.query(
-            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with("EXERCISE#")
-        )
+        try:
+            items = self._safe_query(
+                KeyConditionExpression=Key("PK").eq(pk)
+                & Key("SK").begins_with("EXERCISE#")
+            )
+        except ExerciseRepoError:
+            raise
 
-        items = response.get("Items", [])
-        exercises = [self._to_model(item) for item in items]
-
-        return exercises
+        return [self._to_model(item) for item in items]
