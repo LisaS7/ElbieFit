@@ -44,9 +44,9 @@ class DynamoWorkoutRepository:
 
         try:
             if item_type == "workout":
-                return self._to_workout(**item)
+                return self._to_workout(item)
             elif item_type == "set":
-                return self._to_workout_set(**item)
+                return self._to_workout_set(item)
         except Exception as e:
             raise WorkoutRepoError("Failed to create workout model from item") from e
 
