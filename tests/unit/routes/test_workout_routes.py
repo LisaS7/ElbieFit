@@ -191,7 +191,7 @@ def test_update_workout_meta_updates_workout_and_renders(
     class DummyWorkout:
         def __init__(self):
             self.name = "Edit Me"
-            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+            self.date = workout_date
             self.tags = None
             self.notes = None
             self.updated_at = None
@@ -208,7 +208,12 @@ def test_update_workout_meta_updates_workout_and_renders(
 
     response = authenticated_client.post(
         f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
-        data={"tags": "push, legs, heavy", "notes": "Felt strong"},
+        data={
+            "name": "Edit Me",  # required now
+            "date": workout_date.isoformat(),
+            "tags": "push, legs, heavy",
+            "notes": "Felt strong",
+        },
     )
 
     assert response.status_code == 200
@@ -233,7 +238,12 @@ def test_update_workout_meta_returns_404_when_not_found(
 
     response = authenticated_client.post(
         f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
-        data={"tags": "", "notes": ""},
+        data={
+            "name": "Does not matter",
+            "date": workout_date.isoformat(),
+            "tags": "",
+            "notes": "",
+        },
     )
 
     assert response.status_code == 404
@@ -249,7 +259,12 @@ def test_update_workout_meta_returns_500_when_repo_error_on_fetch(
 
     response = authenticated_client.post(
         f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
-        data={"tags": "push", "notes": "Broken"},
+        data={
+            "name": "Does not matter",
+            "date": workout_date.isoformat(),
+            "tags": "push",
+            "notes": "Broken",
+        },
     )
 
     assert response.status_code == 500
@@ -285,7 +300,12 @@ def test_update_workout_meta_returns_500_when_update_fails(
 
     response = authenticated_client.post(
         f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
-        data={"tags": "push, legs", "notes": "update fails"},
+        data={
+            "name": "Does not matter",
+            "date": workout_date.isoformat(),
+            "tags": "push, legs",
+            "notes": "update fails",
+        },
     )
 
     assert response.status_code == 500

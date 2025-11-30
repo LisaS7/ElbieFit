@@ -1,6 +1,7 @@
-from datetime import date, datetime
+from datetime import date as DateType
+from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 
 from fastapi import Form
 from pydantic import BaseModel, StringConstraints
@@ -12,10 +13,10 @@ class Workout(BaseModel):
     PK: str
     SK: str  # "WORKOUT#2025-11-04#W1"
     type: Literal["workout"]
-    date: date
+    date: DateType
     name: str
     tags: list[str] | None = None
-    notes: Optional[str] = None
+    notes: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -32,7 +33,7 @@ class Workout(BaseModel):
 
 
 class WorkoutCreate(BaseModel):
-    date: date
+    date: DateType
     name: Annotated[
         str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
     ]
@@ -40,11 +41,33 @@ class WorkoutCreate(BaseModel):
     @classmethod
     def as_form(
         cls,
-        # IDE doesn't like this line but it is correct for pydantic
-        date: Annotated[date, Form()],  # type: ignore[arg-type]
+        date: Annotated[DateType, Form()],
         name: Annotated[str, Form()],
     ) -> "WorkoutCreate":
         return cls(date=date, name=name)
+
+
+class WorkoutUpdate(BaseModel):
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+    ]
+    date: DateType
+    notes: str | None = None
+    tags: list[str] | None = None
+
+    @classmethod
+    def as_form(
+        cls,
+        name: Annotated[str, Form()],
+        date: Annotated[DateType, Form()],
+        notes: Annotated[str | None, Form()] = None,
+        tags: Annotated[str | None, Form()] = None,
+    ):
+
+        tag_list: list[str] | None = None
+        if tags:
+            tag_list = [t.strip() for t in tags.split(",") if t.strip()]
+        return cls(name=name, date=date, notes=notes, tags=tag_list)
 
 
 class WorkoutSet(BaseModel):

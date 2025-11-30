@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date as DateType
 from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
@@ -13,11 +13,18 @@ class WorkoutRepository(Protocol):
     def get_all_for_user(self, user_sub: str) -> List[Workout]: ...
     def create_workout(self, workout: Workout) -> Workout: ...
     def get_workout_with_sets(
-        self, user_sub: str, workout_date: date, workout_id: str
+        self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]: ...
     def update_workout(self, workout: Workout) -> Workout: ...
+    def move_workout_date(
+        self,
+        user_sub: str,
+        workout: Workout,
+        new_date: DateType,
+        sets: list[WorkoutSet],
+    ) -> None: ...
     def delete_workout_and_sets(
-        self, user_sub: str, workout_date: date, workout_id: str
+        self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> None: ...
 
 
@@ -80,13 +87,13 @@ class DynamoWorkoutRepository:
             raise WorkoutRepoError("Failed to parse workouts from database response")
 
     def get_workout_with_sets(
-        self, user_sub: str, workout_date: date, workout_id: str
+        self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]:
         """
         Fetch a single workout and its sets for the given user/date/id
         """
         pk = f"USER#{user_sub}"
-        sk = f"WORKOUT#{workout_date.isoformat()}#{workout_id}"
+        sk = db.build_workout_sk(workout_date, workout_id)
 
         try:
             response = self._table.query(
@@ -143,16 +150,50 @@ class DynamoWorkoutRepository:
             raise WorkoutRepoError("Failed to update workout in database") from e
         return workout
 
+    def move_workout_date(
+        self,
+        user_sub: str,
+        workout: Workout,
+        new_date: DateType,
+        sets: list[WorkoutSet],
+    ) -> None:
+
+        old_date = workout.date
+        old_workout_id = workout.workout_id
+
+        # new keys
+        pk = db.build_user_pk(user_sub)
+        new_sk = db.build_workout_sk(new_date, old_workout_id)
+
+        # create a new workout
+        new_workout = workout.model_copy(
+            update={"PK": pk, "SK": new_sk, "date": new_date}
+        )
+        self.create_workout(new_workout)
+
+        # Recreate sets with new SKs
+        for s in sets:
+            new_sk = db.build_set_sk(new_workout.date, old_workout_id, s.set_number)
+            new_item = {
+                **s.to_ddb_item(),
+                "PK": f"USER#{user_sub}",
+                "SK": new_sk,
+            }
+            self._table.put_item(Item=new_item)
+
+        # Delete the old workout + sets
+        self.delete_workout_and_sets(user_sub, old_date, old_workout_id)
+
     # ----------------------- Delete -----------------------------
 
     def delete_workout_and_sets(
-        self, user_sub: str, workout_date: date, workout_id: str
+        self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> None:
         """
         Delete an existing workout.
         """
         pk = f"USER#{user_sub}"
-        sk = f"WORKOUT#{workout_date}#{workout_id}"
+        sk = db.build_workout_sk(workout_date, workout_id)
 
         try:
             # Get everything beginning with this pk/sk combo

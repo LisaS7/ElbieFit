@@ -1,11 +1,11 @@
 import uuid
-from datetime import date
+from datetime import date as DateType
 from typing import Annotated, Sequence
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutUpdate
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import templates
@@ -114,7 +114,7 @@ def create_workout(
 @router.get("/{workout_date}/{workout_id}")
 def view_workout(
     request: Request,
-    workout_date: date,
+    workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
@@ -141,10 +141,11 @@ def view_workout(
 # ---------------------- Edit ---------------------------
 
 
+# ---- Return the form -----
 @router.get("/{workout_date}/{workout_id}/edit-meta")
 def edit_workout_meta(
     request: Request,
-    workout_date: date,
+    workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
@@ -164,13 +165,13 @@ def edit_workout_meta(
     )
 
 
+# ---- Make the update -----
 @router.post("/{workout_date}/{workout_id}/meta")
 def update_workout_meta(
     request: Request,
-    workout_date: date,
+    workout_date: DateType,
     workout_id: str,
-    tags: str = Form(""),
-    notes: str = Form(""),
+    form: WorkoutUpdate = Depends(WorkoutUpdate.as_form),
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
 ):
@@ -184,18 +185,29 @@ def update_workout_meta(
         logger.exception("Error fetching workout for update")
         raise HTTPException(status_code=500, detail="Error fetching workout")
 
-    # parse tags
-    tag_list = [t.strip() for t in tags.split(",") if t.strip()]
-    workout.tags = tag_list or None
+    old_date = workout.date
+    new_date = form.date
 
-    workout.notes = notes or None
+    workout.name = form.name
+    workout.notes = form.notes or None
+    workout.tags = form.tags
     workout.updated_at = dates.now()
 
-    try:
-        repo.update_workout(workout)
-    except WorkoutRepoError:
-        logger.exception("Error updating workout")
-        raise HTTPException(status_code=500, detail="Error updating workout")
+    # if date hasn't changed then update existing item
+    if new_date == old_date:
+        try:
+            repo.update_workout(workout)
+        except WorkoutRepoError:
+            logger.exception("Error updating workout")
+            raise HTTPException(status_code=500, detail="Error updating workout")
+
+    # if date has changed then create new and delete old
+    else:
+        try:
+            repo.move_workout_date(user_sub, workout, new_date, sets)
+        except WorkoutRepoError:
+            logger.exception("Error updating workout with date change")
+            raise HTTPException(status_code=500, detail="Error updating workout")
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
 
@@ -211,7 +223,7 @@ def update_workout_meta(
 
 @router.delete("/{workout_date}/{workout_id}")
 def delete_workout(
-    workout_date: date,
+    workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
