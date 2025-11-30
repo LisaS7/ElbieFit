@@ -1,8 +1,9 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
-from pydantic import BaseModel
+from fastapi import Form
+from pydantic import BaseModel, StringConstraints
 
 from app.utils.dates import date_to_iso, dt_to_iso
 
@@ -28,6 +29,22 @@ class Workout(BaseModel):
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
         return data
+
+
+class WorkoutCreate(BaseModel):
+    date: date
+    name: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+    ]
+
+    @classmethod
+    def as_form(
+        cls,
+        # IDE doesn't like this line but it is correct for pydantic
+        date: Annotated[date, Form()],  # type: ignore[arg-type]
+        name: Annotated[str, Form()],
+    ) -> "WorkoutCreate":
+        return cls(date=date, name=name)
 
 
 class WorkoutSet(BaseModel):

@@ -5,7 +5,7 @@ from typing import Annotated, Sequence
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
-from app.models.workout import Workout, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import templates
@@ -80,8 +80,7 @@ def get_new_form(request: Request):
 @router.post("/create")
 def create_workout(
     request: Request,
-    date: Annotated[date, Form()],
-    name: Annotated[str, Form()],
+    form: Annotated[WorkoutCreate, Depends(WorkoutCreate.as_form)],
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
 ):
@@ -90,10 +89,10 @@ def create_workout(
 
     workout = Workout(
         PK=f"USER#{user_sub}",
-        SK=f"WORKOUT#{date.isoformat()}#{new_id}",
+        SK=f"WORKOUT#{form.date.isoformat()}#{new_id}",
         type="workout",
-        date=date,
-        name=name,
+        date=form.date,
+        name=form.name,
         created_at=dates.now(),
         updated_at=dates.now(),
     )
@@ -105,7 +104,7 @@ def create_workout(
         raise HTTPException(status_code=500, detail="Error creating workout")
 
     return RedirectResponse(
-        url=f"/workout/{date.isoformat()}/{new_id}", status_code=303
+        url=f"/workout/{form.date.isoformat()}/{new_id}", status_code=303
     )
 
 
