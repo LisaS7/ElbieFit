@@ -1,12 +1,13 @@
-from datetime import date
+import uuid
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 import pytest
 
-from app.models.workout import Workout, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
-from app.utils import dates
+from app.utils import dates, db
 
 user_sub = "abc-123"
 fake_table_response = {
@@ -198,42 +199,44 @@ def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
 # --------------- Create ---------------
 
 
-def test_create_workout_does_put_item_and_returns_workout(fake_table):
+def test_create_workout_does_put_item_and_returns_workout(fake_table, monkeypatch):
+    user_sub = "abc-123"
+    workout_date = date(2025, 11, 16)
+
+    fixed_uuid = uuid.UUID("12345678-1234-5678-1234-567812345678")
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+
+    from app.repositories import workout as workout_repo_module
+
+    monkeypatch.setattr(workout_repo_module.uuid, "uuid4", lambda: fixed_uuid)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
     repo = DynamoWorkoutRepository(fake_table)
+    data = WorkoutCreate(date=workout_date, name="Bench Party")
+    workout = repo.create_workout(user_sub=user_sub, data=data)
 
-    workout = Workout(
-        PK="USER#test-user-sub",
-        SK="WORKOUT#2025-11-16#W1",
-        type="workout",
-        date=date(2025, 11, 16),
-        name="Leg Day for Lizards",
-        tags=["legs"],
-        notes="Squats until extinction",
-        created_at=dates.now(),
-        updated_at=dates.now(),
-    )
+    # Check PK/SK are built correctly
+    assert workout.PK == db.build_user_pk(user_sub)
+    assert workout.SK == db.build_workout_sk(workout_date, str(fixed_uuid))
+    assert workout.type == "workout"
+    assert workout.date == workout_date
+    assert workout.name == "Bench Party"
+    assert workout.created_at == fixed_now
+    assert workout.updated_at == fixed_now
 
-    expected_item = workout.to_ddb_item()
-    returned_item = repo.create_workout(workout)
-
-    assert fake_table.last_put_kwargs == {"Item": expected_item}
-    assert returned_item is workout
+    # Check the item was written to Dynamo
+    assert fake_table.last_put_kwargs == {"Item": workout.to_ddb_item()}
 
 
 def test_create_workout_raises_repoerror_on_client_error(failing_put_table):
     repo = DynamoWorkoutRepository(table=failing_put_table)
-    workout = Workout(
-        PK="USER#abc-123",
-        SK="WORKOUT#2025-11-16#W1",
-        type="workout",
+    user_sub = "abc-123"
+    data = WorkoutCreate(
         date=date(2025, 11, 16),
         name="Boom Day",
-        created_at=dates.now(),
-        updated_at=dates.now(),
     )
-
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.create_workout(workout)
+        repo.create_workout(user_sub, data)
 
     assert "Failed to create workout in database" in str(excinfo.value)
 

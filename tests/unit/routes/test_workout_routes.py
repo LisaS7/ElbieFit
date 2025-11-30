@@ -36,16 +36,11 @@ def test_get_new_form_renders_form(client):
 
 
 def test_create_workout_creates_item_and_redirects(
-    authenticated_client, fake_workout_repo, monkeypatch
+    authenticated_client, fake_workout_repo
 ):
     fixed_uuid = uuid.UUID("12345678-1234-5678-1234-567812345678")
     fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
     workout_date = date(2025, 11, 16)
-
-    # Patch uuid.uuid4 used inside app.routes.workout
-    monkeypatch.setattr(workout_routes.uuid, "uuid4", lambda: fixed_uuid)
-    # Patch dates.now() imported in the workout routes module
-    monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
 
     response = authenticated_client.post(
         "/workout/create",
@@ -55,19 +50,19 @@ def test_create_workout_creates_item_and_redirects(
 
     # Redirect to the edit page for the new workout
     assert response.status_code == 303
-    expected_location = f"/workout/{workout_date.isoformat()}/{fixed_uuid}"
-    assert response.headers["location"] == expected_location
 
-    # Get the Workout object passed to the repo
+    # Get the Workout object created by the fake repo
+    assert len(fake_workout_repo.created_workouts) == 1
     created = fake_workout_repo.created_workouts[0]
 
-    assert created.PK == "USER#test-user-sub"
-    assert created.SK == f"WORKOUT#{workout_date.isoformat()}#{fixed_uuid}"
-    assert created.type == "workout"
-    assert created.name == "Bench Party"
+    # Check the repo was called with correct data
     assert created.date == workout_date
-    assert created.created_at == fixed_now
-    assert created.updated_at == fixed_now
+    assert created.name == "Bench Party"
+    assert fake_workout_repo.user_subs == ["test-user-sub"]
+
+    # Location should match the workout returned by the repo
+    expected_location = f"/workout/{created.date.isoformat()}/{created.workout_id}"
+    assert response.headers["location"] == expected_location
 
 
 def test_create_workout_returns_500_when_repo_raises(

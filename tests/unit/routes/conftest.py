@@ -1,7 +1,12 @@
+import uuid
+from datetime import datetime, timezone
+
 import pytest
 
+from app.models.workout import Workout
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.routes import workout as workout_routes
+from app.utils import db
 
 
 class FakeWorkoutRepo:
@@ -35,9 +40,24 @@ class FakeWorkoutRepo:
         return self.workouts_to_return
 
     # Used by POST /workout/create
-    def create_workout(self, workout):
+    def create_workout(self, user_sub: str, data):
         if self.should_raise_on_create:
             raise WorkoutRepoError("boom-create")
+        self.user_subs.append(user_sub)
+
+        new_id = str(uuid.uuid4())
+        now = datetime(2025, 1, 1, tzinfo=timezone.utc)
+
+        workout = Workout(
+            PK=db.build_user_pk(user_sub),
+            SK=db.build_workout_sk(data.date, new_id),
+            type="workout",
+            date=data.date,
+            name=data.name,
+            created_at=now,
+            updated_at=now,
+        )
+
         self.created_workouts.append(workout)
         return workout
 

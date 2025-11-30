@@ -1,17 +1,18 @@
+import uuid
 from datetime import date as DateType
 from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
 
-from app.models.workout import Workout, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
-from app.utils import db
+from app.utils import dates, db
 
 
 class WorkoutRepository(Protocol):
     def get_all_for_user(self, user_sub: str) -> List[Workout]: ...
-    def create_workout(self, workout: Workout) -> Workout: ...
+    def create_workout(self, user_sub, data: WorkoutCreate) -> Workout: ...
     def get_workout_with_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]: ...
@@ -124,11 +125,23 @@ class DynamoWorkoutRepository:
 
     # ----------------------- Add -----------------------------
 
-    def create_workout(self, workout: Workout) -> Workout:
+    def create_workout(self, user_sub: str, data: WorkoutCreate) -> Workout:
         """
         Persist a new workout item to DynamoDB.
-        Expects PK/SK/created_at/updated_at to be set on the model.
         """
+        new_id = str(uuid.uuid4())
+        now = dates.now()
+
+        workout = Workout(
+            PK=db.build_user_pk(user_sub),
+            SK=db.build_workout_sk(data.date, new_id),
+            type="workout",
+            date=data.date,
+            name=data.name,
+            created_at=now,
+            updated_at=now,
+        )
+
         item = workout.to_ddb_item()
         try:
             self._table.put_item(Item=item)
@@ -160,6 +173,7 @@ class DynamoWorkoutRepository:
 
         old_date = workout.date
         old_workout_id = workout.workout_id
+        now = dates.now()
 
         # new keys
         pk = db.build_user_pk(user_sub)
@@ -167,9 +181,10 @@ class DynamoWorkoutRepository:
 
         # create a new workout
         new_workout = workout.model_copy(
-            update={"PK": pk, "SK": new_sk, "date": new_date}
+            update={"PK": pk, "SK": new_sk, "date": new_date, "updated_at": now}
         )
-        self.create_workout(new_workout)
+
+        self._table.put_item(Item=new_workout.to_ddb_item())
 
         # Recreate sets with new SKs
         for s in sets:

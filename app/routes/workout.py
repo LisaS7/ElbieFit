@@ -1,11 +1,10 @@
-import uuid
 from datetime import date as DateType
 from typing import Annotated, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutUpdate
+from app.models.workout import WorkoutCreate, WorkoutSet, WorkoutUpdate
 from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import templates
@@ -85,26 +84,15 @@ def create_workout(
     repo: WorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
-    new_id = uuid.uuid4()
-
-    workout = Workout(
-        PK=f"USER#{user_sub}",
-        SK=f"WORKOUT#{form.date.isoformat()}#{new_id}",
-        type="workout",
-        date=form.date,
-        name=form.name,
-        created_at=dates.now(),
-        updated_at=dates.now(),
-    )
 
     try:
-        workout = repo.create_workout(workout)
+        workout = repo.create_workout(user_sub, data=form)
     except WorkoutRepoError:
         logger.exception("Error creating workout")
         raise HTTPException(status_code=500, detail="Error creating workout")
 
     return RedirectResponse(
-        url=f"/workout/{form.date.isoformat()}/{new_id}", status_code=303
+        url=f"/workout/{workout.date.isoformat()}/{workout.workout_id}", status_code=303
     )
 
 
