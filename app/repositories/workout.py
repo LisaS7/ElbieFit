@@ -29,6 +29,12 @@ class DynamoWorkoutRepository:
     def __init__(self, table=None):
         self._table = table or db.get_table()
 
+    def _to_workout(self, item: dict) -> Workout:
+        return Workout(**item)
+
+    def _to_workout_set(self, item: dict) -> WorkoutSet:
+        return WorkoutSet(**item)
+
     def _to_model(self, item: dict):
         """
         Map a DynamoDB item (from the resource API) into a Workout model.
@@ -38,10 +44,9 @@ class DynamoWorkoutRepository:
 
         try:
             if item_type == "workout":
-                return Workout(**item)
-
-            if item_type == "set":
-                return WorkoutSet(**item)
+                return self._to_workout(**item)
+            elif item_type == "set":
+                return self._to_workout_set(**item)
         except Exception as e:
             raise WorkoutRepoError("Failed to create workout model from item") from e
 
