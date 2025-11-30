@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.models.workout import Workout, WorkoutCreate, WorkoutSet
-from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
+from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates, db
 
@@ -133,19 +133,19 @@ def test_get_all_for_user_empty_results_returns_empty_list(fake_table):
 def test_get_all_for_user_raises_repoerror_on_client_error(failing_query_table):
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
-    with pytest.raises(WorkoutRepoError) as excinfo:
+    with pytest.raises(RepoError) as excinfo:
         repo.get_all_for_user(USER_SUB)
 
-    assert "Failed to query database for workouts" in str(excinfo.value)
+    assert "Failed to query database" in str(excinfo.value)
 
 
 def test_get_all_for_user_raises_repoerror_on_parse_error(bad_items_table):
     repo = DynamoWorkoutRepository(table=bad_items_table)
 
-    with pytest.raises(WorkoutRepoError) as excinfo:
+    with pytest.raises(RepoError) as excinfo:
         repo.get_all_for_user(USER_SUB)
 
-    assert "Failed to parse workouts from database response" in str(excinfo.value)
+    assert "Failed to create workout model from item" in str(excinfo.value)
 
 
 # --------------- Get workout and sets ---------------
@@ -190,7 +190,7 @@ def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
 def test_get_workout_with_sets_raises_repoerror_on_client_error(failing_query_table):
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
-    with pytest.raises(WorkoutRepoError) as excinfo:
+    with pytest.raises(RepoError) as excinfo:
         repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to query workout and sets from database" in str(excinfo.value)
@@ -202,7 +202,7 @@ def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
     with pytest.raises(WorkoutRepoError) as excinfo:
         repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
-    assert "Failed to parse workout and sets from response" in str(excinfo.value)
+    assert "Failed to create workout model from item" in str(excinfo.value)
 
 
 # --------------- Create ---------------
