@@ -2,8 +2,10 @@ from datetime import date
 from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 
 from app.models.workout import Workout, WorkoutSet
+from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.utils import db
 
 
@@ -34,13 +36,16 @@ class DynamoWorkoutRepository:
 
         item_type = item.get("type")
 
-        if item_type == "workout":
-            return Workout(**item)
+        try:
+            if item_type == "workout":
+                return Workout(**item)
 
-        if item_type == "set":
-            return WorkoutSet(**item)
+            if item_type == "set":
+                return WorkoutSet(**item)
+        except Exception as e:
+            raise WorkoutRepoError("Failed to create workout model from item") from e
 
-        raise ValueError(f"Unknown item type: {item_type}")
+        raise WorkoutRepoError(f"Unknown item type: {item_type}")
 
     # ----------------------- Get -----------------------------
 
@@ -50,18 +55,24 @@ class DynamoWorkoutRepository:
         """
         pk = f"USER#{user_sub}"
 
-        response = self._table.query(
-            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with("WORKOUT#")
-        )
+        try:
+            response = self._table.query(
+                KeyConditionExpression=Key("PK").eq(pk)
+                & Key("SK").begins_with("WORKOUT#")
+            )
+        except ClientError as e:
+            raise WorkoutRepoError("Failed to query database for workouts") from e
 
-        items = response.get("Items", [])
-        workouts = [
-            self._to_model(item) for item in items if item.get("type") == "workout"
-        ]
-        # ignore type hint: we're filtering out sets in the previous step
-        # so all items will have a date attribute
-        workouts.sort(key=lambda w: w.date, reverse=True)  # type: ignore[arg-type]
-        return workouts  # type: ignore[arg-type]
+        try:
+            items = response.get("Items", [])
+            workouts = [
+                self._to_model(item) for item in items if item.get("type") == "workout"
+            ]
+            # ignore type hint: we're filtering out sets in the previous step
+            workouts.sort(key=lambda w: w.date, reverse=True)  # type: ignore[arg-type]
+            return workouts  # type: ignore[arg-type]
+        except Exception:
+            raise WorkoutRepoError("Failed to parse workouts from database response")
 
     def get_workout_with_sets(
         self, user_sub: str, workout_date: date, workout_id: str
@@ -72,18 +83,30 @@ class DynamoWorkoutRepository:
         pk = f"USER#{user_sub}"
         sk = f"WORKOUT#{workout_date.isoformat()}#{workout_id}"
 
-        response = self._table.query(
-            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
-        )
-        items = response.get("Items", [])
+        try:
+            response = self._table.query(
+                KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
+            )
+        except ClientError:
+            raise WorkoutRepoError("Failed to query workout and sets from database")
 
-        models = [self._to_model(item) for item in items]
+        try:
+            items = response.get("Items", [])
+
+            models = [self._to_model(item) for item in items]
+
+        except Exception as e:
+            raise WorkoutRepoError(
+                "Failed to parse workout and sets from response"
+            ) from e
 
         workout = [w for w in models if isinstance(w, Workout)]
         sets = [s for s in models if isinstance(s, WorkoutSet)]
 
         if not workout:
-            raise KeyError("Workout not found")
+            raise WorkoutNotFoundError(
+                f"Workout {workout_id} on {workout_date} not found for user {user_sub}"
+            )
 
         return workout[0], sets
 
@@ -95,7 +118,10 @@ class DynamoWorkoutRepository:
         Expects PK/SK/created_at/updated_at to be set on the model.
         """
         item = workout.to_ddb_item()
-        self._table.put_item(Item=item)
+        try:
+            self._table.put_item(Item=item)
+        except ClientError as e:
+            raise WorkoutRepoError("Failed to create workout in database") from e
         return workout
 
     # ----------------------- Update -----------------------------
@@ -106,7 +132,10 @@ class DynamoWorkoutRepository:
         """
 
         item = workout.to_ddb_item()
-        self._table.put_item(Item=item)
+        try:
+            self._table.put_item(Item=item)
+        except ClientError as e:
+            raise WorkoutRepoError("Failed to update workout in database") from e
         return workout
 
     # ----------------------- Delete -----------------------------
@@ -120,18 +149,23 @@ class DynamoWorkoutRepository:
         pk = f"USER#{user_sub}"
         sk = f"WORKOUT#{workout_date}#{workout_id}"
 
-        # Get everything beginning with this pk/sk combo
-        # (so this includes sets belonging to the workout)
-        response = self._table.query(
-            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
-        )
-        items = response.get("Items", [])
+        try:
+            # Get everything beginning with this pk/sk combo
+            # (so this includes sets belonging to the workout)
+            response = self._table.query(
+                KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
+            )
+            items = response.get("Items", [])
 
-        if not items:
-            return
+            if not items:
+                return
 
-        # use batch_writer here to make bulk delete easier
-        # batch_writer bundles into batches and auto retries unprocessed items
-        with self._table.batch_writer() as batch:
-            for item in items:
-                batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
+            # use batch_writer here to make bulk delete easier
+            # batch_writer bundles into batches and auto retries unprocessed items
+            with self._table.batch_writer() as batch:
+                for item in items:
+                    batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
+        except ClientError as e:
+            raise WorkoutRepoError(
+                "Failed to delete workout and sets from database"
+            ) from e

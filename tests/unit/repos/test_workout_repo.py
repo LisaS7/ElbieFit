@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from app.models.workout import Workout, WorkoutSet
+from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates
 
@@ -89,7 +90,7 @@ def test_to_model_raises_for_unknown_type(fake_table):
         "type": "lunch",
     }
 
-    with pytest.raises(ValueError) as err:
+    with pytest.raises(WorkoutRepoError) as err:
         repo._to_model(wrong_type_item)
 
     assert "Unknown item type" in str(err.value)
@@ -126,7 +127,7 @@ def test_get_workout_with_sets_returns_workout_and_sets(fake_table):
     assert "KeyConditionExpression" in fake_table.last_query_kwargs
 
 
-def test_get_workout_with_sets_raises_keyerror_when_not_found(fake_table):
+def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
     workout_date = date(2025, 11, 3)
     workout_id = "DOES_NOT_EXIST"
 
@@ -134,10 +135,10 @@ def test_get_workout_with_sets_raises_keyerror_when_not_found(fake_table):
 
     repo = DynamoWorkoutRepository(table=fake_table)
 
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(WorkoutNotFoundError) as excinfo:
         repo.get_workout_with_sets(user_sub, workout_date, workout_id)
 
-    assert "Workout not found" in str(excinfo.value)
+    assert "not found" in str(excinfo.value)
 
 
 # --------------- Create ---------------

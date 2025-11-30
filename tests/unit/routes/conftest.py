@@ -1,5 +1,6 @@
 import pytest
 
+from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.routes import workout as workout_routes
 
 
@@ -24,7 +25,7 @@ class FakeWorkoutRepo:
     def get_all_for_user(self, user_sub: str):
         self.user_subs.append(user_sub)
         if self.should_raise_on_get_all:
-            raise RuntimeError("boom")
+            raise WorkoutRepoError("boom")
         return self.workouts_to_return
 
     # Used by POST /workout/create
@@ -35,7 +36,7 @@ class FakeWorkoutRepo:
     # Used by GET /workout/{workout_date}/{workout_id}
     def get_workout_with_sets(self, user_sub, workout_date, workout_id):
         if self.should_raise_on_get_one:
-            raise KeyError("Workout not found")
+            raise WorkoutNotFoundError("Workout not found")
         return self.workout_to_return, self.sets_to_return
 
     # Used by POST /workout/{workout_date}/{workout_id}/meta
@@ -45,7 +46,7 @@ class FakeWorkoutRepo:
 
     def delete_workout_and_sets(self, user_sub, workout_date, workout_id):
         if self.should_raise_on_delete:
-            raise RuntimeError("boom-delete")
+            raise WorkoutRepoError("boom-delete")
         self.deleted_calls.append((user_sub, workout_date, workout_id))
 
 

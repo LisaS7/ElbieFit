@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
 from app.models.workout import Workout, WorkoutSet
+from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import templates
 from app.utils import auth, dates
@@ -57,7 +58,7 @@ def get_all_workouts(
 
     try:
         workouts = repo.get_all_for_user(user_sub)
-    except Exception:
+    except WorkoutRepoError:
         logger.exception(f"Error fetching workouts for user {user_sub}")
         raise HTTPException(status_code=500, detail="Error fetching workouts")
     return templates.TemplateResponse(
@@ -97,7 +98,11 @@ def create_workout(
         updated_at=dates.now(),
     )
 
-    workout = repo.create_workout(workout)
+    try:
+        workout = repo.create_workout(workout)
+    except WorkoutRepoError:
+        logger.exception("Error creating workout")
+        raise HTTPException(status_code=500, detail="Error creating workout")
 
     return RedirectResponse(
         url=f"/workout/{date.isoformat()}/{new_id}", status_code=303
@@ -119,8 +124,11 @@ def view_workout(
 
     try:
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
-    except KeyError:
+    except WorkoutNotFoundError:
         raise HTTPException(status_code=404, detail="Workout not found")
+    except WorkoutRepoError:
+        logger.exception("Error fetching workout")
+        raise HTTPException(status_code=500, detail="Error fetching workout")
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
 
@@ -143,7 +151,14 @@ def edit_workout_meta(
     repo: WorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
-    workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+
+    try:
+        workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+    except WorkoutNotFoundError:
+        raise HTTPException(status_code=404, detail="Workout not found")
+    except WorkoutRepoError:
+        logger.exception("Error fetching workout for edit")
+        raise HTTPException(status_code=500, detail="Error fetching workout")
 
     return templates.TemplateResponse(
         request, "workouts/edit_meta_form.html", {"workout": workout}
@@ -164,8 +179,11 @@ def update_workout_meta(
 
     try:
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
-    except KeyError:
+    except WorkoutNotFoundError:
         raise HTTPException(status_code=404, detail="Workout not found")
+    except WorkoutRepoError:
+        logger.exception("Error fetching workout for update")
+        raise HTTPException(status_code=500, detail="Error fetching workout")
 
     # parse tags
     tag_list = [t.strip() for t in tags.split(",") if t.strip()]
@@ -174,7 +192,12 @@ def update_workout_meta(
     workout.notes = notes or None
     workout.updated_at = dates.now()
 
-    repo.update_workout(workout)
+    try:
+        repo.update_workout(workout)
+    except WorkoutRepoError:
+        logger.exception("Error updating workout")
+        raise HTTPException(status_code=500, detail="Error updating workout")
+
     sets, defaults = get_sorted_sets_and_defaults(sets)
 
     return templates.TemplateResponse(
@@ -196,6 +219,10 @@ def delete_workout(
 ):
     user_sub = claims["sub"]
 
-    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+    try:
+        repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+    except WorkoutRepoError:
+        logger.exception("Error deleting workout")
+        raise HTTPException(status_code=500, detail="Error deleting workout")
 
     return RedirectResponse(url="/workout/all", status_code=303)
