@@ -1,4 +1,3 @@
-import uuid
 from datetime import date, datetime, timezone
 
 from app.routes import workout as workout_routes
@@ -38,8 +37,6 @@ def test_get_new_form_renders_form(client):
 def test_create_workout_creates_item_and_redirects(
     authenticated_client, fake_workout_repo
 ):
-    fixed_uuid = uuid.UUID("12345678-1234-5678-1234-567812345678")
-    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
     workout_date = date(2025, 11, 16)
 
     response = authenticated_client.post(
@@ -277,7 +274,48 @@ def test_update_workout_meta_returns_500_when_update_fails(
     class DummyWorkout:
         def __init__(self):
             self.name = "Edit Me"
-            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+            self.date = workout_date
+            self.tags = None
+            self.notes = None
+            self.updated_at = None
+
+    class DummySet:
+        def __init__(self):
+            self.exercise_id = "EX-1"
+            self.reps = 8
+            self.weight_kg = 60
+            self.created_at = fixed_now
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.should_raise_on_update = True
+
+    response = authenticated_client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data={
+            "name": "Does not matter",
+            "date": workout_date.isoformat(),
+            "tags": "push, legs",
+            "notes": "update fails",
+        },
+    )
+
+    assert response.status_code == 500
+
+
+def test_update_workout_meta_returns_500_when_move_date_fails(
+    authenticated_client, fake_workout_repo, monkeypatch
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
+
+    class DummyWorkout:
+        def __init__(self):
+            self.name = "Edit Me"
+            self.date = workout_date  # original date
             self.tags = None
             self.notes = None
             self.updated_at = None
@@ -291,15 +329,23 @@ def test_update_workout_meta_returns_500_when_update_fails(
 
     fake_workout_repo.workout_to_return = DummyWorkout()
     fake_workout_repo.sets_to_return = [DummySet()]
-    fake_workout_repo.should_raise_on_update = True
+
+    # Force a *different* new date so we go into the "move" branch
+    new_date = date(2025, 11, 4)
+
+    # Make move_workout_date raise the same error the route expects
+    def broken_move(user_sub, workout, new_date_param, sets):
+        raise workout_routes.WorkoutRepoError("kaboom")
+
+    fake_workout_repo.move_workout_date = broken_move  # monkeypatch the method
 
     response = authenticated_client.post(
         f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
         data={
-            "name": "Does not matter",
-            "date": workout_date.isoformat(),
-            "tags": "push, legs",
-            "notes": "update fails",
+            "name": "Edit Me",
+            "date": new_date.isoformat(),  # different from old date
+            "tags": "push",
+            "notes": "Broken move",
         },
     )
 

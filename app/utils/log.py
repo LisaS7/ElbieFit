@@ -8,7 +8,7 @@ FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 root = logging.getLogger()
 root.setLevel(LOG_LEVEL)
 
-for h in list(root.handlers):
+for h in list(root.handlers):  # pragma: no cover
     root.removeHandler(h)
 
 handler = logging.StreamHandler(sys.stdout)
