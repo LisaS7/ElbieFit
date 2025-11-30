@@ -189,7 +189,6 @@ def update_workout_meta(
 
 @router.delete("/{workout_date}/{workout_id}")
 def delete_workout(
-    request: Request,
     workout_date: date,
     workout_id: str,
     claims=Depends(auth.require_auth),
