@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.models.workout import Workout, WorkoutCreate, WorkoutSet
-from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
+from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates, db
 
@@ -133,19 +133,40 @@ def test_get_all_for_user_empty_results_returns_empty_list(fake_table):
 def test_get_all_for_user_raises_repoerror_on_client_error(failing_query_table):
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
-    with pytest.raises(RepoError) as excinfo:
+    with pytest.raises(WorkoutRepoError) as excinfo:
         repo.get_all_for_user(USER_SUB)
 
-    assert "Failed to query database" in str(excinfo.value)
+    assert "Failed to fetch workouts from database" in str(excinfo.value)
 
 
 def test_get_all_for_user_raises_repoerror_on_parse_error(bad_items_table):
     repo = DynamoWorkoutRepository(table=bad_items_table)
 
-    with pytest.raises(RepoError) as excinfo:
+    with pytest.raises(WorkoutRepoError) as excinfo:
         repo.get_all_for_user(USER_SUB)
 
     assert "Failed to create workout model from item" in str(excinfo.value)
+
+
+def test_get_all_for_user_wraps_unexpected_exception_in_workoutrepoerror(
+    fake_table, monkeypatch
+):
+    # Return at least one valid-looking item so we get as far as _to_model
+    fake_table.response = FAKE_TABLE_RESPONSE_ALL
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Force an unexpected exception inside the try-block
+    def boom(_item):
+        raise RuntimeError("some totally unexpected error")
+
+    # Monkeypatch the instance method so the list comprehension explodes
+    monkeypatch.setattr(repo, "_to_model", boom)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_all_for_user(USER_SUB)
+
+    # Check that it hit the generic "parse" handler
+    assert "Failed to parse workouts from database response" in str(excinfo.value)
 
 
 # --------------- Get workout and sets ---------------
@@ -190,7 +211,7 @@ def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
 def test_get_workout_with_sets_raises_repoerror_on_client_error(failing_query_table):
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
-    with pytest.raises(RepoError) as excinfo:
+    with pytest.raises(WorkoutRepoError) as excinfo:
         repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to query workout and sets from database" in str(excinfo.value)
@@ -203,6 +224,25 @@ def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
         repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to create workout model from item" in str(excinfo.value)
+
+
+def test_get_workout_with_sets_wraps_unexpected_exception_in_workoutrepoerror(
+    fake_table, monkeypatch
+):
+    # Make the query succeed and return normal-looking items
+    fake_table.response = FAKE_TABLE_RESPONSE_W2_ONLY
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Force an unexpected exception during model conversion
+    def boom(_item):
+        raise RuntimeError("some totally unexpected error")
+
+    monkeypatch.setattr(repo, "_to_model", boom)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    assert "Failed to parse workout and sets from response" in str(excinfo.value)
 
 
 # --------------- Create ---------------
@@ -425,6 +465,36 @@ def test_move_workout_date_recreates_sets_with_new_keys(fake_table, monkeypatch)
     assert fake_table.last_put_kwargs == {"Item": expected_set_item}
 
 
+def test_move_workout_date_raises_workoutrepoerror_when_write_fails(
+    failing_put_table,
+):
+    repo = DynamoWorkoutRepository(table=failing_put_table)
+
+    # Original workout on old date
+    workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Move Me Dino Day",
+        tags=["upper"],
+        notes="Roar",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    # No sets needed – we just need the FIRST _safe_put to blow up
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.move_workout_date(
+            user_sub=USER_SUB,
+            workout=workout,
+            new_date=WORKOUT_DATE_NEW,
+            sets=[],
+        )
+
+    assert "Failed to write new workout or sets" in str(excinfo.value)
+
+
 # --------------- Delete ---------------
 
 
@@ -478,4 +548,4 @@ def test_delete_workout_and_sets_raises_repoerror_on_client_error(failing_delete
     with pytest.raises(WorkoutRepoError) as excinfo:
         repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
-    assert "Failed to delete workout and sets from database" in str(excinfo.value)
+    assert "Failed to load workout and sets for deletion" in str(excinfo.value)
