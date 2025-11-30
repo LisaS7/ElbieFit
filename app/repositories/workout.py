@@ -111,10 +111,27 @@ class DynamoWorkoutRepository:
 
     # ----------------------- Delete -----------------------------
 
-    def delete_workout_and_sets(self, workout: Workout) -> Workout:
+    def delete_workout_and_sets(
+        self, user_sub: str, workout_date: date, workout_id: str
+    ) -> None:
         """
         Delete an existing workout.
         """
+        pk = f"USER#{user_sub}"
+        sk = f"WORKOUT#{workout_date}#{workout_id}"
 
-        self._table.delete_item()
-        return workout
+        # Get everything beginning with this pk/sk combo
+        # (so this includes sets belonging to the workout)
+        response = self._table.query(
+            KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
+        )
+        items = response.get("Items", [])
+
+        if not items:
+            return
+
+        # use batch_writer here to make bulk delete easier
+        # batch_writer bundles into batches and auto retries unprocessed items
+        with self._table.batch_writer() as batch:
+            for item in items:
+                batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
