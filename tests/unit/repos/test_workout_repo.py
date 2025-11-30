@@ -290,6 +290,139 @@ def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
 
 
 # --------------- Update (New SK) ---------------
+def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
+    from app.repositories import workout as workout_repo_module
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    repo = DynamoWorkoutRepository(fake_table)
+
+    # Original workout on old date
+    workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Move Me Dino Day",
+        tags=["upper"],
+        notes="Roar",
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    # Spy on delete_workout_and_sets so we don't rely on its own implementation
+    delete_calls = {}
+
+    def fake_delete(user_sub, workout_date, workout_id):
+        delete_calls["user_sub"] = user_sub
+        delete_calls["date"] = workout_date
+        delete_calls["workout_id"] = workout_id
+
+    monkeypatch.setattr(repo, "delete_workout_and_sets", fake_delete)
+
+    # Act: move the workout to a new date, but with no sets
+    repo.move_workout_date(
+        user_sub=USER_SUB,
+        workout=workout,
+        new_date=WORKOUT_DATE_NEW,
+        sets=[],
+    )
+
+    # ── Assert: delete called with OLD keys ──
+    assert delete_calls == {
+        "user_sub": USER_SUB,
+        "date": WORKOUT_DATE_W2,
+        "workout_id": WORKOUT_ID_W2,
+    }
+
+    # ── Assert: new workout item was written with NEW keys ──
+    expected_pk = db.build_user_pk(USER_SUB)
+    expected_sk = db.build_workout_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2)
+
+    expected_workout = workout.model_copy(
+        update={
+            "PK": expected_pk,
+            "SK": expected_sk,
+            "date": WORKOUT_DATE_NEW,
+            "updated_at": fixed_now,
+        }
+    )
+
+    assert fake_table.last_put_kwargs == {"Item": expected_workout.to_ddb_item()}
+
+
+def test_move_workout_date_recreates_sets_with_new_keys(fake_table, monkeypatch):
+    from app.repositories import workout as workout_repo_module
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    repo = DynamoWorkoutRepository(fake_table)
+
+    # Original workout
+    workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Leg Day Before Meteor",
+        tags=["legs"],
+        notes=None,
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    # Original set on old keys
+    set1 = WorkoutSet(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_set_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2, 1),
+        type="set",
+        exercise_id="squat",
+        set_number=1,
+        reps=8,
+        weight_kg=Decimal("60"),
+        rpe=7,
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    # Spy on delete again (we only care that it's called, not what it does internally)
+    delete_calls = {}
+
+    def fake_delete(user_sub, workout_date, workout_id):
+        delete_calls["user_sub"] = user_sub
+        delete_calls["date"] = workout_date
+        delete_calls["workout_id"] = workout_id
+
+    monkeypatch.setattr(repo, "delete_workout_and_sets", fake_delete)
+
+    # Act: move with one set
+    repo.move_workout_date(
+        user_sub=USER_SUB,
+        workout=workout,
+        new_date=WORKOUT_DATE_NEW,
+        sets=[set1],
+    )
+
+    # ── Assert: delete called on old workout ──
+    assert delete_calls == {
+        "user_sub": USER_SUB,
+        "date": WORKOUT_DATE_W2,
+        "workout_id": WORKOUT_ID_W2,
+    }
+
+    # ── Assert: the last Dynamo put is the recreated set with new PK/SK ──
+    expected_pk = db.build_user_pk(USER_SUB)
+    expected_sk = db.build_set_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2, 1)
+
+    expected_set_item = {
+        **set1.to_ddb_item(),
+        "PK": expected_pk,
+        "SK": expected_sk,
+    }
+
+    assert fake_table.last_put_kwargs == {"Item": expected_set_item}
 
 
 # --------------- Delete ---------------
