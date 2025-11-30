@@ -13,6 +13,10 @@ class WorkoutRepository(Protocol):
     def get_workout_with_sets(
         self, user_sub: str, workout_date: date, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]: ...
+    def update_workout(self, workout: Workout) -> Workout: ...
+    def delete_workout(
+        self, user_sub: str, workout_date: date, workout_id: str
+    ) -> None: ...
 
 
 class DynamoWorkoutRepository:
@@ -103,4 +107,14 @@ class DynamoWorkoutRepository:
 
         item = workout.to_ddb_item()
         self._table.put_item(Item=item)
+        return workout
+
+    # ----------------------- Delete -----------------------------
+
+    def delete_workout_and_sets(self, workout: Workout) -> Workout:
+        """
+        Delete an existing workout.
+        """
+
+        self._table.delete_item()
         return workout
