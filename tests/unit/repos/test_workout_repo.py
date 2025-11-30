@@ -188,3 +188,79 @@ def test_update_workout_does_put_item_and_returns_workout(fake_table):
 
     assert fake_table.last_put_kwargs == {"Item": expected_item}
     assert returned_item is workout
+
+
+# --------------- Delete ---------------
+
+
+def test_delete_workout_and_sets_deletes_workout_and_its_sets(fake_table):
+    """
+    Given a workout with sets, delete_workout_and_sets should:
+      - query using the correct PK and SK prefix
+      - delete all returned items via batch_writer
+    """
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+    pk = f"USER#{user_sub}"
+
+    # Only include the workout + its sets in this fake response
+    fake_table.response = {
+        "Items": [
+            {
+                "PK": pk,
+                "SK": "WORKOUT#2025-11-03#W2",
+                "type": "workout",
+                "date": "2025-11-03",
+                "name": "Workout A",
+                "tags": ["upper"],
+                "notes": "Newer",
+                "created_at": "2025-11-03T09:00:00Z",
+                "updated_at": "2025-11-03T09:00:00Z",
+            },
+            {
+                "PK": pk,
+                "SK": "WORKOUT#2025-11-03#W2#SET#1",
+                "type": "set",
+                "exercise_id": "squat",
+                "set_number": 1,
+                "reps": 8,
+                "weight_kg": Decimal("60"),
+                "rpe": 7,
+                "created_at": "2025-11-03T09:00:10Z",
+                "updated_at": "2025-11-03T09:00:10Z",
+            },
+        ]
+    }
+
+    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+
+    # Check that all items from the fake response were "deleted"
+    assert len(fake_table.deleted_keys) == 2
+    assert {"PK": pk, "SK": "WORKOUT#2025-11-03#W2"} in fake_table.deleted_keys
+    assert {
+        "PK": pk,
+        "SK": "WORKOUT#2025-11-03#W2#SET#1",
+    } in fake_table.deleted_keys
+
+
+def test_delete_workout_and_sets_does_nothing_when_no_items(fake_table):
+    """
+    If Dynamo returns no items, the method should return quietly
+    and not attempt any deletes.
+    """
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    workout_date = date(2025, 11, 3)
+    workout_id = "NON_EXISTENT"
+
+    fake_table.response = {"Items": []}
+
+    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+
+    # Query should still be called
+    assert fake_table.last_query_kwargs is not None
+
+    # But no deletes should be recorded
+    assert fake_table.deleted_keys == []
