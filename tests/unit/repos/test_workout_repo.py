@@ -52,6 +52,41 @@ fake_table_response = {
 }
 
 
+# --------------- To Model ---------------
+
+
+def test_to_model_wraps_validation_error_in_workoutrepoerror(fake_table):
+    # No required fields -> Pydantic should blow up
+    bad_item = {
+        "PK": "USER#abc-123",
+        "SK": "WORKOUT#2025-11-03#W2",
+        "type": "workout",
+        # missing date, name, etc.
+    }
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo._to_model(bad_item)
+
+    assert "Failed to create workout model" in str(excinfo.value)
+
+
+def test_to_model_raises_for_unknown_type(fake_table):
+    repo = DynamoWorkoutRepository(fake_table)
+
+    wrong_type_item = {
+        "PK": "USER#abc-123",
+        "SK": "WORKOUT#2025-11-03#W2",
+        "type": "lunch",
+    }
+
+    with pytest.raises(WorkoutRepoError) as err:
+        repo._to_model(wrong_type_item)
+
+    assert "Unknown item type" in str(err.value)
+
+
 # --------------- Get All ---------------
 
 
@@ -80,20 +115,22 @@ def test_get_all_for_user_empty_results_returns_empty_list(fake_table):
     assert workouts == []
 
 
-def test_to_model_raises_for_unknown_type(fake_table):
-    fake_table.response = {"Items": []}
-    repo = DynamoWorkoutRepository(fake_table)
+def test_get_all_for_user_raises_repoerror_on_client_error(failing_query_table):
+    repo = DynamoWorkoutRepository(table=failing_query_table)
 
-    wrong_type_item = {
-        "PK": "USER#abc-123",
-        "SK": "WORKOUT#2025-11-03#W2",
-        "type": "lunch",
-    }
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_all_for_user("abc-123")
 
-    with pytest.raises(WorkoutRepoError) as err:
-        repo._to_model(wrong_type_item)
+    assert "Failed to query database for workouts" in str(excinfo.value)
 
-    assert "Unknown item type" in str(err.value)
+
+def test_get_all_for_user_raises_repoerror_on_parse_error(bad_items_table):
+    repo = DynamoWorkoutRepository(table=bad_items_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_all_for_user("abc-123")
+
+    assert "Failed to parse workouts from database response" in str(excinfo.value)
 
 
 # --------------- Get workout and sets ---------------
@@ -106,7 +143,6 @@ def test_get_workout_with_sets_returns_workout_and_sets(fake_table):
     workout_date = date(2025, 11, 3)
     workout_id = "W2"
     pk = f"USER#{user_sub}"
-    sk = f"WORKOUT#{workout_date.isoformat()}#{workout_id}"
 
     workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
 
@@ -141,6 +177,24 @@ def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
     assert "not found" in str(excinfo.value)
 
 
+def test_get_workout_with_sets_raises_repoerror_on_client_error(failing_query_table):
+    repo = DynamoWorkoutRepository(table=failing_query_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_workout_with_sets("abc-123", date(2025, 11, 3), "W2")
+
+    assert "Failed to query workout and sets from database" in str(excinfo.value)
+
+
+def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
+    repo = DynamoWorkoutRepository(table=bad_items_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_workout_with_sets("abc-123", date(2025, 11, 3), "W2")
+
+    assert "Failed to parse workout and sets from response" in str(excinfo.value)
+
+
 # --------------- Create ---------------
 
 
@@ -166,6 +220,24 @@ def test_create_workout_does_put_item_and_returns_workout(fake_table):
     assert returned_item is workout
 
 
+def test_create_workout_raises_repoerror_on_client_error(failing_put_table):
+    repo = DynamoWorkoutRepository(table=failing_put_table)
+    workout = Workout(
+        PK="USER#abc-123",
+        SK="WORKOUT#2025-11-16#W1",
+        type="workout",
+        date=date(2025, 11, 16),
+        name="Boom Day",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.create_workout(workout)
+
+    assert "Failed to create workout in database" in str(excinfo.value)
+
+
 # --------------- Update ---------------
 
 
@@ -189,6 +261,24 @@ def test_update_workout_does_put_item_and_returns_workout(fake_table):
 
     assert fake_table.last_put_kwargs == {"Item": expected_item}
     assert returned_item is workout
+
+
+def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
+    repo = DynamoWorkoutRepository(table=failing_put_table)
+    workout = Workout(
+        PK="USER#abc-123",
+        SK="WORKOUT#2025-11-16#W1",
+        type="workout",
+        date=date(2025, 11, 16),
+        name="Updated",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.update_workout(workout)
+
+    assert "Failed to update workout in database" in str(excinfo.value)
 
 
 # --------------- Delete ---------------
@@ -265,3 +355,12 @@ def test_delete_workout_and_sets_does_nothing_when_no_items(fake_table):
 
     # But no deletes should be recorded
     assert fake_table.deleted_keys == []
+
+
+def test_delete_workout_and_sets_raises_repoerror_on_client_error(failing_delete_table):
+    repo = DynamoWorkoutRepository(table=failing_delete_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.delete_workout_and_sets("abc-123", date(2025, 11, 3), "W2")
+
+    assert "Failed to delete workout and sets from database" in str(excinfo.value)
