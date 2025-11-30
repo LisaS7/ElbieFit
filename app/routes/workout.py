@@ -182,3 +182,21 @@ def update_workout_meta(
         "workouts/workout_detail.html",
         {"workout": workout, "sets": sets, "defaults": defaults},
     )
+
+
+# ---------------------- Delete ---------------------------
+
+
+@router.delete("/{workout_date}/{workout_id}")
+def delete_workout(
+    request: Request,
+    workout_date: date,
+    workout_id: str,
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+
+    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+
+    return RedirectResponse(url="/workout/all", status_code=303)
