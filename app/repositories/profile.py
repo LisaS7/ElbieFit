@@ -17,8 +17,9 @@ class DynamoProfileRepository:
         self._table = table or db.get_table()
 
     def get_for_user(self, user_sub: str) -> dict | None:
+        pk = db.build_user_pk(user_sub)
 
-        key = {"PK": f"USER#{user_sub}", "SK": "PROFILE"}
+        key = {"PK": pk, "SK": "PROFILE"}
         response = self._table.get_item(Key=key, ConsistentRead=True)
 
         request_id = response.get("ResponseMetadata", {}).get("RequestId")

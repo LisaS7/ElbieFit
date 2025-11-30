@@ -66,7 +66,7 @@ class DynamoWorkoutRepository:
         """
         Return only workout items, sorted by date desc, Sets are filtered out.
         """
-        pk = f"USER#{user_sub}"
+        pk = db.build_user_pk(user_sub)
 
         try:
             response = self._table.query(
@@ -93,7 +93,7 @@ class DynamoWorkoutRepository:
         """
         Fetch a single workout and its sets for the given user/date/id
         """
-        pk = f"USER#{user_sub}"
+        pk = db.build_user_pk(user_sub)
         sk = db.build_workout_sk(workout_date, workout_id)
 
         try:
@@ -188,10 +188,11 @@ class DynamoWorkoutRepository:
 
         # Recreate sets with new SKs
         for s in sets:
+            pk = db.build_user_pk(user_sub)
             new_sk = db.build_set_sk(new_workout.date, old_workout_id, s.set_number)
             new_item = {
                 **s.to_ddb_item(),
-                "PK": f"USER#{user_sub}",
+                "PK": pk,
                 "SK": new_sk,
             }
             self._table.put_item(Item=new_item)
@@ -207,7 +208,7 @@ class DynamoWorkoutRepository:
         """
         Delete an existing workout.
         """
-        pk = f"USER#{user_sub}"
+        pk = db.build_user_pk(user_sub)
         sk = db.build_workout_sk(workout_date, workout_id)
 
         try:

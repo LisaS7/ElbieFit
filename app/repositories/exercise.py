@@ -35,7 +35,7 @@ class DynamoExerciseRepository:
         Return a list of exercises for this user
         """
 
-        pk = f"USER#{user_sub}"
+        pk = db.build_user_pk(user_sub)
 
         response = self._table.query(
             KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with("EXERCISE#")
