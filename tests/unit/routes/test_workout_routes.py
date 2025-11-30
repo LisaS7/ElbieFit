@@ -70,6 +70,22 @@ def test_create_workout_creates_item_and_redirects(
     assert created.updated_at == fixed_now
 
 
+def test_create_workout_returns_500_when_repo_raises(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 16)
+
+    fake_workout_repo.should_raise_on_create = True
+
+    response = authenticated_client.post(
+        "/workout/create",
+        data={"date": workout_date.isoformat(), "name": "Broken Bench"},
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 500
+
+
 # ──────────────────────────── GET /workout/{date}/{id} ────────────────────────────
 
 
@@ -114,6 +130,21 @@ def test_view_workout_returns_404_when_not_found(
     )
 
     assert response.status_code == 404
+
+
+def test_view_workout_returns_500_when_repo_error(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fake_workout_repo.should_raise_repo_error_on_get_one = True
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}"
+    )
+
+    assert response.status_code == 500
 
 
 # ──────────────────────────── POST /workout/{date}/{id}/meta ────────────────────────────
@@ -208,6 +239,58 @@ def test_update_workout_meta_returns_404_when_not_found(
     assert response.status_code == 404
 
 
+def test_update_workout_meta_returns_500_when_repo_error_on_fetch(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fake_workout_repo.should_raise_repo_error_on_get_one = True
+
+    response = authenticated_client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data={"tags": "push", "notes": "Broken"},
+    )
+
+    assert response.status_code == 500
+
+
+def test_update_workout_meta_returns_500_when_update_fails(
+    authenticated_client, fake_workout_repo, monkeypatch
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
+
+    class DummyWorkout:
+        def __init__(self):
+            self.name = "Edit Me"
+            self.date = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+            self.tags = None
+            self.notes = None
+            self.updated_at = None
+
+    class DummySet:
+        def __init__(self):
+            self.exercise_id = "EX-1"
+            self.reps = 8
+            self.weight_kg = 60
+            self.created_at = datetime(2025, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.should_raise_on_update = True
+
+    response = authenticated_client.post(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/meta",
+        data={"tags": "push, legs", "notes": "update fails"},
+    )
+
+    assert response.status_code == 500
+
+
 # ──────────────────────────── GET /workout/{date}/{id}/edit-meta ────────────────────────────
 def test_edit_workout_meta_renders_form(authenticated_client, fake_workout_repo):
     workout_date = date(2025, 11, 3)
@@ -231,6 +314,36 @@ def test_edit_workout_meta_renders_form(authenticated_client, fake_workout_repo)
     # sanity check that we're actually seeing the edit form
     assert 'name="tags"' in response.text
     assert 'name="notes"' in response.text
+
+
+def test_edit_workout_meta_returns_404_when_not_found(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "NOPE"
+
+    fake_workout_repo.should_raise_on_get_one = True
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/edit-meta"
+    )
+
+    assert response.status_code == 404
+
+
+def test_edit_workout_meta_returns_500_when_repo_error(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fake_workout_repo.should_raise_repo_error_on_get_one = True
+
+    response = authenticated_client.get(
+        f"/workout/{workout_date.isoformat()}/{workout_id}/edit-meta"
+    )
+
+    assert response.status_code == 500
 
 
 # ──────────────────────────── DELETE /workout/{date}/{id} ────────────────────────────

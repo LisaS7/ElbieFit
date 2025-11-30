@@ -14,10 +14,16 @@ class FakeWorkoutRepo:
         self.workouts_to_return = []
         self.created_workouts = []
         self.should_raise_on_get_all = False
+
         self.workout_to_return = None
         self.sets_to_return = []
         self.should_raise_on_get_one = False
+        self.should_raise_repo_error_on_get_one = False
+
+        self.should_raise_on_create = False
         self.updated_workouts = []
+        self.should_raise_on_update = False
+
         self.deleted_calls = []
         self.should_raise_on_delete = False
 
@@ -30,17 +36,23 @@ class FakeWorkoutRepo:
 
     # Used by POST /workout/create
     def create_workout(self, workout):
+        if self.should_raise_on_create:
+            raise WorkoutRepoError("boom-create")
         self.created_workouts.append(workout)
         return workout
 
     # Used by GET /workout/{workout_date}/{workout_id}
     def get_workout_with_sets(self, user_sub, workout_date, workout_id):
+        if self.should_raise_repo_error_on_get_one:
+            raise WorkoutRepoError("boom-get-one")
         if self.should_raise_on_get_one:
             raise WorkoutNotFoundError("Workout not found")
         return self.workout_to_return, self.sets_to_return
 
     # Used by POST /workout/{workout_date}/{workout_id}/meta
     def update_workout(self, workout):
+        if self.should_raise_on_update:
+            raise WorkoutRepoError("boom-update")
         self.updated_workouts.append(workout)
         return workout
 
