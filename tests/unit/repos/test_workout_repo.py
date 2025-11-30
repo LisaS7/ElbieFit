@@ -9,46 +9,60 @@ from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates, db
 
-user_sub = "abc-123"
-fake_table_response = {
+USER_SUB = "abc-123"
+WORKOUT_DATE_W2 = date(2025, 11, 3)
+WORKOUT_ID_W2 = "W2"
+WORKOUT_DATE_NEW = date(2025, 11, 16)
+
+WORKOUT_W2_ITEM = {
+    "PK": f"USER#{USER_SUB}",
+    "SK": "WORKOUT#2025-11-03#W2",
+    "type": "workout",
+    "date": "2025-11-03",
+    "name": "Workout A",
+    "tags": ["upper"],
+    "notes": "Newer",
+    "created_at": "2025-11-03T09:00:00Z",
+    "updated_at": "2025-11-03T09:00:00Z",
+}
+
+WORKOUT_W1_ITEM = {
+    "PK": f"USER#{USER_SUB}",
+    "SK": "WORKOUT#2025-11-01#W1",
+    "type": "workout",
+    "date": "2025-11-01",
+    "name": "Workout B",
+    "tags": ["legs"],
+    "notes": "Older",
+    "created_at": "2025-11-01T09:00:00Z",
+    "updated_at": "2025-11-01T09:00:00Z",
+}
+
+WORKOUT_W2_SET1_ITEM = {
+    "PK": f"USER#{USER_SUB}",
+    "SK": "WORKOUT#2025-11-03#W2#SET#1",
+    "type": "set",
+    "exercise_id": "squat",
+    "set_number": 1,
+    "reps": 8,
+    "weight_kg": Decimal("60"),
+    "rpe": 7,
+    "created_at": "2025-11-03T09:00:10Z",
+    "updated_at": "2025-11-03T09:00:10Z",
+}
+
+FAKE_TABLE_RESPONSE_ALL = {
     "Items": [
-        # Workout W2
-        {
-            "PK": f"USER#{user_sub}",
-            "SK": "WORKOUT#2025-11-03#W2",
-            "type": "workout",
-            "date": "2025-11-03",
-            "name": "Workout A",
-            "tags": ["upper"],
-            "notes": "Newer",
-            "created_at": "2025-11-03T09:00:00Z",
-            "updated_at": "2025-11-03T09:00:00Z",
-        },
-        # Workout W1
-        {
-            "PK": f"USER#{user_sub}",
-            "SK": "WORKOUT#2025-11-01#W1",
-            "type": "workout",
-            "date": "2025-11-01",
-            "name": "Workout B",
-            "tags": ["legs"],
-            "notes": "Older",
-            "created_at": "2025-11-01T09:00:00Z",
-            "updated_at": "2025-11-01T09:00:00Z",
-        },
-        # A set for W2
-        {
-            "PK": f"USER#{user_sub}",
-            "SK": "WORKOUT#2025-11-03#W2#SET#1",
-            "type": "set",
-            "exercise_id": "squat",
-            "set_number": 1,
-            "reps": 8,
-            "weight_kg": Decimal("60"),
-            "rpe": 7,
-            "created_at": "2025-11-03T09:00:10Z",
-            "updated_at": "2025-11-03T09:00:10Z",
-        },
+        WORKOUT_W2_ITEM,
+        WORKOUT_W1_ITEM,
+        WORKOUT_W2_SET1_ITEM,
+    ]
+}
+
+FAKE_TABLE_RESPONSE_W2_ONLY = {
+    "Items": [
+        WORKOUT_W2_ITEM,
+        WORKOUT_W2_SET1_ITEM,
     ]
 }
 
@@ -59,7 +73,7 @@ fake_table_response = {
 def test_to_model_wraps_validation_error_in_workoutrepoerror(fake_table):
     # No required fields -> Pydantic should blow up
     bad_item = {
-        "PK": "USER#abc-123",
+        "PK": f"USER#{USER_SUB}",
         "SK": "WORKOUT#2025-11-03#W2",
         "type": "workout",
         # missing date, name, etc.
@@ -92,10 +106,10 @@ def test_to_model_raises_for_unknown_type(fake_table):
 
 
 def test_get_all_for_user_returns_sorted_workouts_only(fake_table):
-    fake_table.response = fake_table_response
+    fake_table.response = FAKE_TABLE_RESPONSE_ALL
     repo = DynamoWorkoutRepository(table=fake_table)
 
-    workouts = repo.get_all_for_user(user_sub)
+    workouts = repo.get_all_for_user(USER_SUB)
 
     assert len(workouts) == 2
     assert workouts[0].date.isoformat() == "2025-11-03"
@@ -111,7 +125,7 @@ def test_get_all_for_user_empty_results_returns_empty_list(fake_table):
     fake_table.response = {"Items": []}
     repo = DynamoWorkoutRepository(fake_table)
 
-    workouts = repo.get_all_for_user(user_sub)
+    workouts = repo.get_all_for_user(USER_SUB)
 
     assert workouts == []
 
@@ -120,7 +134,7 @@ def test_get_all_for_user_raises_repoerror_on_client_error(failing_query_table):
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.get_all_for_user("abc-123")
+        repo.get_all_for_user(USER_SUB)
 
     assert "Failed to query database for workouts" in str(excinfo.value)
 
@@ -129,7 +143,7 @@ def test_get_all_for_user_raises_repoerror_on_parse_error(bad_items_table):
     repo = DynamoWorkoutRepository(table=bad_items_table)
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.get_all_for_user("abc-123")
+        repo.get_all_for_user(USER_SUB)
 
     assert "Failed to parse workouts from database response" in str(excinfo.value)
 
@@ -138,17 +152,13 @@ def test_get_all_for_user_raises_repoerror_on_parse_error(bad_items_table):
 
 
 def test_get_workout_with_sets_returns_workout_and_sets(fake_table):
-    fake_table.response = fake_table_response
+    fake_table.response = FAKE_TABLE_RESPONSE_ALL
     repo = DynamoWorkoutRepository(table=fake_table)
 
-    workout_date = date(2025, 11, 3)
-    workout_id = "W2"
-    pk = f"USER#{user_sub}"
-
-    workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+    workout, sets = repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert workout.SK == "WORKOUT#2025-11-03#W2"
-    assert workout.PK == pk
+    assert workout.PK == f"USER#{USER_SUB}"
     assert workout.name == "Workout A"
     assert workout.date.isoformat() == "2025-11-03"
 
@@ -165,7 +175,6 @@ def test_get_workout_with_sets_returns_workout_and_sets(fake_table):
 
 
 def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
-    workout_date = date(2025, 11, 3)
     workout_id = "DOES_NOT_EXIST"
 
     fake_table.response = {"Items": []}
@@ -173,7 +182,7 @@ def test_get_workout_with_sets_raises_error_when_not_found(fake_table):
     repo = DynamoWorkoutRepository(table=fake_table)
 
     with pytest.raises(WorkoutNotFoundError) as excinfo:
-        repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+        repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, workout_id)
 
     assert "not found" in str(excinfo.value)
 
@@ -182,7 +191,7 @@ def test_get_workout_with_sets_raises_repoerror_on_client_error(failing_query_ta
     repo = DynamoWorkoutRepository(table=failing_query_table)
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.get_workout_with_sets("abc-123", date(2025, 11, 3), "W2")
+        repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to query workout and sets from database" in str(excinfo.value)
 
@@ -191,7 +200,7 @@ def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
     repo = DynamoWorkoutRepository(table=bad_items_table)
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.get_workout_with_sets("abc-123", date(2025, 11, 3), "W2")
+        repo.get_workout_with_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to parse workout and sets from response" in str(excinfo.value)
 
@@ -200,9 +209,6 @@ def test_get_workout_with_sets_raises_repoerror_on_parse_error(bad_items_table):
 
 
 def test_create_workout_does_put_item_and_returns_workout(fake_table, monkeypatch):
-    user_sub = "abc-123"
-    workout_date = date(2025, 11, 16)
-
     fixed_uuid = uuid.UUID("12345678-1234-5678-1234-567812345678")
     fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
 
@@ -212,14 +218,14 @@ def test_create_workout_does_put_item_and_returns_workout(fake_table, monkeypatc
     monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
 
     repo = DynamoWorkoutRepository(fake_table)
-    data = WorkoutCreate(date=workout_date, name="Bench Party")
-    workout = repo.create_workout(user_sub=user_sub, data=data)
+    data = WorkoutCreate(date=WORKOUT_DATE_NEW, name="Bench Party")
+    workout = repo.create_workout(user_sub=USER_SUB, data=data)
 
     # Check PK/SK are built correctly
-    assert workout.PK == db.build_user_pk(user_sub)
-    assert workout.SK == db.build_workout_sk(workout_date, str(fixed_uuid))
+    assert workout.PK == db.build_user_pk(USER_SUB)
+    assert workout.SK == db.build_workout_sk(WORKOUT_DATE_NEW, str(fixed_uuid))
     assert workout.type == "workout"
-    assert workout.date == workout_date
+    assert workout.date == WORKOUT_DATE_NEW
     assert workout.name == "Bench Party"
     assert workout.created_at == fixed_now
     assert workout.updated_at == fixed_now
@@ -230,18 +236,17 @@ def test_create_workout_does_put_item_and_returns_workout(fake_table, monkeypatc
 
 def test_create_workout_raises_repoerror_on_client_error(failing_put_table):
     repo = DynamoWorkoutRepository(table=failing_put_table)
-    user_sub = "abc-123"
     data = WorkoutCreate(
-        date=date(2025, 11, 16),
+        date=WORKOUT_DATE_NEW,
         name="Boom Day",
     )
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.create_workout(user_sub, data)
+        repo.create_workout(USER_SUB, data)
 
     assert "Failed to create workout in database" in str(excinfo.value)
 
 
-# --------------- Update ---------------
+# --------------- Update (No New SK) ---------------
 
 
 def test_update_workout_does_put_item_and_returns_workout(fake_table):
@@ -251,7 +256,7 @@ def test_update_workout_does_put_item_and_returns_workout(fake_table):
         PK="USER#test-user-sub",
         SK="WORKOUT#2025-11-16#W1",
         type="workout",
-        date=date(2025, 11, 16),
+        date=WORKOUT_DATE_NEW,
         name="Updated Lizard Leg Day",
         tags=["legs", "updated"],
         notes="Now with extra squats",
@@ -272,7 +277,7 @@ def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
         PK="USER#abc-123",
         SK="WORKOUT#2025-11-16#W1",
         type="workout",
-        date=date(2025, 11, 16),
+        date=WORKOUT_DATE_NEW,
         name="Updated",
         created_at=dates.now(),
         updated_at=dates.now(),
@@ -282,6 +287,9 @@ def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
         repo.update_workout(workout)
 
     assert "Failed to update workout in database" in str(excinfo.value)
+
+
+# --------------- Update (New SK) ---------------
 
 
 # --------------- Delete ---------------
@@ -295,46 +303,18 @@ def test_delete_workout_and_sets_deletes_workout_and_its_sets(fake_table):
     """
     repo = DynamoWorkoutRepository(table=fake_table)
 
-    workout_date = date(2025, 11, 3)
-    workout_id = "W2"
-    pk = f"USER#{user_sub}"
-
     # Only include the workout + its sets in this fake response
-    fake_table.response = {
-        "Items": [
-            {
-                "PK": pk,
-                "SK": "WORKOUT#2025-11-03#W2",
-                "type": "workout",
-                "date": "2025-11-03",
-                "name": "Workout A",
-                "tags": ["upper"],
-                "notes": "Newer",
-                "created_at": "2025-11-03T09:00:00Z",
-                "updated_at": "2025-11-03T09:00:00Z",
-            },
-            {
-                "PK": pk,
-                "SK": "WORKOUT#2025-11-03#W2#SET#1",
-                "type": "set",
-                "exercise_id": "squat",
-                "set_number": 1,
-                "reps": 8,
-                "weight_kg": Decimal("60"),
-                "rpe": 7,
-                "created_at": "2025-11-03T09:00:10Z",
-                "updated_at": "2025-11-03T09:00:10Z",
-            },
-        ]
-    }
-
-    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+    fake_table.response = FAKE_TABLE_RESPONSE_W2_ONLY
+    repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     # Check that all items from the fake response were "deleted"
     assert len(fake_table.deleted_keys) == 2
-    assert {"PK": pk, "SK": "WORKOUT#2025-11-03#W2"} in fake_table.deleted_keys
     assert {
-        "PK": pk,
+        "PK": f"USER#{USER_SUB}",
+        "SK": "WORKOUT#2025-11-03#W2",
+    } in fake_table.deleted_keys
+    assert {
+        "PK": f"USER#{USER_SUB}",
         "SK": "WORKOUT#2025-11-03#W2#SET#1",
     } in fake_table.deleted_keys
 
@@ -346,12 +326,11 @@ def test_delete_workout_and_sets_does_nothing_when_no_items(fake_table):
     """
     repo = DynamoWorkoutRepository(table=fake_table)
 
-    workout_date = date(2025, 11, 3)
     workout_id = "NON_EXISTENT"
 
     fake_table.response = {"Items": []}
 
-    repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
+    repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, workout_id)
 
     # Query should still be called
     assert fake_table.last_query_kwargs is not None
@@ -364,6 +343,6 @@ def test_delete_workout_and_sets_raises_repoerror_on_client_error(failing_delete
     repo = DynamoWorkoutRepository(table=failing_delete_table)
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.delete_workout_and_sets("abc-123", date(2025, 11, 3), "W2")
+        repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to delete workout and sets from database" in str(excinfo.value)
