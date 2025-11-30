@@ -17,6 +17,8 @@ class FakeWorkoutRepo:
         self.sets_to_return = []
         self.should_raise_on_get_one = False
         self.updated_workouts = []
+        self.deleted_calls = []
+        self.should_raise_on_delete = False
 
     # Used by GET /workout/all
     def get_all_for_user(self, user_sub: str):
@@ -40,6 +42,11 @@ class FakeWorkoutRepo:
     def update_workout(self, workout):
         self.updated_workouts.append(workout)
         return workout
+
+    def delete_workout_and_sets(self, user_sub, workout_date, workout_id):
+        if self.should_raise_on_delete:
+            raise RuntimeError("boom-delete")
+        self.deleted_calls.append((user_sub, workout_date, workout_id))
 
 
 @pytest.fixture

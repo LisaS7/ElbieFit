@@ -136,7 +136,8 @@ def test_get_sorted_sets_and_defaults_sorts_and_builds_defaults():
 
     sets = [DummySet(5, "EX-2"), DummySet(3, "EX-1")]
 
-    sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults(sets)
+    # ok to ignore type error - DummySet behaves like a WorkoutSet here
+    sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults(sets)  # type: ignore[arg-type]
 
     # sorted by created_at
     assert [s.exercise_id for s in sorted_sets] == ["EX-1", "EX-2"]
@@ -230,3 +231,41 @@ def test_edit_workout_meta_renders_form(authenticated_client, fake_workout_repo)
     # sanity check that we're actually seeing the edit form
     assert 'name="tags"' in response.text
     assert 'name="notes"' in response.text
+
+
+# ──────────────────────────── DELETE /workout/{date}/{id} ────────────────────────────
+
+
+def test_delete_workout_deletes_and_redirects(authenticated_client, fake_workout_repo):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    response = authenticated_client.delete(
+        f"/workout/{workout_date.isoformat()}/{workout_id}",
+        follow_redirects=False,
+    )
+
+    # route should redirect to /workout/all
+    assert response.status_code == 303
+    assert response.headers["location"] == "/workout/all"
+
+    # repo method should have been called with correct arguments
+    assert fake_workout_repo.deleted_calls == [
+        ("test-user-sub", workout_date, workout_id)
+    ]
+
+
+def test_delete_workout_returns_500_when_repo_raises(
+    authenticated_client, fake_workout_repo
+):
+    workout_date = date(2025, 11, 3)
+    workout_id = "W2"
+
+    fake_workout_repo.should_raise_on_delete = True
+
+    response = authenticated_client.delete(
+        f"/workout/{workout_date.isoformat()}/{workout_id}",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 500
