@@ -5,7 +5,7 @@ from decimal import Decimal
 import pytest
 
 from app.models.workout import Workout, WorkoutCreate, WorkoutSet
-from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
+from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates, db
 
@@ -100,6 +100,182 @@ def test_to_model_raises_for_unknown_type(fake_table):
         repo._to_model(wrong_type_item)
 
     assert "Unknown item type" in str(err.value)
+
+
+# --------------- Next set number ---------------
+def test_get_next_set_number_returns_1_when_no_sets(fake_table):
+    fake_table.response = {"Items": []}
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    result = repo._get_next_set_number(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    assert result == 1
+    assert fake_table.last_query_kwargs is not None
+    assert "KeyConditionExpression" in fake_table.last_query_kwargs
+
+
+def test_get_next_set_number_returns_max_plus_one(fake_table):
+    """
+    When there are existing sets, it should return max(set_number) + 1.
+    """
+    pk = db.build_user_pk(USER_SUB)
+    base_sk = db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2) + "#SET#"
+
+    items = {
+        "Items": [
+            {"PK": pk, "SK": base_sk + "001"},  # set 1
+            {"PK": pk, "SK": base_sk + "003"},  # set 3
+            {"PK": pk, "SK": base_sk + "002"},  # set 2
+        ]
+    }
+
+    fake_table.response = items
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    result = repo._get_next_set_number(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    # max is 3 -> next should be 4
+    assert result == 4
+
+
+def test_get_next_set_number_ignores_malformed_set_sks(fake_table):
+    """
+    Malformed SKs that don't end in an int should be ignored. The method should
+    still return max(valid_set_number) + 1, or 1 if none are valid.
+    """
+    pk = db.build_user_pk(USER_SUB)
+    base_sk = db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2) + "#SET#"
+
+    fake_table.response = {
+        "Items": [
+            {"PK": pk, "SK": base_sk + "not-an-int"},
+            {"PK": pk, "SK": base_sk + "005"},
+        ]
+    }
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    result = repo._get_next_set_number(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    # Only "005" is valid -> max is 5, next is 6
+    assert result == 6
+
+
+def test_get_next_set_number_raises_workoutrepoerror_on_safe_query_failure(
+    fake_table, monkeypatch
+):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    def boom(**kwargs):
+        raise RepoError("kaboom")
+
+    # Force _safe_query to blow up
+    monkeypatch.setattr(repo, "_safe_query", boom)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo._get_next_set_number(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    assert "Failed to determine next set number" in str(excinfo.value)
+
+
+def test_get_next_set_number_returns_1_when_all_set_sks_are_invalid(fake_table):
+    pk = db.build_user_pk(USER_SUB)
+    base_sk = db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    fake_table.response = {
+        "Items": [
+            {"PK": pk, "SK": base_sk + "#SET#x"},
+            {"PK": pk, "SK": base_sk + "#SET#notanumber"},
+            {"PK": pk, "SK": base_sk + "#SET#00x"},
+        ]
+    }
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    result = repo._get_next_set_number(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    assert result == 1
+
+
+# --------------- Build moved workouts & sets ---------------
+
+
+def test_build_moved_workout_updates_keys_and_date(fake_table, monkeypatch):
+    from app.repositories import workout as workout_repo_module
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    original = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Move Me Dino Day",
+        tags=["upper"],
+        notes="Roar",
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    new_workout = repo._build_moved_workout(USER_SUB, original, WORKOUT_DATE_NEW)
+
+    assert new_workout.PK == db.build_user_pk(USER_SUB)
+    assert new_workout.SK == db.build_workout_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2)
+    assert new_workout.date == WORKOUT_DATE_NEW
+    assert new_workout.updated_at == fixed_now  # from patched dates.now
+    # sanity: name and created_at carried over
+    assert new_workout.name == original.name
+    assert new_workout.created_at == original.created_at
+
+
+def test_build_moved_sets_updates_pk_sk_and_timestamp(fake_table, monkeypatch):
+    from app.repositories import workout as workout_repo_module
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    new_workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_NEW,
+        name="Moved",
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    original_set = WorkoutSet(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_set_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2, 1),
+        type="set",
+        exercise_id="squat",
+        set_number=1,
+        reps=8,
+        weight_kg=Decimal("60"),
+        rpe=7,
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    new_sets = repo._build_moved_sets(
+        USER_SUB, new_workout, WORKOUT_ID_W2, [original_set]
+    )
+
+    assert len(new_sets) == 1
+    moved = new_sets[0]
+
+    assert moved.PK == db.build_user_pk(USER_SUB)
+    assert moved.SK == db.build_set_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2, 1)
+    assert moved.updated_at == fixed_now  # patched dates.now
+    # still the same set content
+    assert moved.exercise_id == original_set.exercise_id
+    assert moved.reps == original_set.reps
+    assert moved.weight_kg == original_set.weight_kg
 
 
 # --------------- Get All ---------------
@@ -331,11 +507,6 @@ def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
 
 # --------------- Update (New SK) ---------------
 def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
-    from app.repositories import workout as workout_repo_module
-
-    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
-    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
-
     repo = DynamoWorkoutRepository(fake_table)
 
     # Original workout on old date
@@ -347,11 +518,10 @@ def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
         name="Move Me Dino Day",
         tags=["upper"],
         notes="Roar",
-        created_at=fixed_now,
-        updated_at=fixed_now,
+        created_at=dates.now(),
+        updated_at=dates.now(),
     )
 
-    # Spy on delete_workout_and_sets so we don't rely on its own implementation
     delete_calls = {}
 
     def fake_delete(user_sub, workout_date, workout_id):
@@ -361,7 +531,6 @@ def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
 
     monkeypatch.setattr(repo, "delete_workout_and_sets", fake_delete)
 
-    # Act: move the workout to a new date, but with no sets
     repo.move_workout_date(
         user_sub=USER_SUB,
         workout=workout,
@@ -369,100 +538,17 @@ def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
         sets=[],
     )
 
-    # ── Assert: delete called with OLD keys ──
     assert delete_calls == {
         "user_sub": USER_SUB,
         "date": WORKOUT_DATE_W2,
         "workout_id": WORKOUT_ID_W2,
     }
 
-    # ── Assert: new workout item was written with NEW keys ──
-    expected_pk = db.build_user_pk(USER_SUB)
-    expected_sk = db.build_workout_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2)
+    assert fake_table.last_put_kwargs is not None
+    item = fake_table.last_put_kwargs["Item"]
 
-    expected_workout = workout.model_copy(
-        update={
-            "PK": expected_pk,
-            "SK": expected_sk,
-            "date": WORKOUT_DATE_NEW,
-            "updated_at": fixed_now,
-        }
-    )
-
-    assert fake_table.last_put_kwargs == {"Item": expected_workout.to_ddb_item()}
-
-
-def test_move_workout_date_recreates_sets_with_new_keys(fake_table, monkeypatch):
-    from app.repositories import workout as workout_repo_module
-
-    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
-    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
-
-    repo = DynamoWorkoutRepository(fake_table)
-
-    # Original workout
-    workout = Workout(
-        PK=db.build_user_pk(USER_SUB),
-        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
-        type="workout",
-        date=WORKOUT_DATE_W2,
-        name="Leg Day Before Meteor",
-        tags=["legs"],
-        notes=None,
-        created_at=fixed_now,
-        updated_at=fixed_now,
-    )
-
-    # Original set on old keys
-    set1 = WorkoutSet(
-        PK=db.build_user_pk(USER_SUB),
-        SK=db.build_set_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2, 1),
-        type="set",
-        exercise_id="squat",
-        set_number=1,
-        reps=8,
-        weight_kg=Decimal("60"),
-        rpe=7,
-        created_at=fixed_now,
-        updated_at=fixed_now,
-    )
-
-    # Spy on delete again (we only care that it's called, not what it does internally)
-    delete_calls = {}
-
-    def fake_delete(user_sub, workout_date, workout_id):
-        delete_calls["user_sub"] = user_sub
-        delete_calls["date"] = workout_date
-        delete_calls["workout_id"] = workout_id
-
-    monkeypatch.setattr(repo, "delete_workout_and_sets", fake_delete)
-
-    # Act: move with one set
-    repo.move_workout_date(
-        user_sub=USER_SUB,
-        workout=workout,
-        new_date=WORKOUT_DATE_NEW,
-        sets=[set1],
-    )
-
-    # ── Assert: delete called on old workout ──
-    assert delete_calls == {
-        "user_sub": USER_SUB,
-        "date": WORKOUT_DATE_W2,
-        "workout_id": WORKOUT_ID_W2,
-    }
-
-    # ── Assert: the last Dynamo put is the recreated set with new PK/SK ──
-    expected_pk = db.build_user_pk(USER_SUB)
-    expected_sk = db.build_set_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2, 1)
-
-    expected_set_item = {
-        **set1.to_ddb_item(),
-        "PK": expected_pk,
-        "SK": expected_sk,
-    }
-
-    assert fake_table.last_put_kwargs == {"Item": expected_set_item}
+    assert item["PK"] == db.build_user_pk(USER_SUB)
+    assert item["SK"] == db.build_workout_sk(WORKOUT_DATE_NEW, WORKOUT_ID_W2)
 
 
 def test_move_workout_date_raises_workoutrepoerror_when_write_fails(
@@ -493,6 +579,95 @@ def test_move_workout_date_raises_workoutrepoerror_when_write_fails(
         )
 
     assert "Failed to write new workout or sets" in str(excinfo.value)
+
+
+def test_move_workout_date_raises_workoutrepoerror_when_delete_fails(
+    fake_table, monkeypatch
+):
+    """
+    If the new workout (and sets) are written successfully but deleting the old
+    workout fails, move_workout_date should raise a WorkoutRepoError with the
+    expected message.
+    """
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    # Ensure deterministic timestamps
+    monkeypatch.setattr(dates, "now", lambda: fixed_now)
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Original workout on old date
+    workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Move Me Dino Day",
+        tags=["upper"],
+        notes="Roar",
+        created_at=fixed_now,
+        updated_at=fixed_now,
+    )
+
+    # Make delete_workout_and_sets raise after new workout is created
+    def fake_delete(user_sub, workout_date, workout_id):
+        raise WorkoutRepoError("failed to delete old workout")
+
+    monkeypatch.setattr(repo, "delete_workout_and_sets", fake_delete)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.move_workout_date(
+            user_sub=USER_SUB,
+            workout=workout,
+            new_date=WORKOUT_DATE_NEW,
+            sets=[],
+        )
+
+    assert "New workout created but failed to delete old one" in str(excinfo.value)
+
+
+def test_move_workout_date_calls_safe_put_for_sets(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    workout = Workout(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2),
+        type="workout",
+        date=WORKOUT_DATE_W2,
+        name="Move Me Dino Day",
+        tags=["upper"],
+        notes="Roar",
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    set1 = WorkoutSet(
+        PK=db.build_user_pk(USER_SUB),
+        SK=db.build_set_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2, 1),
+        type="set",
+        exercise_id="squat",
+        set_number=1,
+        reps=8,
+        weight_kg=Decimal("60"),
+        rpe=7,
+        created_at=dates.now(),
+        updated_at=dates.now(),
+    )
+
+    calls: list[dict] = []
+
+    def fake_safe_put(item: dict) -> None:
+        calls.append(item)
+
+    monkeypatch.setattr(repo, "_safe_put", fake_safe_put)
+
+    repo.move_workout_date(
+        user_sub=USER_SUB,
+        workout=workout,
+        new_date=WORKOUT_DATE_NEW,
+        sets=[set1],
+    )
+
+    assert len(calls) == 2
 
 
 # --------------- Delete ---------------
@@ -549,3 +724,34 @@ def test_delete_workout_and_sets_raises_repoerror_on_client_error(failing_delete
         repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to load workout and sets for deletion" in str(excinfo.value)
+
+
+def test_delete_workout_and_sets_wraps_unexpected_exception_in_workoutrepoerror(
+    fake_table, monkeypatch
+):
+    """
+    If Dynamo's batch_writer.delete_item raises an unexpected exception, the
+    repository should wrap it in a WorkoutRepoError with the expected message.
+    """
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Ensure there are items to delete
+    fake_table.response = FAKE_TABLE_RESPONSE_W2_ONLY
+
+    class BadBatch:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def delete_item(self, Key):
+            raise RuntimeError("boom delete")
+
+    # Replace the table's batch_writer with one that raises on delete
+    monkeypatch.setattr(repo._table, "batch_writer", lambda: BadBatch())
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
+
+    assert "Failed to delete workout and sets from database" in str(excinfo.value)

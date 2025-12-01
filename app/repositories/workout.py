@@ -8,6 +8,7 @@ from app.models.workout import Workout, WorkoutCreate, WorkoutSet
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.utils import dates, db
+from app.utils.log import logger
 
 
 class WorkoutRepository(Protocol):
@@ -46,6 +47,75 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             raise WorkoutRepoError("Failed to create workout model from item") from e
 
         raise WorkoutRepoError(f"Unknown item type: {item_type}")
+
+    def _build_moved_workout(
+        self, user_sub: str, workout: Workout, new_date: DateType
+    ) -> Workout:
+        """
+        Create a new Workout model instance with updated date and keys.
+        """
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_workout_sk(new_date, workout.workout_id)
+        now = dates.now()
+
+        return workout.model_copy(
+            update={"PK": pk, "SK": sk, "date": new_date, "updated_at": now}
+        )
+
+    def _build_moved_sets(
+        self,
+        user_sub: str,
+        new_workout: Workout,
+        old_workout_id: str,
+        sets: List[WorkoutSet],
+    ) -> List[WorkoutSet]:
+        """
+        Create new WorkoutSet model instances with updated keys for the moved workout.
+        """
+        pk = db.build_user_pk(user_sub)
+        new_sets = []
+        for s in sets:
+            new_sk = db.build_set_sk(new_workout.date, old_workout_id, s.set_number)
+            now = dates.now()
+            new_set = s.model_copy(update={"PK": pk, "SK": new_sk, "updated_at": now})
+            new_sets.append(new_set)
+        return new_sets
+
+    def _get_next_set_number(
+        self, user_sub: str, workout_date: DateType, workout_id: str
+    ) -> int:
+        """
+        Determine the next set number for a given workout by fetching existing sets.
+        """
+        pk = db.build_user_pk(user_sub)
+        sk_prefix = db.build_set_prefix(workout_date, workout_id)
+
+        try:
+            items = self._safe_query(
+                KeyConditionExpression=Key("PK").eq(pk)
+                & Key("SK").begins_with(sk_prefix)
+            )
+
+            if not items:
+                return 1
+
+            set_numbers = []
+            for item in items:
+                parts = item["SK"].split("#")
+                if len(parts) >= 5:
+                    try:
+                        set_number = int(parts[-1])
+                        set_numbers.append(set_number)
+                    except ValueError:
+                        continue
+
+            if not set_numbers:
+                logger.warning("No valid set numbers found, defaulting to 1")
+                return 1
+
+            return max(set_numbers) + 1
+        except RepoError as e:
+            raise WorkoutRepoError("Failed to determine next set number") from e
 
     # ----------------------- Get -----------------------------
 
@@ -157,32 +227,16 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
         old_date = workout.date
         old_workout_id = workout.workout_id
-        now = dates.now()
-
-        # new keys
-        pk = db.build_user_pk(user_sub)
-        new_sk = db.build_workout_sk(new_date, old_workout_id)
 
         # create a new workout
-        new_workout = workout.model_copy(
-            update={"PK": pk, "SK": new_sk, "date": new_date, "updated_at": now}
-        )
+        new_workout = self._build_moved_workout(user_sub, workout, new_date)
+        new_sets = self._build_moved_sets(user_sub, new_workout, old_workout_id, sets)
 
         try:
             self._safe_put(new_workout.to_ddb_item())
 
-            # Recreate sets with new SKs
-            for s in sets:
-                set_pk = db.build_user_pk(user_sub)
-                set_new_sk = db.build_set_sk(
-                    new_workout.date, old_workout_id, s.set_number
-                )
-                new_item = {
-                    **s.to_ddb_item(),
-                    "PK": set_pk,
-                    "SK": set_new_sk,
-                }
-                self._safe_put(new_item)
+            for item in new_sets:
+                self._safe_put(item.to_ddb_item())
         except RepoError as e:
             raise WorkoutRepoError("Failed to write new workout or sets") from e
 

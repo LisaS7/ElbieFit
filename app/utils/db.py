@@ -33,12 +33,21 @@ def build_workout_sk(workout_date: DateType, workout_id: str) -> str:
     return f"WORKOUT#{workout_date.isoformat()}#{workout_id}"
 
 
+def build_set_prefix(workout_date: DateType, workout_id: str) -> str:
+    """
+    Prefix for set items under a workout, e.g.:
+    WORKOUT#2025-11-04#W1#SET#
+    """
+    return f"{build_workout_sk(workout_date, workout_id)}#SET#"
+
+
 def build_set_sk(workout_date: DateType, workout_id: str, set_number: int) -> str:
     """
     Build the SK for a set item, e.g.:
     WORKOUT#2025-11-04#W1#SET#001
     """
-    return f"{build_workout_sk(workout_date, workout_id)}#SET#{set_number:03d}"
+    prefix = build_set_prefix(workout_date, workout_id)
+    return f"{prefix}{set_number:03d}"
 
 
 def build_exercise_sk(exercise_id: str) -> str:
