@@ -173,12 +173,14 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
             # Recreate sets with new SKs
             for s in sets:
-                pk = db.build_user_pk(user_sub)
-                new_sk = db.build_set_sk(new_workout.date, old_workout_id, s.set_number)
+                set_pk = db.build_user_pk(user_sub)
+                set_new_sk = db.build_set_sk(
+                    new_workout.date, old_workout_id, s.set_number
+                )
                 new_item = {
                     **s.to_ddb_item(),
-                    "PK": pk,
-                    "SK": new_sk,
+                    "PK": set_pk,
+                    "SK": set_new_sk,
                 }
                 self._safe_put(new_item)
         except RepoError as e:
