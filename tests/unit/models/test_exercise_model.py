@@ -37,6 +37,11 @@ def test_exercise_model_creates_instance_with_expected_fields():
     assert isinstance(exercise.updated_at, datetime)
 
 
+def test_exercise_id_comes_from_suffix_of_SK():
+    exercise = make_example_exercise(SK="EXERCISE#1234-uuid")
+    assert exercise.exercise_id == "1234-uuid"
+
+
 def test_exercise_type_must_be_literal_exercise():
     # type is a Literal["exercise"], so anything else should blow up
     with pytest.raises(ValidationError):

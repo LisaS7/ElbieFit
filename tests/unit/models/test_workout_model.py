@@ -126,6 +126,19 @@ def test_workout_set_model_creates_instance_with_expected_fields():
     assert isinstance(ws.updated_at, datetime)
 
 
+def test_workoutset_workout_id_extracts_from_SK():
+    ws = make_example_workout_set(SK="WORKOUT#2025-11-04#W42#SET#001")
+    assert ws.workout_id == "W42"
+
+
+def test_workoutset_workout_id_raises_on_invalid_SK():
+    ws = make_example_workout_set(SK="WORKOUT#ONLYTWO")
+    with pytest.raises(ValueError) as exc:
+        _ = ws.workout_id
+
+    assert "Invalid SK format" in str(exc.value)
+
+
 def test_workout_set_type_must_be_literal_set():
     with pytest.raises(ValidationError):
         make_example_workout_set(type="workout")  # not allowed per Literal
