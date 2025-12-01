@@ -1,10 +1,24 @@
 # scripts/seed_data.py
+import uuid
 from datetime import date
 from decimal import Decimal
 from typing import List, Tuple
 
 from app.models import Exercise, UserProfile, Workout, WorkoutSet
 from app.utils.dates import now
+
+exercise_ids = {
+    "PUSHUP": str(uuid.uuid4()),
+    "ROW": str(uuid.uuid4()),
+    "SQUAT": str(uuid.uuid4()),
+    "DEADLIFT": str(uuid.uuid4()),
+    "PLANK": str(uuid.uuid4()),
+    "BURPEE": str(uuid.uuid4()),
+    "KETTLEBELL_SWING": str(uuid.uuid4()),
+    "LUNGE": str(uuid.uuid4()),
+    "BENCH_PRESS": str(uuid.uuid4()),
+    "SHOULDER_PRESS": str(uuid.uuid4()),
+}
 
 
 def build_profile(pk: str) -> UserProfile:
@@ -28,10 +42,11 @@ def build_exercises(pk: str) -> List[Exercise]:
     Build all exercises used by the seed workouts.
     """
     ts = now()
+
     return [
         Exercise(
             PK=pk,
-            SK="EXERCISE#PUSHUP",
+            SK=f"EXERCISE#{exercise_ids['PUSHUP']}",
             type="exercise",
             name="Push-up",
             muscles=["chest", "triceps", "shoulders"],
@@ -42,7 +57,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#ROW",
+            SK=f"EXERCISE#{exercise_ids['ROW']}",
             type="exercise",
             name="Dumbbell Row",
             muscles=["lats", "upper_back", "biceps"],
@@ -53,7 +68,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#SQUAT",
+            SK=f"EXERCISE#{exercise_ids['SQUAT']}",
             type="exercise",
             name="Back Squat",
             muscles=["quads", "glutes", "hamstrings"],
@@ -64,7 +79,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#DEADLIFT",
+            SK=f"EXERCISE#{exercise_ids['DEADLIFT']}",
             type="exercise",
             name="Deadlift",
             muscles=["hamstrings", "glutes", "back"],
@@ -75,7 +90,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#PLANK",
+            SK=f"EXERCISE#{exercise_ids['PLANK']}",
             type="exercise",
             name="Plank",
             muscles=["core"],
@@ -86,7 +101,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#BURPEE",
+            SK=f"EXERCISE#{exercise_ids['BURPEE']}",
             type="exercise",
             name="Burpee",
             muscles=["full_body"],
@@ -97,7 +112,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#KETTLEBELL_SWING",
+            SK=f"EXERCISE#{exercise_ids['KETTLEBELL_SWING']}",
             type="exercise",
             name="Kettlebell Swing",
             muscles=["glutes", "hamstrings", "back"],
@@ -108,7 +123,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#LUNGE",
+            SK=f"EXERCISE#{exercise_ids['LUNGE']}",
             type="exercise",
             name="Lunge",
             muscles=["quads", "glutes", "hamstrings"],
@@ -119,7 +134,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#BENCH_PRESS",
+            SK=f"EXERCISE#{exercise_ids['BENCH_PRESS']}",
             type="exercise",
             name="Bench Press",
             muscles=["chest", "triceps", "shoulders"],
@@ -130,7 +145,7 @@ def build_exercises(pk: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK="EXERCISE#SHOULDER_PRESS",
+            SK=f"EXERCISE#{exercise_ids['SHOULDER_PRESS']}",
             type="exercise",
             name="Shoulder Press",
             muscles=["shoulders", "triceps"],
@@ -167,7 +182,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-04#W1#SET#001",
             type="set",
-            exercise_id="PUSHUP",
+            exercise_id=exercise_ids["PUSHUP"],
             set_number=1,
             reps=12,
             weight_kg=Decimal(0.0),
@@ -179,7 +194,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-04#W1#SET#002",
             type="set",
-            exercise_id="ROW",
+            exercise_id=exercise_ids["ROW"],
             set_number=2,
             reps=10,
             weight_kg=Decimal(20.0),
@@ -207,7 +222,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-06#W2#SET#001",
             type="set",
-            exercise_id="SQUAT",
+            exercise_id=exercise_ids["SQUAT"],
             set_number=1,
             reps=8,
             weight_kg=Decimal(40.0),
@@ -219,7 +234,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-06#W2#SET#002",
             type="set",
-            exercise_id="DEADLIFT",
+            exercise_id=exercise_ids["DEADLIFT"],
             set_number=2,
             reps=5,
             weight_kg=Decimal(60.0),
@@ -247,7 +262,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-08#W3#SET#001",
             type="set",
-            exercise_id="PLANK",
+            exercise_id=exercise_ids["PLANK"],
             set_number=1,
             reps=1,
             weight_kg=Decimal(0.0),
@@ -259,7 +274,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-08#W3#SET#002",
             type="set",
-            exercise_id="BURPEE",
+            exercise_id=exercise_ids["BURPEE"],
             set_number=2,
             reps=10,
             weight_kg=Decimal(0.0),
@@ -287,7 +302,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-10#W4#SET#001",
             type="set",
-            exercise_id="KETTLEBELL_SWING",
+            exercise_id=exercise_ids["KETTLEBELL_SWING"],
             set_number=1,
             reps=15,
             weight_kg=Decimal(12.0),
@@ -299,7 +314,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-10#W4#SET#002",
             type="set",
-            exercise_id="LUNGE",
+            exercise_id=exercise_ids["LUNGE"],
             set_number=2,
             reps=12,
             weight_kg=Decimal(10.0),
@@ -327,7 +342,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-12#W5#SET#001",
             type="set",
-            exercise_id="BENCH_PRESS",
+            exercise_id=exercise_ids["BENCH_PRESS"],
             set_number=1,
             reps=6,
             weight_kg=Decimal(35.0),
@@ -339,7 +354,7 @@ def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
             PK=pk,
             SK="WORKOUT#2025-11-12#W5#SET#002",
             type="set",
-            exercise_id="SHOULDER_PRESS",
+            exercise_id=exercise_ids["SHOULDER_PRESS"],
             set_number=2,
             reps=8,
             weight_kg=Decimal(15.0),
