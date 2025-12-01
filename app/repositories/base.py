@@ -38,3 +38,18 @@ class DynamoRepository(Generic[T]):
         except ClientError as e:
             logger.exception("DynamoDB put_item failed")
             raise RepoError("Failed to write to database") from e
+
+    def _safe_get(self, **kwargs) -> dict | None:
+        try:
+            resp = self._table.get_item(**kwargs)
+            return resp.get("Item")
+        except ClientError as e:
+            logger.exception("DynamoDB get_item failed")
+            raise RepoError("Failed to read from database") from e
+
+    def _safe_delete(self, **kwargs) -> None:
+        try:
+            self._table.delete_item(**kwargs)
+        except ClientError as e:
+            logger.exception("DynamoDB delete_item failed")
+            raise RepoError("Failed to delete from database") from e
