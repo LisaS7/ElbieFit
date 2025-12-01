@@ -93,3 +93,37 @@ def fake_workout_repo(app_instance):
         yield repo
     finally:
         app_instance.dependency_overrides.pop(workout_routes.get_workout_repo, None)
+
+
+class FakeExerciseRepo:
+    """
+    Tiny fake to stand in for DynamoExerciseRepository in route tests.
+    """
+
+    def __init__(self):
+        self.calls = []
+
+    def get_exercise_by_id(self, user_sub: str, exercise_id: str):
+        # record calls so tests *could* assert on them later
+        self.calls.append((user_sub, exercise_id))
+
+        # Return a super simple dummy object that behaves enough like an exercise
+        class DummyExercise:
+            def __init__(self, exercise_id: str):
+                self.exercise_id = exercise_id
+                self.name = f"Exercise {exercise_id}"
+
+        return DummyExercise(exercise_id)
+
+
+@pytest.fixture(autouse=True)
+def fake_exercise_repo(app_instance):
+    """
+    Override get_exercise_repo() for all tests that use the FastAPI app.
+    """
+    repo = FakeExerciseRepo()
+    app_instance.dependency_overrides[workout_routes.get_exercise_repo] = lambda: repo
+    try:
+        yield repo
+    finally:
+        app_instance.dependency_overrides.pop(workout_routes.get_exercise_repo, None)
