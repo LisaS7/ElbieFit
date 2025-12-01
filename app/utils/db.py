@@ -39,3 +39,11 @@ def build_set_sk(workout_date: DateType, workout_id: str, set_number: int) -> st
     WORKOUT#2025-11-04#W1#SET#001
     """
     return f"{build_workout_sk(workout_date, workout_id)}#SET#{set_number:03d}"
+
+
+def build_exercise_sk(exercise_id: str) -> str:
+    """
+    Sort key for an exercise item.
+    Example: EXERCISE#E1
+    """
+    return f"EXERCISE#{exercise_id}"
