@@ -77,7 +77,7 @@ def decode_and_validate_id_token(
     return decoded_token
 
 
-def log_sub_and_exp(decoded_token: Dict[str, Any]):
+def log_sub_and_exp(decoded_token: Dict[str, Any]):  # pragma: no cover
     """Logging the user sub and token expiry to help with debugging"""
     exp = decoded_token.get("exp")
     exp_time = (
