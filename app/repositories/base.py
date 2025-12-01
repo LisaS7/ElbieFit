@@ -3,6 +3,7 @@ from typing import Generic, List, TypeVar
 from botocore.exceptions import ClientError
 
 from app.repositories.errors import RepoError
+from app.utils.log import logger
 
 T = TypeVar("T")
 
@@ -27,6 +28,7 @@ class DynamoRepository(Generic[T]):
             response = self._table.query(**kwargs)
             return response.get("Items", [])
         except ClientError as e:
+            logger.exception("DynamoDB query failed")
             raise RepoError("Failed to query database") from e
 
     def _safe_put(self, item: dict) -> None:
@@ -34,4 +36,5 @@ class DynamoRepository(Generic[T]):
         try:
             self._table.put_item(Item=item)
         except ClientError as e:
+            logger.exception("DynamoDB put_item failed")
             raise RepoError("Failed to write to database") from e
