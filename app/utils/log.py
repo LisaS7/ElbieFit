@@ -11,6 +11,15 @@ root.setLevel(LOG_LEVEL)
 for h in list(root.handlers):  # pragma: no cover
     root.removeHandler(h)
 
+noisy_loggers = [
+    "botocore",
+    "boto3",
+    "urllib3",
+]
+
+for name in noisy_loggers:
+    logging.getLogger(name).setLevel(logging.INFO)
+
 handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(FORMAT))
 root.addHandler(handler)
