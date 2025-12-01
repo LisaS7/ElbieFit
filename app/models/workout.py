@@ -17,6 +17,7 @@ class Workout(BaseModel):
     name: str
     tags: list[str] | None = None
     notes: str | None = None
+
     created_at: datetime
     updated_at: datetime
 
@@ -77,8 +78,9 @@ class WorkoutSet(BaseModel):
     exercise_id: str
     set_number: int
     reps: int
-    weight_kg: Decimal
-    rpe: int
+    weight_kg: Decimal | None = None
+    rpe: int | None = None  # Rate of Perceived Exertion
+
     created_at: datetime
     updated_at: datetime
 
@@ -87,3 +89,17 @@ class WorkoutSet(BaseModel):
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
         return data
+
+    @property
+    def workout_id(self) -> str:
+        parts = self.SK.split("#")
+        if len(parts) < 3:
+            raise ValueError(f"Invalid SK format: {self.SK}")
+        return parts[2]
+
+
+class WorkoutSetCreate(BaseModel):
+    exercise_id: str
+    reps: int
+    weight_kg: Decimal | None = None
+    rpe: int | None = None
