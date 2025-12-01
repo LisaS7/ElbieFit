@@ -3,23 +3,24 @@
 {% block title %}Workout - {{workout.name}} {% endblock %}
 
 {% block content %}
-<header id="workout-detail-header">
-    <div class="workout-title">
-        <h2>{{workout.name}}</h2>
-        <p class="">
-            {{ workout.date.strftime("%A %d %B %Y")  }}
-        </p>
-    </div>
-    <a href="/workout/all" class="icon-button" title="Back to list">
-        <img src="{{ url_for('static', path='images/back.png') }}" alt="Back">
-    </a>
 
-</header>
 
 
 <section id="workout-meta" class="card">
+    <header id="workout-detail-header">
+        <div class="workout-title">
+            <h2>{{workout.name}}</h2>
+            <p class="">
+                {{ workout.date.strftime("%A %d %B %Y")  }}
+            </p>
+        </div>
+        <a href="/workout/all" class="icon-button" title="Back to list">
+            <img src="{{ url_for('static', path='images/back.png') }}" alt="Back">
+        </a>
+    </header>
+
     <div id="tags-actions">
-        <div class="tags-group ">
+        <div class="tags-group">
         Tags:
             {% for tag in workout.tags or [] %}
                 <span class="tag">{{ tag }}</span>
@@ -49,7 +50,7 @@
             {% set exercise = exercises.get(exercise_id) if exercises else None %}
             <header>
                 {% if exercise %}
-                    <h3>Exercise {{exercise.name}}</h3>
+                    <h3>{{exercise.name}}</h3>
                 {% else %}
                     <h3>Unknown Exercise</h3>
                 {% endif %}

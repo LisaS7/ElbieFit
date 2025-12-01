@@ -229,7 +229,7 @@ def update_workout_meta(
     # if date has changed then create new and delete old
     else:
         try:
-            repo.move_workout_date(user_sub, workout, new_date, sets)
+            workout = repo.move_workout_date(user_sub, workout, new_date, sets)
         except WorkoutRepoError:
             logger.exception("Error updating workout with date change")
             raise HTTPException(status_code=500, detail="Error updating workout")

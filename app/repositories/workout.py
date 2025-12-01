@@ -24,7 +24,7 @@ class WorkoutRepository(Protocol):
         workout: Workout,
         new_date: DateType,
         sets: list[WorkoutSet],
-    ) -> None: ...
+    ) -> Workout: ...
     def delete_workout_and_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> None: ...
@@ -223,7 +223,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         workout: Workout,
         new_date: DateType,
         sets: list[WorkoutSet],
-    ) -> None:
+    ) -> Workout:
 
         old_date = workout.date
         old_workout_id = workout.workout_id
@@ -246,6 +246,8 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             raise WorkoutRepoError(
                 "New workout created but failed to delete old one"
             ) from e
+
+        return new_workout
 
     # ----------------------- Delete -----------------------------
 
