@@ -46,7 +46,7 @@
     {% if sets %}
         {% for group in sets | groupby('exercise_id') %}
             {% set exercise_id = group.grouper %}
-            {% set exercise = exercises.get(exercise_id) %}
+            {% set exercise = exercises.get(exercise_id) if exercises else None %}
             <header>
                 {% if exercise %}
                     <h3>Exercise {{exercise.name}}</h3>
