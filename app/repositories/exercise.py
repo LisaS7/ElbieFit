@@ -10,6 +10,9 @@ from app.utils import db
 
 class ExerciseRepository(Protocol):
     def get_all_for_user(self, user_sub: str) -> List[Exercise]: ...
+    def get_exercise_by_id(
+        self, user_sub: str, exercise_id: str
+    ) -> Exercise | None: ...
 
     # TODO:
     # create exercise
@@ -48,3 +51,21 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
             raise
 
         return [self._to_model(item) for item in items]
+
+    def get_exercise_by_id(self, user_sub: str, exercise_id: str) -> Exercise | None:
+        """
+        Return a single exercise by its id for this user
+        """
+
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_exercise_sk(exercise_id)
+
+        try:
+            item = self._safe_get(Key={"PK": pk, "SK": sk})
+        except ExerciseRepoError:
+            raise
+
+        if not item:
+            return None
+
+        return self._to_model(item)

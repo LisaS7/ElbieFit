@@ -46,8 +46,18 @@
     {% if sets %}
         {% for group in sets | groupby('exercise_id') %}
             {% set exercise_id = group.grouper %}
-            <header><h3>Exercise {{exercise_id}}</h3></header>
-            {# TODO: Exercise Name #}             {# Muscle group label - like a sticky label at the side #}
+            {% set exercise = exercises.get(exercise_id) %}
+            <header>
+                {% if exercise %}
+                    <h3>Exercise {{exercise.name}}</h3>
+                {% else %}
+                    <h3>Unknown Exercise</h3>
+                {% endif %}
+
+            </header>
+
+
+            {# TODO: Muscle group label - like a sticky label at the side #}
 
             <div class="sets-table">
                 <div class="sets-table-header">

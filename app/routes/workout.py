@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
 from app.models.workout import WorkoutCreate, WorkoutSet, WorkoutUpdate
-from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
+from app.repositories.errors import (
+    ExerciseRepoError,
+    WorkoutNotFoundError,
+    WorkoutRepoError,
+)
+from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import templates
 from app.utils import auth, dates
@@ -17,6 +22,11 @@ router = APIRouter(prefix="/workout", tags=["workout"])
 def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
     """Fetch the workout repo"""
     return DynamoWorkoutRepository()
+
+
+def get_exercise_repo() -> ExerciseRepository:  # pragma: no cover
+    """Fetch the exercise repo"""
+    return DynamoExerciseRepository()
 
 
 def get_sorted_sets_and_defaults(
@@ -105,12 +115,16 @@ def view_workout(
     workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    workout_repo: WorkoutRepository = Depends(get_workout_repo),
+    exercise_repo: ExerciseRepository = Depends(get_exercise_repo),
 ):
     user_sub = claims["sub"]
 
+    # ---- Fetch workout and sets -----
     try:
-        workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
+        workout, sets = workout_repo.get_workout_with_sets(
+            user_sub, workout_date, workout_id
+        )
     except WorkoutNotFoundError:
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
@@ -119,10 +133,33 @@ def view_workout(
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
 
+    # ---- Fetch exercise details -----
+    exercise_map = {}
+
+    try:
+        for s in sets:
+            print("SET:", s)
+            print("EXERCISE ID:", s.exercise_id)
+            exercise_id = s.exercise_id
+            if exercise_id not in exercise_map:
+                exercise = exercise_repo.get_exercise_by_id(user_sub, exercise_id)
+                print("EXERCISE:", exercise)
+                if exercise:
+                    exercise_map[exercise_id] = exercise
+    except ExerciseRepoError:
+        logger.exception("Error fetching exercise details")
+        raise HTTPException(status_code=500, detail="Error fetching exercise details")
+
+    # ---- Finish ----
     return templates.TemplateResponse(
         request,
         "workouts/workout_detail.html",
-        {"workout": workout, "sets": sets, "defaults": defaults},
+        {
+            "workout": workout,
+            "sets": sets,
+            "defaults": defaults,
+            "exercises": exercise_map,
+        },
     )
 
 
