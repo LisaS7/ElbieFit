@@ -4,7 +4,7 @@ from boto3.dynamodb.conditions import Key
 
 from app.models.exercise import Exercise
 from app.repositories.base import DynamoRepository
-from app.repositories.errors import ExerciseRepoError
+from app.repositories.errors import ExerciseRepoError, RepoError
 from app.utils import db
 
 
@@ -47,8 +47,8 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
                 KeyConditionExpression=Key("PK").eq(pk)
                 & Key("SK").begins_with("EXERCISE#")
             )
-        except ExerciseRepoError:
-            raise
+        except RepoError as e:
+            raise ExerciseRepoError("Failed to get all exercises for user") from e
 
         return [self._to_model(item) for item in items]
 
@@ -62,8 +62,8 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
 
         try:
             item = self._safe_get(Key={"PK": pk, "SK": sk})
-        except ExerciseRepoError:
-            raise
+        except RepoError as e:
+            raise ExerciseRepoError("Failed to get exercise by id for user") from e
 
         if not item:
             return None
