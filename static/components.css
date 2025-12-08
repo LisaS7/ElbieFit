@@ -130,6 +130,12 @@ form {
   justify-content: flex-end;
 }
 
+.form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
 input[type='text'],
 input[type='date'],
 input[type='number'],
@@ -152,4 +158,56 @@ textarea:focus {
   outline: none;
   border-color: var(--color-heading-dark);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 6px var(--color-heading-dark);
+}
+
+/* ── Number Input Spinner ── */
+
+/* Hide native number spinners (we're doing our own) */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.number-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.number-stepper input[type='number'] {
+  max-width: 4.5rem;
+  text-align: center;
+  padding: 0.6rem 0.4rem;
+  font-size: 1.2rem;
+  box-sizing: border-box;
+}
+
+.stepper-button {
+  margin: 0;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .number-stepper {
+    gap: 0.3rem;
+  }
+
+  .number-stepper input[type='number'] {
+    max-width: 4rem;
+    font-size: 1.2rem;
+  }
+
+  .stepper-button {
+    padding: 0.3rem 0.5rem;
+    font-size: 2rem;
+  }
 }
