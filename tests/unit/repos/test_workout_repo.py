@@ -4,7 +4,8 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutSetCreate
+from app.repositories import workout as workout_repo_module
 from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
 from app.utils import dates, db
@@ -460,6 +461,83 @@ def test_create_workout_raises_repoerror_on_client_error(failing_put_table):
         repo.create_workout(USER_SUB, data)
 
     assert "Failed to create workout in database" in str(excinfo.value)
+
+
+# --- Sets ---
+
+
+def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatch):
+
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Make _get_next_set_number see an existing set #1 so it picks #2
+    pk = db.build_user_pk(USER_SUB)
+    base_sk = db.build_workout_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2) + "#SET#"
+    fake_table.response = {
+        "Items": [
+            {"PK": pk, "SK": base_sk + "001"},
+        ]
+    }
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    data = WorkoutSetCreate(
+        exercise_id="squat",
+        reps=8,
+        weight_kg=Decimal("60.5"),
+        rpe=7,
+    )
+
+    new_set = repo.add_workout_set(
+        user_sub=USER_SUB,
+        workout_date=WORKOUT_DATE_W2,
+        workout_id=WORKOUT_ID_W2,
+        data=data,
+    )
+
+    # Check model fields
+    assert isinstance(new_set, WorkoutSet)
+    assert new_set.PK == db.build_user_pk(USER_SUB)
+    assert new_set.set_number == 2  # existing set #1 -> next is #2
+    assert new_set.exercise_id == "squat"
+    assert new_set.reps == 8
+    assert new_set.weight_kg == Decimal("60.5")
+    assert new_set.rpe == 7
+    assert new_set.created_at == fixed_now
+    assert new_set.updated_at == fixed_now
+
+    # Check what was written to Dynamo
+    assert fake_table.last_put_kwargs == {"Item": new_set.to_ddb_item()}
+
+
+def test_add_workout_set_raises_workoutrepoerror_on_put_failure(
+    failing_put_table, monkeypatch
+):
+    repo = DynamoWorkoutRepository(table=failing_put_table)
+
+    # Avoid hitting query() on failing_put_table by bypassing _get_next_set_number internals
+    monkeypatch.setattr(repo, "_get_next_set_number", lambda *args, **kwargs: 1)
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    data = WorkoutSetCreate(
+        exercise_id="squat",
+        reps=8,
+        weight_kg=None,
+        rpe=None,
+    )
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.add_workout_set(
+            user_sub=USER_SUB,
+            workout_date=WORKOUT_DATE_W2,
+            workout_id=WORKOUT_ID_W2,
+            data=data,
+        )
+
+    assert "Failed to add workout set to database" in str(excinfo.value)
 
 
 # --------------- Update (No New SK) ---------------

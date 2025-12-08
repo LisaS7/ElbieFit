@@ -4,7 +4,7 @@ from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet
+from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutSetCreate
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.utils import dates, db
@@ -28,6 +28,13 @@ class WorkoutRepository(Protocol):
     def delete_workout_and_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> None: ...
+    def add_workout_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        details: dict,
+    ) -> WorkoutSet: ...
 
 
 class DynamoWorkoutRepository(DynamoRepository[Workout]):
@@ -203,6 +210,40 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         except RepoError as e:
             raise WorkoutRepoError("Failed to create workout in database") from e
         return workout
+
+    def add_workout_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        data: WorkoutSetCreate,
+    ) -> WorkoutSet:
+        """
+        Add a new set to the existing workout.
+        """
+        new_set_number = self._get_next_set_number(user_sub, workout_date, workout_id)
+
+        now = dates.now()
+
+        new_set = WorkoutSet(
+            PK=db.build_user_pk(user_sub),
+            SK=db.build_set_sk(workout_date, workout_id, new_set_number),
+            type="set",
+            set_number=new_set_number,
+            exercise_id=data.exercise_id,
+            reps=data.reps,
+            weight_kg=data.weight_kg,
+            rpe=data.rpe,
+            created_at=now,
+            updated_at=now,
+        )
+
+        try:
+            self._safe_put(new_set.to_ddb_item())
+        except RepoError as e:
+            raise WorkoutRepoError("Failed to add workout set to database") from e
+
+        return new_set
 
     # ----------------------- Update -----------------------------
 
