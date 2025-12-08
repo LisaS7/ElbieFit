@@ -1,10 +1,15 @@
 from datetime import date as DateType
 from typing import Annotated, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
-from app.models.workout import WorkoutCreate, WorkoutSet, WorkoutUpdate
+from app.models.workout import (
+    WorkoutCreate,
+    WorkoutSet,
+    WorkoutSetCreate,
+    WorkoutUpdate,
+)
 from app.repositories.errors import (
     ExerciseRepoError,
     WorkoutNotFoundError,
@@ -88,9 +93,17 @@ def get_new_form(request: Request):
 
 @router.get("/{workout_date}/{workout_id}/set/form")
 def get_new_set_form(
-    request: Request,
+    request: Request, workout_date: DateType, workout_id: str, exercise_id: str
 ):
-    return templates.TemplateResponse(request, "workouts/new_set_form.html")
+    return templates.TemplateResponse(
+        request,
+        "workouts/new_set_form.html",
+        {
+            "workout_date": workout_date,
+            "workout_id": workout_id,
+            "exercise_id": exercise_id,
+        },
+    )
 
 
 @router.post("/create")
@@ -111,6 +124,26 @@ def create_workout(
     return RedirectResponse(
         url=f"/workout/{workout.date.isoformat()}/{workout.workout_id}", status_code=303
     )
+
+
+@router.post("/{workout_date}/{workout_id}/set/add")
+def create_workout_set(
+    workout_date: DateType,
+    workout_id: str,
+    exercise_id: Annotated[str, Form()],
+    form: Annotated[WorkoutSetCreate, Depends(WorkoutSetCreate.as_form)],
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+
+    try:
+        repo.add_workout_set(user_sub, workout_date, workout_id, exercise_id, form)
+    except WorkoutRepoError:
+        logger.exception("Error creating workout set")
+        raise HTTPException(status_code=500, detail="Error creating workout set")
+
+    return Response(status_code=204, headers={"HX-Trigger": "workoutSetAdded"})
 
 
 # ---------------------- Detail ---------------------------
@@ -145,12 +178,9 @@ def view_workout(
 
     try:
         for s in sets:
-            print("SET:", s)
-            print("EXERCISE ID:", s.exercise_id)
             exercise_id = s.exercise_id
             if exercise_id not in exercise_map:
                 exercise = exercise_repo.get_exercise_by_id(user_sub, exercise_id)
-                print("EXERCISE:", exercise)
                 if exercise:
                     exercise_map[exercise_id] = exercise
     except ExerciseRepoError:

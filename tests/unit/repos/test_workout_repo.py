@@ -483,7 +483,6 @@ def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatc
     monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
 
     data = WorkoutSetCreate(
-        exercise_id="squat",
         reps=8,
         weight_kg=Decimal("60.5"),
         rpe=7,
@@ -493,6 +492,7 @@ def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatc
         user_sub=USER_SUB,
         workout_date=WORKOUT_DATE_W2,
         workout_id=WORKOUT_ID_W2,
+        exercise_id="squat",
         data=data,
     )
 
@@ -523,7 +523,6 @@ def test_add_workout_set_raises_workoutrepoerror_on_put_failure(
     monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
 
     data = WorkoutSetCreate(
-        exercise_id="squat",
         reps=8,
         weight_kg=None,
         rpe=None,
@@ -534,6 +533,7 @@ def test_add_workout_set_raises_workoutrepoerror_on_put_failure(
             user_sub=USER_SUB,
             workout_date=WORKOUT_DATE_W2,
             workout_id=WORKOUT_ID_W2,
+            exercise_id="deadlift",
             data=data,
         )
 

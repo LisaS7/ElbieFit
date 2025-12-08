@@ -177,14 +177,12 @@ def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch):
 
 def test_workoutsetcreate_as_form_builds_expected_model():
     ws_create = WorkoutSetCreate.as_form(
-        exercise_id="EX-1",
         reps=8,
         weight_kg=Decimal("60.5"),
         rpe=9,
     )
 
     assert isinstance(ws_create, WorkoutSetCreate)
-    assert ws_create.exercise_id == "EX-1"
     assert ws_create.reps == 8
     assert ws_create.weight_kg == Decimal("60.5")
     assert ws_create.rpe == 9
@@ -192,13 +190,11 @@ def test_workoutsetcreate_as_form_builds_expected_model():
 
 def test_workoutsetcreate_as_form_allows_optional_fields_none():
     ws_create = WorkoutSetCreate.as_form(
-        exercise_id="EX-2",
         reps=5,
         weight_kg=None,
         rpe=None,
     )
 
-    assert ws_create.exercise_id == "EX-2"
     assert ws_create.reps == 5
     assert ws_create.weight_kg is None
     assert ws_create.rpe is None

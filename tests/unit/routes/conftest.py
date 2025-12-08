@@ -32,6 +32,9 @@ class FakeWorkoutRepo:
         self.deleted_calls = []
         self.should_raise_on_delete = False
 
+        self.added_sets: list[tuple[str, str, str, str, dict]] = []
+        self.should_raise_on_add_set = False
+
     # Used by GET /workout/all
     def get_all_for_user(self, user_sub: str):
         self.user_subs.append(user_sub)
@@ -80,6 +83,12 @@ class FakeWorkoutRepo:
         if self.should_raise_on_delete:
             raise WorkoutRepoError("boom-delete")
         self.deleted_calls.append((user_sub, workout_date, workout_id))
+
+    def add_workout_set(self, user_sub, workout_date, workout_id, exercise_id, form):
+        if self.should_raise_on_add_set:
+            raise WorkoutRepoError("boom")
+        self.added_sets.append((user_sub, workout_date, workout_id, exercise_id, form))
+        self.user_subs.append(user_sub)
 
 
 @pytest.fixture

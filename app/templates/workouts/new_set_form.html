@@ -1,9 +1,5 @@
-<form method="post" action="/workout/{{ date }}/{{ workout_id }}/set/add" class="set-form">
-    <div class="form-field">
-        <label>Exercise</label>
-        <input type="text" name="exercise_id" required>
-    </div>
-
+<form method="post" action="/workout/{{ workout_date }}/{{ workout_id }}/set/add" class="set-form">
+    <input type="hidden" name="exercise_id" value="{{ exercise_id }}">
     <div class="form-row">
         <!-- Reps -->
         <div class="form-field">
@@ -24,8 +20,6 @@
                 <button type="button" class="stepper-button" data-action="increment">+</button>
             </div>
         </div>
-
-
     </div>
 
      <!-- RPE -->

@@ -1,4 +1,5 @@
 from datetime import date, datetime, timezone
+from decimal import Decimal
 
 from app.routes import workout as workout_routes
 
@@ -58,13 +59,24 @@ def test_get_all_workouts_handles_repo_error(authenticated_client, fake_workout_
     assert response.status_code == 500
 
 
-# ──────────────────────────── /workout/new-form ────────────────────────────
+# ──────────────────────────── GET/workout/new-form ────────────────────────────
 
 
 def test_get_new_form_renders_form(client):
     response = client.get("/workout/new-form")
     assert response.status_code == 200
     assert 'name="name"' in response.text
+
+
+# ──────────────────────────── GET /workout/{date}/{id}/set/form ────────────────────────────
+
+
+def test_get_new_set_form_renders_form(client):
+    response = client.get(f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/form")
+
+    assert response.status_code == 200
+    assert "<form" in response.text
+    assert 'name="reps"' in response.text
 
 
 # ──────────────────────────── POST /workout/create ────────────────────────────
@@ -81,19 +93,15 @@ def test_create_workout_creates_item_and_redirects(
         follow_redirects=False,
     )
 
-    # Redirect to the edit page for the new workout
     assert response.status_code == 303
 
-    # Get the Workout object created by the fake repo
     assert len(fake_workout_repo.created_workouts) == 1
     created = fake_workout_repo.created_workouts[0]
 
-    # Check the repo was called with correct data
     assert created.date == workout_date
     assert created.name == "Bench Party"
     assert fake_workout_repo.user_subs == ["test-user-sub"]
 
-    # Location should match the workout returned by the repo
     expected_location = f"/workout/{created.date.isoformat()}/{created.workout_id}"
     assert response.headers["location"] == expected_location
 
@@ -110,6 +118,61 @@ def test_create_workout_returns_500_when_repo_raises(
         data={"date": workout_date.isoformat(), "name": "Broken Bench"},
         follow_redirects=False,
     )
+
+    assert response.status_code == 500
+
+
+# ───────────────────── POST /workout/{date}/{id}/set/add ─────────────────────
+
+
+def post_set(
+    client,
+    workout_date=WORKOUT_DATE,
+    workout_id=WORKOUT_ID,
+    exercise_id="EX-1",
+    **overrides,
+):
+    data = {
+        "reps": "8",
+        "weight_kg": "60.5",
+        "rpe": "9",
+    }
+    data.update(overrides)
+
+    url = f"/workout/{workout_date.isoformat()}/{workout_id}/set/add?exercise_id={exercise_id}"
+
+    return client.post(
+        url,
+        data=data,
+        follow_redirects=False,
+    )
+
+
+def test_create_workout_set_adds_set_and_returns_204(
+    authenticated_client, fake_workout_repo
+):
+    response = post_set(authenticated_client, exercise_id="EX-BENCH")
+
+    assert response.status_code == 204
+    assert response.headers.get("HX-Trigger") == "workoutSetAdded"
+
+    assert len(fake_workout_repo.added_sets) == 1
+    user_sub, w_date, w_id, exercise_id, form = fake_workout_repo.added_sets[0]
+
+    assert user_sub == "test-user-sub"
+    assert w_date == WORKOUT_DATE
+    assert w_id == WORKOUT_ID
+    assert form.reps == 8
+    assert form.weight_kg == Decimal("60.5")
+    assert form.rpe == 9
+
+
+def test_create_workout_set_returns_500_when_repo_raises(
+    authenticated_client, fake_workout_repo
+):
+    fake_workout_repo.should_raise_on_add_set = True
+
+    response = post_set(authenticated_client)
 
     assert response.status_code == 500
 
@@ -198,10 +261,8 @@ def test_get_sorted_sets_and_defaults_sorts_and_builds_defaults():
     # ok to ignore type error - DummySet behaves like a WorkoutSet here
     sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults(sets)  # type: ignore[arg-type]
 
-    # sorted by created_at
     assert [s.exercise_id for s in sorted_sets] == ["EX-1", "EX-2"]
 
-    # defaults use the last (most recent) set
     assert defaults["exercise"] == "EX-2"
     assert defaults["reps"] == 8
     assert defaults["weight"] == 60
@@ -290,18 +351,51 @@ def test_update_workout_meta_returns_500_when_move_date_fails(
     fake_workout_repo.workout_to_return = DummyWorkout()
     fake_workout_repo.sets_to_return = [DummySet()]
 
-    # Force a *different* new date so we go into the "move" branch
     new_date = date(2025, 11, 4)
 
-    # Make move_workout_date raise the same error the route expects
     def broken_move(user_sub, workout, new_date_param, sets):
         raise workout_routes.WorkoutRepoError("kaboom")
 
-    fake_workout_repo.move_workout_date = broken_move  # monkeypatch the method
+    fake_workout_repo.move_workout_date = broken_move
 
     response = post_meta(authenticated_client, new_date, WORKOUT_ID)
 
     assert response.status_code == 500
+
+
+def test_update_workout_meta_moves_date_and_sets_hx_redirect(
+    authenticated_client, fake_workout_repo, monkeypatch
+):
+    fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
+
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet()]
+    new_date = date(2025, 11, 4)
+
+    class MovedWorkout:
+        def __init__(self, date, workout_id):
+            self.date = date
+            self._workout_id = workout_id
+
+        @property
+        def workout_id(self):
+            return self._workout_id
+
+    moved_workout = MovedWorkout(new_date, WORKOUT_ID)
+
+    def fake_move_workout_date(user_sub, workout, new_date_param, sets):
+        assert user_sub == "test-user-sub"
+        assert new_date_param == new_date
+        return moved_workout
+
+    fake_workout_repo.move_workout_date = fake_move_workout_date
+
+    response = post_meta(authenticated_client, new_date, WORKOUT_ID)
+    expected_url = f"/workout/{new_date.isoformat()}/{WORKOUT_ID}"
+
+    assert response.status_code == 204
+    assert response.headers.get("HX-Redirect") == expected_url
 
 
 # ──────────────────────────── GET /workout/{date}/{id}/edit-meta ────────────────────────────
@@ -357,11 +451,8 @@ def test_delete_workout_deletes_and_redirects(authenticated_client, fake_workout
         follow_redirects=False,
     )
 
-    # route should redirect to /workout/all
     assert response.status_code == 303
     assert response.headers["location"] == "/workout/all"
-
-    # repo method should have been called with correct arguments
     assert fake_workout_repo.deleted_calls == [
         ("test-user-sub", WORKOUT_DATE, WORKOUT_ID)
     ]

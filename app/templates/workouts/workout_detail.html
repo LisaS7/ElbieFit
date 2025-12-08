@@ -83,7 +83,7 @@
                 {% endfor %}
             </div>
             <section id="add-set">
-                <button class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form" hx-target="#new-set-form-container" hx-swap="innerHTML"><img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set"></button>
+                <button class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form" hx-target="#new-set-form-container" hx-swap="innerHTML" hx-vals='{"exercise_id": "{{ exercise_id }}"}'><img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set"></button>
                 <div id="new-set-form-container"></div>
             </section>
         {% endfor %}

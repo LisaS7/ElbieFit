@@ -33,6 +33,7 @@ class WorkoutRepository(Protocol):
         user_sub: str,
         workout_date: DateType,
         workout_id: str,
+        exercise_id: str,
         data: WorkoutSetCreate,
     ) -> WorkoutSet: ...
 
@@ -216,6 +217,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         user_sub: str,
         workout_date: DateType,
         workout_id: str,
+        exercise_id: str,
         data: WorkoutSetCreate,
     ) -> WorkoutSet:
         """
@@ -230,7 +232,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             SK=db.build_set_sk(workout_date, workout_id, new_set_number),
             type="set",
             set_number=new_set_number,
-            exercise_id=data.exercise_id,
+            exercise_id=exercise_id,
             reps=data.reps,
             weight_kg=data.weight_kg,
             rpe=data.rpe,
