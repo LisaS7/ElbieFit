@@ -103,3 +103,18 @@ class WorkoutSetCreate(BaseModel):
     reps: int
     weight_kg: Decimal | None = None
     rpe: int | None = None
+
+    @classmethod
+    def as_form(
+        cls,
+        exercise_id: Annotated[str, Form()],
+        reps: Annotated[int, Form()],
+        weight_kg: Annotated[Decimal | None, Form()] = None,
+        rpe: Annotated[int | None, Form()] = None,
+    ) -> "WorkoutSetCreate":
+        return cls(
+            exercise_id=exercise_id,
+            reps=reps,
+            weight_kg=weight_kg,
+            rpe=rpe,
+        )
