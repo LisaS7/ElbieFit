@@ -33,7 +33,7 @@ class WorkoutRepository(Protocol):
         user_sub: str,
         workout_date: DateType,
         workout_id: str,
-        details: dict,
+        data: WorkoutSetCreate,
     ) -> WorkoutSet: ...
 
 
