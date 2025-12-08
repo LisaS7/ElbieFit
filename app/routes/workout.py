@@ -1,7 +1,7 @@
 from datetime import date as DateType
 from typing import Annotated, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.models.workout import WorkoutCreate, WorkoutSet, WorkoutUpdate
@@ -226,6 +226,13 @@ def update_workout_meta(
             logger.exception("Error updating workout")
             raise HTTPException(status_code=500, detail="Error updating workout")
 
+        sets, defaults = get_sorted_sets_and_defaults(sets)
+        return templates.TemplateResponse(
+            request,
+            "workouts/workout_detail.html",
+            {"workout": workout, "sets": sets, "defaults": defaults},
+        )
+
     # if date has changed then create new and delete old
     else:
         try:
@@ -234,13 +241,8 @@ def update_workout_meta(
             logger.exception("Error updating workout with date change")
             raise HTTPException(status_code=500, detail="Error updating workout")
 
-    sets, defaults = get_sorted_sets_and_defaults(sets)
-
-    return templates.TemplateResponse(
-        request,
-        "workouts/workout_detail.html",
-        {"workout": workout, "sets": sets, "defaults": defaults},
-    )
+        new_url = f"/workout/{workout.date.isoformat()}/{workout.workout_id}"
+        return Response(status_code=204, headers={"HX-Redirect": new_url})
 
 
 # ---------------------- Delete ---------------------------
