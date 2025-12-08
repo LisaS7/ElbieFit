@@ -86,6 +86,13 @@ def get_new_form(request: Request):
     return templates.TemplateResponse(request, "workouts/new_form.html")
 
 
+@router.get("/{workout_date}/{workout_id}/set/form")
+def get_new_set_form(
+    request: Request,
+):
+    return templates.TemplateResponse(request, "workouts/new_set_form.html")
+
+
 @router.post("/create")
 def create_workout(
     request: Request,

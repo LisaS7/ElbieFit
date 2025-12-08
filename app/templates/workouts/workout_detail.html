@@ -82,6 +82,10 @@
                     </div>
                 {% endfor %}
             </div>
+            <section id="add-set">
+                <button class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form" hx-target="#new-set-form-container" hx-swap="innerHTML"><img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set"></button>
+                <div id="new-set-form-container"></div>
+            </section>
         {% endfor %}
     {% else %}
         <p>No sets logged yet. It's the thought that counts.</p>
@@ -91,13 +95,7 @@
 
 
 
-
-
-
-{# add set button #}
-
-
-{# big ADD EXERCISE button - inline form? on save htmx swap whole set list #}
+{# TODO: big ADD EXERCISE button - inline form? on save htmx swap whole set list #}
 {# this form also needs a cancel button #}
 
 <section id="delete-workout">
