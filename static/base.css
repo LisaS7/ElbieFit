@@ -229,6 +229,8 @@ a {
   border: 2px solid var(--color-borders);
 }
 
+/* ── Sets Table ── */
+
 .sets-table-header,
 .set-row {
   display: grid;
@@ -244,6 +246,47 @@ a {
 .sets-table-header {
   border-bottom: 2px solid var(--color-borders);
 }
+
+.set-form {
+  width: 100%;
+}
+
+.set-form .form-row {
+  flex: 1 1 auto;
+}
+
+.set-form input[type='number'],
+.set-form input[type='text'] {
+  font-size: 1.2rem;
+  padding: 0.7rem 0.9rem;
+  max-width: 100%;
+}
+
+@media (max-width: 480px) {
+  .set-form .form-row {
+    flex-wrap: wrap;
+  }
+
+  .set-form .form-row .form-field {
+    min-width: 90px;
+    flex: 1 1 30%;
+  }
+
+  .set-form input[type='number'],
+  .set-form input[type='text'] {
+    font-size: 1.2rem;
+    padding: 0.7rem 0.9rem;
+    height: 3rem;
+  }
+
+  input[type='number']::-webkit-inner-spin-button {
+    width: 1.8rem;
+    height: 1.8rem;
+    transform: scale(1.5); /* increase spinner size */
+  }
+}
+
+/* ── Delete Workout Section ── */
 
 section#delete-workout {
   margin: 1rem;
