@@ -169,10 +169,34 @@ def view_workout(
             user_sub, workout_date, workout_id
         )
     except WorkoutNotFoundError:
+        logger.warning(
+            "Workout not found",
+            extra={
+                "user_sub": user_sub,
+                "workout_date": workout_date.isoformat(),
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
-        logger.exception("Error fetching workout")
+        logger.exception(
+            "Error fetching workout",
+            extra={
+                "user_sub": user_sub,
+                "workout_date": workout_date.isoformat(),
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=500, detail="Error fetching workout")
+
+    logger.debug(
+        "Fetched workout and sets",
+        extra={
+            "workout_id_attr": getattr(workout, "workout_id", None),
+            "sets_count": len(sets),
+            "set_numbers": [getattr(s, "set_number", None) for s in sets],
+        },
+    )
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
 
@@ -187,7 +211,13 @@ def view_workout(
                 if exercise:
                     exercise_map[exercise_id] = exercise
     except ExerciseRepoError:
-        logger.exception("Error fetching exercise details")
+        logger.exception(
+            "Error fetching exercise details",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=500, detail="Error fetching exercise details")
 
     # ---- Finish ----
@@ -220,10 +250,26 @@ def edit_workout_meta(
     try:
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
     except WorkoutNotFoundError:
+        logger.warning(
+            "Workout not found for edit",
+            extra={
+                "user_sub": user_sub,
+                "workout_date": workout_date.isoformat(),
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
-        logger.exception("Error fetching workout for edit")
+        logger.exception(
+            "Error fetching workout for edit",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=500, detail="Error fetching workout")
+
+    logger.debug(f"Loading edit meta form for workout {workout.workout_id}")
 
     return templates.TemplateResponse(
         request, "workouts/edit_meta_form.html", {"workout": workout}
@@ -242,12 +288,32 @@ def update_workout_meta(
 ):
     user_sub = claims["sub"]
 
+    logger.info(
+        "Updating workout meta",
+        extra={
+            "user_sub": user_sub,
+            "workout_date": workout_date.isoformat(),
+            "workout_id": workout_id,
+            "form_date": form.date.isoformat() if form.date else None,
+        },
+    )
+
     try:
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
     except WorkoutNotFoundError:
+        logger.warning(
+            "Workout not found for update",
+            extra={"user_sub": user_sub, "workout_id": workout_id},
+        )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
-        logger.exception("Error fetching workout for update")
+        logger.exception(
+            "Error fetching workout for update",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=500, detail="Error fetching workout")
 
     old_date = workout.date
@@ -263,10 +329,19 @@ def update_workout_meta(
         try:
             repo.update_workout(workout)
         except WorkoutRepoError:
-            logger.exception("Error updating workout")
+            logger.exception(
+                "Error updating workout",
+                extra={
+                    "user_sub": user_sub,
+                    "workout_id": workout_id,
+                },
+            )
             raise HTTPException(status_code=500, detail="Error updating workout")
 
         sets, defaults = get_sorted_sets_and_defaults(sets)
+
+        logger.debug(f"Updated metadata for workout {workout_id}. No date change.")
+
         return templates.TemplateResponse(
             request,
             "workouts/workout_detail.html",
@@ -278,10 +353,26 @@ def update_workout_meta(
         try:
             workout = repo.move_workout_date(user_sub, workout, new_date, sets)
         except WorkoutRepoError:
-            logger.exception("Error updating workout with date change")
+            logger.exception(
+                "Error updating workout with date change",
+                extra={
+                    "user_sub": user_sub,
+                    "workout_id": workout_id,
+                },
+            )
             raise HTTPException(status_code=500, detail="Error updating workout")
 
         new_url = f"/workout/{workout.date.isoformat()}/{workout.workout_id}"
+
+        logger.info(
+            "Workout date changed, issuing HX-Redirect",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+                "redirect_url": new_url,
+            },
+        )
+
         return Response(status_code=204, headers={"HX-Redirect": new_url})
 
 
@@ -300,7 +391,41 @@ def delete_workout(
     try:
         repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
     except WorkoutRepoError:
-        logger.exception("Error deleting workout")
+        logger.exception(
+            "Error deleting workout",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+            },
+        )
         raise HTTPException(status_code=500, detail="Error deleting workout")
 
     return RedirectResponse(url="/workout/all", status_code=303)
+
+
+@router.delete("/{workout_date}/{workout_id}/set/{set_number}")
+def delete_set(
+    request: Request,
+    workout_date: DateType,
+    workout_id: str,
+    set_number: int,
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+
+    user_sub = claims["sub"]
+
+    try:
+        repo.delete_set(user_sub, workout_date, workout_id, set_number)
+    except WorkoutRepoError:
+        logger.exception(
+            f"Error deleting set {set_number} from workout {workout_id}",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+            },
+        )
+        raise HTTPException(status_code=500, detail="Error deleting set")
+
+    # Return nothing because we're using HTMX to swap the div content for this set
+    return ""
