@@ -72,11 +72,14 @@ def test_get_new_form_renders_form(client):
 
 
 def test_get_new_set_form_renders_form(client):
-    response = client.get(f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/form")
+    response = client.get(
+        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/form?exercise_id=EX-1"
+    )
 
     assert response.status_code == 200
     assert "<form" in response.text
     assert 'name="reps"' in response.text
+    assert "EX-1" in response.text
 
 
 # ──────────────────────────── POST /workout/create ────────────────────────────
