@@ -37,7 +37,7 @@ class WorkoutRepository(Protocol):
         data: WorkoutSetCreate,
     ) -> WorkoutSet: ...
     def delete_set(
-        self, user_sub: str, workout_date: DateType, workout_id: str, exercise_id: str
+        self, user_sub: str, workout_date: DateType, workout_id: str, set_number: int
     ) -> None: ...
 
 
@@ -342,6 +342,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         sk = db.build_set_sk(workout_date, workout_id, set_number)
 
         try:
-            self._safe_delete()
+            self._safe_delete(Key={"PK": pk, "SK": sk})
         except RepoError as e:
             raise WorkoutRepoError("Failed to delete workout set from database") from e

@@ -52,6 +52,12 @@ class FakeTable:
         self.last_put_kwargs = kwargs
         return self.response
 
+    def delete_item(self, **kwargs):
+        key = kwargs.get("Key")
+        if key is not None:
+            self.deleted_keys.append(key)
+        return self.response
+
     def batch_writer(self):
         return FakeBatchWriter(self)
 
@@ -110,6 +116,9 @@ def failing_put_table():
 class FailingDeleteTable:
     def query(self, *args, **kwargs):
         raise _client_error("Query")
+
+    def delete_item(self, **kwargs):
+        raise _client_error("DeleteItem")
 
 
 @pytest.fixture

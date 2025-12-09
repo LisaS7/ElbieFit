@@ -14,6 +14,7 @@ USER_SUB = "abc-123"
 WORKOUT_DATE_W2 = date(2025, 11, 3)
 WORKOUT_ID_W2 = "W2"
 WORKOUT_DATE_NEW = date(2025, 11, 16)
+SET_NUMBER = 1
 
 WORKOUT_W2_ITEM = {
     "PK": f"USER#{USER_SUB}",
@@ -748,6 +749,8 @@ def test_move_workout_date_calls_safe_put_for_sets(fake_table, monkeypatch):
 
 # --------------- Delete ---------------
 
+# --- Workout ---
+
 
 def test_delete_workout_and_sets_deletes_workout_and_its_sets(fake_table):
     """
@@ -831,3 +834,27 @@ def test_delete_workout_and_sets_wraps_unexpected_exception_in_workoutrepoerror(
         repo.delete_workout_and_sets(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2)
 
     assert "Failed to delete workout and sets from database" in str(excinfo.value)
+
+
+# --- Set ---
+
+
+def test_delete_set_successful(fake_table):
+    repo = DynamoWorkoutRepository(table=fake_table)
+    repo.delete_set(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2, SET_NUMBER)
+
+    expected_key = {
+        "PK": db.build_user_pk(USER_SUB),
+        "SK": db.build_set_sk(WORKOUT_DATE_W2, WORKOUT_ID_W2, SET_NUMBER),
+    }
+
+    assert fake_table.deleted_keys == [expected_key]
+
+
+def test_delete_set_raises_workoutrepoerror_on_dynamo_failure(failing_delete_table):
+    repo = DynamoWorkoutRepository(table=failing_delete_table)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.delete_set(USER_SUB, WORKOUT_DATE_W2, WORKOUT_ID_W2, SET_NUMBER)
+
+    assert "Failed to delete workout set from database" in str(excinfo.value)
