@@ -1,4 +1,8 @@
-<form method="post" action="/workout/{{ workout_date }}/{{ workout_id }}/set/add" class="set-form">
+<form hx-post="/workout/{{ workout_date }}/{{ workout_id }}/set/add"
+    hx-swap="none"
+    class="set-form"
+    >
+
     <input type="hidden" name="exercise_id" value="{{ exercise_id }}">
     <div class="form-row">
         <!-- Reps -->
@@ -38,7 +42,7 @@
         <button
             type="button"
             class="small"
-            hx-on="click: document.querySelector('#new-set-form-container').innerHTML = ''"
+            hx-on="click: this.closest('form').remove()"
         >
             Cancel
         </button>

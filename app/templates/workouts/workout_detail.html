@@ -44,6 +44,15 @@
 <img class="horizontal-divider" src="{{ url_for('static', path='images/horizontal_divider.png') }}" alt="horizontal divider">
 
 <section id="sets-list" class="card">
+    <div
+    id="sets-list-refresher"
+    hx-get="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+    hx-trigger="workoutSetAdded from:body"
+    hx-select="#sets-list"
+    hx-target="#sets-list"
+    hx-swap="outerHTML"
+    style="display: none;"
+    ></div>
     {% if sets %}
         {% for group in sets | groupby('exercise_id') %}
             {% set exercise_id = group.grouper %}
@@ -82,9 +91,15 @@
                     </div>
                 {% endfor %}
             </div>
-            <section id="add-set">
-                <button class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form" hx-target="#new-set-form-container" hx-swap="innerHTML" hx-vals='{"exercise_id": "{{ exercise_id }}"}'><img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set"></button>
-                <div id="new-set-form-container"></div>
+            <section class="add-set">
+                <button
+                    class="icon-button"
+                    hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form?exercise_id={{ exercise_id }}"
+                    hx-target="next .new-set-form-container"
+                    hx-swap="innerHTML">
+                        <img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set">
+                </button>
+                <div class="new-set-form-container"></div>
             </section>
         {% endfor %}
     {% else %}

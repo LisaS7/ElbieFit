@@ -95,6 +95,9 @@ def get_new_form(request: Request):
 def get_new_set_form(
     request: Request, workout_date: DateType, workout_id: str, exercise_id: str
 ):
+    logger.debug(
+        f"Getting new set form for workout {workout_id} on {workout_date} for exercise {exercise_id}"
+    )
     return templates.TemplateResponse(
         request,
         "workouts/new_set_form.html",
