@@ -79,14 +79,25 @@
                 </div>
 
                 {% for s in group.list %}
-                    <div class="set-row">
+                    <div id="set-row-{{ s.set_number }}" class="set-row">
                         <span>{{s.set_number}}</span>
                         <span>{{s.reps}}</span>
                         <span>{{s.weight_kg}}</span>
                         <span>{{s.rpe}}</span>
                         <span>
                             <button class="icon-button"><img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit"></button>
-                            <button class="icon-button"><img src="{{ url_for('static', path='images/delete.png') }}" alt="Del"></button>
+                            <button
+                                class="icon-button"
+                                hx-delete="{{ url_for('delete_set',
+                                    workout_date=workout.date,
+                                    workout_id=workout.workout_id,
+                                    set_number=s.set_number
+                                ) }}"
+                                hx-target="#set-row-{{ s.set_number }}"
+                                hx-swap="outerHTML"
+                                >
+                                <img src="{{ url_for('static', path='images/delete.png') }}" alt="Del">
+                            </button>
                         </span>
                     </div>
                 {% endfor %}
