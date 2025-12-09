@@ -1,7 +1,7 @@
 from datetime import date as DateType
 from typing import Annotated, Sequence
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.models.workout import (
@@ -133,7 +133,7 @@ def create_workout(
 def create_workout_set(
     workout_date: DateType,
     workout_id: str,
-    exercise_id: Annotated[str, Form()],
+    exercise_id: str,
     form: Annotated[WorkoutSetCreate, Depends(WorkoutSetCreate.as_form)],
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),

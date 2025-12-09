@@ -11,6 +11,16 @@ from app.utils import auth
 # Runtime behaviour is unaffected; the tested code only accesses `.cookies`.
 
 
+# Switch off the auth override for this module
+@pytest.fixture(autouse=True)
+def _force_real_auth_flow(monkeypatch):
+    """
+    For this module, always disable the local-dev auth bypass so tests
+    exercise the real token validation logic by default.
+    """
+    monkeypatch.setattr(auth.settings, "DISABLE_AUTH_FOR_LOCAL_DEV", False)
+
+
 # ------------ Get jwks url ------------
 
 
