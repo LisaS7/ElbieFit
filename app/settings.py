@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     REGION: str = "eu-west-2"
     ENV: str = "dev"
     DDB_TABLE_NAME: str = "elbiefit-dev-table"
+
+    DISABLE_AUTH_FOR_LOCAL_DEV: bool = False
+    DEV_USER_SUB: str | None = None
+
     COGNITO_AUDIENCE: str = ""
     COGNITO_DOMAIN: str = ""
     COGNITO_REDIRECT_URI: str = ""

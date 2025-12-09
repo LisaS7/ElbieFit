@@ -93,6 +93,16 @@ async def require_auth(request: Request):
     """
     Validate ID token from cookies and return decoded claims.
     """
+
+    if settings.DISABLE_AUTH_FOR_LOCAL_DEV:
+        logger.warning("Auth bypass enabled: returning fake LOCAL-DEV-USER claims")
+        fake_claims = {
+            "sub": settings.DEV_USER_SUB or "LOCAL-DEV-USER",
+            "cognito:username": "localdevuser",
+            "email": "local-dev@example.com",
+        }
+        return fake_claims
+
     id_token = get_id_token(request)
 
     issuer_url = f"https://cognito-idp.{REGION}.amazonaws.com/{ISSUER}"
