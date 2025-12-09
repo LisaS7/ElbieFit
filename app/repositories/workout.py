@@ -28,7 +28,7 @@ class WorkoutRepository(Protocol):
     def delete_workout_and_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> None: ...
-    def add_workout_set(
+    def add_set(
         self,
         user_sub: str,
         workout_date: DateType,
@@ -36,6 +36,9 @@ class WorkoutRepository(Protocol):
         exercise_id: str,
         data: WorkoutSetCreate,
     ) -> WorkoutSet: ...
+    def delete_set(
+        self, user_sub: str, workout_date: DateType, workout_id: str, exercise_id: str
+    ) -> None: ...
 
 
 class DynamoWorkoutRepository(DynamoRepository[Workout]):
@@ -212,7 +215,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             raise WorkoutRepoError("Failed to create workout in database") from e
         return workout
 
-    def add_workout_set(
+    def add_set(
         self,
         user_sub: str,
         workout_date: DateType,
@@ -327,3 +330,18 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             raise WorkoutRepoError(
                 "Failed to delete workout and sets from database"
             ) from e
+
+    def delete_set(
+        self, user_sub: str, workout_date: DateType, workout_id: str, set_number: int
+    ) -> None:
+        """
+        Delete a specific workout set.
+        """
+
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_set_sk(workout_date, workout_id, set_number)
+
+        try:
+            self._safe_delete()
+        except RepoError as e:
+            raise WorkoutRepoError("Failed to delete workout set from database") from e

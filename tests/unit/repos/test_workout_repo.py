@@ -466,7 +466,7 @@ def test_create_workout_raises_repoerror_on_client_error(failing_put_table):
 # --- Sets ---
 
 
-def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatch):
+def test_add_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatch):
 
     repo = DynamoWorkoutRepository(table=fake_table)
 
@@ -488,7 +488,7 @@ def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatc
         rpe=7,
     )
 
-    new_set = repo.add_workout_set(
+    new_set = repo.add_set(
         user_sub=USER_SUB,
         workout_date=WORKOUT_DATE_W2,
         workout_id=WORKOUT_ID_W2,
@@ -511,9 +511,7 @@ def test_add_workout_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatc
     assert fake_table.last_put_kwargs == {"Item": new_set.to_ddb_item()}
 
 
-def test_add_workout_set_raises_workoutrepoerror_on_put_failure(
-    failing_put_table, monkeypatch
-):
+def test_add_set_raises_workoutrepoerror_on_put_failure(failing_put_table, monkeypatch):
     repo = DynamoWorkoutRepository(table=failing_put_table)
 
     # Avoid hitting query() on failing_put_table by bypassing _get_next_set_number internals
@@ -529,7 +527,7 @@ def test_add_workout_set_raises_workoutrepoerror_on_put_failure(
     )
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.add_workout_set(
+        repo.add_set(
             user_sub=USER_SUB,
             workout_date=WORKOUT_DATE_W2,
             workout_id=WORKOUT_ID_W2,

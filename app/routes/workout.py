@@ -141,7 +141,7 @@ def create_workout_set(
     user_sub = claims["sub"]
 
     try:
-        repo.add_workout_set(user_sub, workout_date, workout_id, exercise_id, form)
+        repo.add_set(user_sub, workout_date, workout_id, exercise_id, form)
     except WorkoutRepoError:
         logger.exception("Error creating workout set")
         raise HTTPException(status_code=500, detail="Error creating workout set")

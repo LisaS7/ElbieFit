@@ -84,7 +84,7 @@ class FakeWorkoutRepo:
             raise WorkoutRepoError("boom-delete")
         self.deleted_calls.append((user_sub, workout_date, workout_id))
 
-    def add_workout_set(self, user_sub, workout_date, workout_id, exercise_id, form):
+    def add_set(self, user_sub, workout_date, workout_id, exercise_id, form):
         if self.should_raise_on_add_set:
             raise WorkoutRepoError("boom")
         self.added_sets.append((user_sub, workout_date, workout_id, exercise_id, form))
