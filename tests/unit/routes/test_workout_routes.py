@@ -15,12 +15,18 @@ class DummyWorkout:
         tags=None,
         notes=None,
         updated_at=None,
+        workout_id=WORKOUT_ID,
     ):
         self.name = name
         self.date = date or WORKOUT_DATE
         self.tags = tags
         self.notes = notes
         self.updated_at = updated_at
+        self._workout_id = workout_id
+
+    @property
+    def workout_id(self):
+        return self._workout_id
 
 
 class DummySet:
@@ -30,7 +36,7 @@ class DummySet:
         reps=8,
         weight_kg=60,
         created_at=None,
-        set_number=None,
+        set_number=1,
     ):
         self.exercise_id = exercise_id
         self.reps = reps
