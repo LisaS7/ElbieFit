@@ -25,55 +25,38 @@ def test_preferences_invalid_units_raises():
 # ---------- UserProfile ----------
 
 
-def _base_profile_kwargs():
-    return {
-        "PK": "USER#123",
-        "SK": "PROFILE",
-        "display_name": "Lisa Test",
-        "email": "lisa@example.com",
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
-        "updated_at": datetime(2025, 1, 1, 13, 0, 0),
-        "timezone": "Europe/London",
-    }
-
-
-def test_user_profile_valid_instance_and_default_preferences():
-    profile = UserProfile(**_base_profile_kwargs())
-
-    assert profile.PK == "USER#123"
-    assert profile.SK == "PROFILE"
-    assert profile.display_name == "Lisa Test"
-    assert profile.email == "lisa@example.com"
+def test_user_profile_valid_instance_and_default_preferences(user_profile):
+    assert user_profile.PK == "USER#123"
+    assert user_profile.SK == "PROFILE"
+    assert user_profile.display_name == "Lisa Test"
+    assert user_profile.email == "lisa@example.com"
 
     # created/updated are parsed as datetime
-    assert isinstance(profile.created_at, datetime)
-    assert isinstance(profile.updated_at, datetime)
+    assert isinstance(user_profile.created_at, datetime)
+    assert isinstance(user_profile.updated_at, datetime)
 
     # preferences should be a Preferences instance with defaults
-    assert isinstance(profile.preferences, Preferences)
-    assert profile.preferences.units == "metric"
-    assert profile.preferences.show_tips is True
+    assert isinstance(user_profile.preferences, Preferences)
+    assert user_profile.preferences.units == "metric"
+    assert user_profile.preferences.show_tips is True
 
 
-def test_user_profile_requires_sk_profile_literal():
-    kwargs = _base_profile_kwargs()
-    kwargs["SK"] = "NOT_PROFILE"
-
-    with pytest.raises(ValidationError):
-        UserProfile(**kwargs)
-
-
-def test_user_profile_validates_email():
-    kwargs = _base_profile_kwargs()
-    kwargs["email"] = "not-an-email"
+def test_user_profile_requires_sk_profile_literal(profile_kwargs):
+    kwargs = {**profile_kwargs, "SK": "NOT_PROFILE"}
 
     with pytest.raises(ValidationError):
         UserProfile(**kwargs)
 
 
-def test_to_ddb_item_serializes_datetimes_and_nests_preferences():
-    profile = UserProfile(**_base_profile_kwargs())
-    ddb_item = profile.to_ddb_item()
+def test_user_profile_validates_email(profile_kwargs):
+    kwargs = {**profile_kwargs, "email": "not-an-email"}
+
+    with pytest.raises(ValidationError):
+        UserProfile(**kwargs)
+
+
+def test_to_ddb_item_serializes_datetimes_and_nests_preferences(user_profile):
+    ddb_item = user_profile.to_ddb_item()
 
     # top-level keys preserved
     assert ddb_item["PK"] == "USER#123"

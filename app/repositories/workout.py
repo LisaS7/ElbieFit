@@ -165,6 +165,11 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             )
             logger.debug(f"{len(items)} items returned from DynamoDB")
 
+        except RepoError as e:
+            logger.error(f"Repo error fetching workouts: {e}")
+            raise WorkoutRepoError("Failed to fetch workouts from database") from e
+
+        try:
             models = [self._to_model(item) for item in items]
             workouts = [m for m in models if isinstance(m, Workout)]
             logger.debug(f"{len(workouts)} workouts parsed")
@@ -172,9 +177,8 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             workouts.sort(key=lambda w: w.date, reverse=True)
             return workouts
 
-        except RepoError as e:
-            logger.error(f"Repo error fetching workouts: {e}")
-            raise WorkoutRepoError("Failed to fetch workouts from database") from e
+        except WorkoutRepoError:
+            raise
         except Exception as e:
             logger.error(f"Unexpected error parsing workouts: {e}")
             raise WorkoutRepoError(
@@ -197,12 +201,21 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
             )
             logger.debug(f"Query returned {len(items)} items")
-            models = [self._to_model(item) for item in items]
 
         except RepoError as e:
             logger.error(f"Repo error querying workout+sets: {e}")
             raise WorkoutRepoError(
                 "Failed to query workout and sets from database"
+            ) from e
+
+        try:
+            models = [self._to_model(item) for item in items]
+        except WorkoutRepoError:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error parsing workout and sets: {e}")
+            raise WorkoutRepoError(
+                "Failed to parse workout and sets from response"
             ) from e
 
         workout = [m for m in models if isinstance(m, Workout)]

@@ -4,71 +4,33 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from app.models.workout import Workout, WorkoutSet, WorkoutSetCreate
-
-# ------------ Helpers ------------
-
-
-def make_example_workout(**overrides) -> Workout:
-    base = {
-        "PK": "USER#abc123",
-        "SK": "WORKOUT#2025-11-04#W1",
-        "type": "workout",
-        "date": date(2025, 11, 4),
-        "name": "Workout A",
-        "tags": ["push", "upper"],
-        "notes": "Felt strong",
-        "created_at": datetime(2025, 11, 4, 18, 0, 0),
-        "updated_at": datetime(2025, 11, 4, 18, 30, 0),
-    }
-    base.update(overrides)
-    return Workout(**base)
-
-
-def make_example_workout_set(**overrides) -> WorkoutSet:
-    base = {
-        "PK": "USER#abc123",
-        "SK": "WORKOUT#2025-11-04#W1#SET#001",
-        "type": "set",
-        "exercise_id": "EXERCISE#BENCH",
-        "set_number": 1,
-        "reps": 8,
-        "weight_kg": Decimal("60.5"),
-        "rpe": 8,
-        "created_at": datetime(2025, 11, 4, 18, 5, 0),
-        "updated_at": datetime(2025, 11, 4, 18, 5, 30),
-    }
-    base.update(overrides)
-    return WorkoutSet(**base)
-
+from app.models.workout import WorkoutSetCreate
 
 # ------------ Workout tests ------------
 
 
-def test_workout_model_creates_instance_with_expected_fields():
-    workout = make_example_workout()
-
-    assert workout.PK == "USER#abc123"
-    assert workout.SK == "WORKOUT#2025-11-04#W1"
-    assert workout.type == "workout"
-    assert workout.date == date(2025, 11, 4)
-    assert workout.tags == ["push", "upper"]
-    assert workout.notes == "Felt strong"
-    assert isinstance(workout.created_at, datetime)
-    assert isinstance(workout.updated_at, datetime)
+def test_workout_model_creates_instance_with_expected_fields(example_workout):
+    assert example_workout.PK == "USER#abc123"
+    assert example_workout.SK == "WORKOUT#2025-11-04#W1"
+    assert example_workout.type == "workout"
+    assert example_workout.date == date(2025, 11, 4)
+    assert example_workout.tags == ["push", "upper"]
+    assert example_workout.notes == "Felt strong"
+    assert isinstance(example_workout.created_at, datetime)
+    assert isinstance(example_workout.updated_at, datetime)
 
 
-def test_workout_type_must_be_literal_workout():
+def test_workout_type_must_be_literal_workout(make_workout):
     with pytest.raises(ValidationError):
-        make_example_workout(type="cardio")
+        make_workout(type="cardio")
 
 
-def test_workout_notes_is_optional_and_can_be_none():
-    workout = make_example_workout(notes=None)
+def test_workout_notes_is_optional_and_can_be_none(make_workout):
+    workout = make_workout(notes=None)
     assert workout.notes is None
 
 
-def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch):
+def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, make_workout):
     # Track calls to fake converters
     date_calls = []
     dt_calls = []
@@ -89,7 +51,7 @@ def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch):
     created_at = datetime(2025, 11, 4, 18, 0, 0)
     updated_at = datetime(2025, 11, 4, 18, 30, 0)
 
-    workout = make_example_workout(
+    workout = make_workout(
         date=workout_date,
         created_at=created_at,
         updated_at=updated_at,
@@ -111,40 +73,39 @@ def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch):
 # ------------ WorkoutSet tests ------------
 
 
-def test_workout_set_model_creates_instance_with_expected_fields():
-    ws = make_example_workout_set()
+def test_workout_set_model_creates_instance_with_expected_fields(example_set):
 
-    assert ws.PK == "USER#abc123"
-    assert ws.SK.startswith("WORKOUT#2025-11-04#W1#SET#")
-    assert ws.type == "set"
-    assert ws.exercise_id == "EXERCISE#BENCH"
-    assert ws.set_number == 1
-    assert ws.reps == 8
-    assert ws.weight_kg == Decimal("60.5")
-    assert ws.rpe == 8
-    assert isinstance(ws.created_at, datetime)
-    assert isinstance(ws.updated_at, datetime)
+    assert example_set.PK == "USER#abc123"
+    assert example_set.SK.startswith("WORKOUT#2025-11-04#W1#SET#")
+    assert example_set.type == "set"
+    assert example_set.exercise_id == "EXERCISE#BENCH"
+    assert example_set.set_number == 1
+    assert example_set.reps == 8
+    assert example_set.weight_kg == Decimal("60.5")
+    assert example_set.rpe == 8
+    assert isinstance(example_set.created_at, datetime)
+    assert isinstance(example_set.updated_at, datetime)
 
 
-def test_workoutset_workout_id_extracts_from_SK():
-    ws = make_example_workout_set(SK="WORKOUT#2025-11-04#W42#SET#001")
+def test_workoutset_workout_id_extracts_from_SK(make_set):
+    ws = make_set(SK="WORKOUT#2025-11-04#W42#SET#001")
     assert ws.workout_id == "W42"
 
 
-def test_workoutset_workout_id_raises_on_invalid_SK():
-    ws = make_example_workout_set(SK="WORKOUT#ONLYTWO")
+def test_workoutset_workout_id_raises_on_invalid_SK(make_set):
+    ws = make_set(SK="WORKOUT#ONLYTWO")
     with pytest.raises(ValueError) as exc:
         _ = ws.workout_id
 
     assert "Invalid SK format" in str(exc.value)
 
 
-def test_workout_set_type_must_be_literal_set():
+def test_workout_set_type_must_be_literal_set(make_set):
     with pytest.raises(ValidationError):
-        make_example_workout_set(type="workout")  # not allowed per Literal
+        make_set(type="workout")  # not allowed per Literal
 
 
-def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch):
+def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch, make_set):
     dt_calls = []
 
     def fake_dt_to_iso(dt: datetime) -> str:
@@ -156,7 +117,7 @@ def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch):
     created_at = datetime(2025, 11, 4, 18, 5, 0)
     updated_at = datetime(2025, 11, 4, 18, 5, 30)
 
-    ws = make_example_workout_set(
+    ws = make_set(
         created_at=created_at,
         updated_at=updated_at,
     )
