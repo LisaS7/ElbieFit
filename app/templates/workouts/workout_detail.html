@@ -14,7 +14,7 @@
                 {{ workout.date.strftime("%A %d %B %Y")  }}
             </p>
         </div>
-        <a href="/workout/all" class="icon-button" title="Back to list">
+        <a href="{{ url_for('get_all_workouts') }}" class="icon-button" title="Back to list">
             <img src="{{ url_for('static', path='images/back.png') }}" alt="Back">
         </a>
     </header>
@@ -26,7 +26,15 @@
                 <span class="tag">{{ tag }}</span>
             {% endfor %}
         </div>
-        <a class="icon-button" hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/edit-meta" hx-target="#workout-meta" hx-swap="outerHTML">
+        <a
+            class="icon-button"
+            hx-get="{{ url_for('edit_workout_meta',
+                workout_date=workout.date,
+                workout_id=workout.workout_id
+            ) }}"
+            hx-target="#workout-meta"
+            hx-swap="outerHTML"
+            >
             <img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit">
         </a>
     </div>
@@ -36,7 +44,7 @@
         {% if workout.notes %}
             {{ workout.notes}}
         {% else %}
-            "No notes yet...fossilize your thoughts here."
+            No notes yet...fossilize your thoughts here.
         {% endif %}
     </div>
 </section>
@@ -46,7 +54,10 @@
 <section id="sets-list" class="card">
     <div
     id="sets-list-refresher"
-    hx-get="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+    hx-get="{{ url_for('view_workout',
+            workout_date=workout.date,
+            workout_id=workout.workout_id
+        ) }}"
     hx-trigger="workoutSetAdded from:body"
     hx-select="#sets-list"
     hx-target="#sets-list"
@@ -105,7 +116,10 @@
             <section class="add-set">
                 <button
                     class="icon-button"
-                    hx-get="/workout/{{workout.date}}/{{workout.workout_id}}/set/form?exercise_id={{ exercise_id }}"
+                    hx-get="{{ url_for('get_new_set_form',
+                        workout_date=workout.date,
+                        workout_id=workout.workout_id
+                    ) }}?exercise_id={{ exercise_id }}"
                     hx-target="next .new-set-form-container"
                     hx-swap="innerHTML">
                         <img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set">
@@ -128,7 +142,10 @@
     <span>Delete entire workout:</span>
     <button
         class="icon-button"
-        hx-delete="/workout/{{workout.date}}/{{workout.workout_id}}"
+        hx-delete="{{ url_for('delete_workout',
+            workout_date=workout.date,
+            workout_id=workout.workout_id
+        ) }}"
         hx-confirm="Delete workout? (This cannot be undone)"
         hx-target="body"
         hx-swap="outerHTML">

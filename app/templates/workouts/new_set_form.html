@@ -1,9 +1,11 @@
-<form hx-post="/workout/{{ workout_date }}/{{ workout_id }}/set/add"
+<form hx-post="{{ url_for(
+            'add_set',
+            workout_date=workout_date,
+            workout_id=workout_id
+            ) }}?exercise_id={{ exercise_id }}"
     hx-swap="none"
     class="set-form"
     >
-
-    <input type="hidden" name="exercise_id" value="{{ exercise_id }}">
     <div class="form-row">
         <!-- Reps -->
         <div class="form-field">
