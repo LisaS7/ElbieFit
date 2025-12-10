@@ -120,11 +120,11 @@
                         workout_date=workout.date,
                         workout_id=workout.workout_id
                     ) }}?exercise_id={{ exercise_id }}"
-                    hx-target="next .new-set-form-container"
+                    hx-target="#new-set-form-container-{{ exercise_id }}"
                     hx-swap="innerHTML">
                         <img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set">
                 </button>
-                <div class="new-set-form-container"></div>
+                <div id="new-set-form-container-{{ exercise_id }}"></div>
             </section>
         {% endfor %}
     {% else %}

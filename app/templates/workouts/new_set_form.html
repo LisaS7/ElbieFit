@@ -44,7 +44,7 @@
         <button
             type="button"
             class="small"
-            hx-on="click: this.closest('form').remove()"
+            hx-on="click: document.closeForm('#new-set-form-container-{{ exercise_id }}')"
         >
             Cancel
         </button>
