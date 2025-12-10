@@ -130,7 +130,7 @@ def create_workout(
 
 
 @router.post("/{workout_date}/{workout_id}/set/add")
-def create_workout_set(
+def add_set(
     workout_date: DateType,
     workout_id: str,
     exercise_id: str,
@@ -351,6 +351,9 @@ def update_workout_meta(
     # if date has changed then create new and delete old
     else:
         try:
+            logger.debug(
+                f"Moving workout date from {old_date} to {new_date} for {workout.workout_id}"
+            )
             workout = repo.move_workout_date(user_sub, workout, new_date, sets)
         except WorkoutRepoError:
             logger.exception(
@@ -389,6 +392,7 @@ def delete_workout(
     user_sub = claims["sub"]
 
     try:
+        logger.debug(f"Deleting workout {workout_id}")
         repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
     except WorkoutRepoError:
         logger.exception(
@@ -416,6 +420,7 @@ def delete_set(
     user_sub = claims["sub"]
 
     try:
+        logger.debug(f"Deleting set {set_number} for workout {workout_id}")
         repo.delete_set(user_sub, workout_date, workout_id, set_number)
     except WorkoutRepoError:
         logger.exception(
@@ -427,5 +432,5 @@ def delete_set(
         )
         raise HTTPException(status_code=500, detail="Error deleting set")
 
-    # Return nothing because we're using HTMX to swap the div content for this set
-    return ""
+    # Fire an event which htmx picks up to reload the page
+    return Response(status_code=204, headers={"HX-Trigger": "workoutSetAdded"})
