@@ -18,6 +18,7 @@ COMMON_COOKIE_OPTS = {
 
 
 def set_cookies(response: Response, token_data: dict) -> None:
+    logger.debug("Setting auth cookies")
     response.set_cookie(
         key="id_token",
         value=token_data["id_token"],
@@ -47,16 +48,20 @@ def auth_login(request: Request):
         f"&redirect_uri={REDIRECT_URI}"
         f"&scope=openid+email+profile"
     )
+    logger.debug("Redirecting user to Cognito hosted UI")
     return RedirectResponse(url=login_url)
 
 
 @router.get("/callback", name="auth_callback")
 def auth_callback(request: Request, code: str):
+    logger.debug("Received auth callback")
+
     if not code:
         logger.error("No authorization code provided in callback")
         raise HTTPException(status_code=400, detail="Missing authorization code")
 
     # Send token exchange request
+    logger.debug("Exchanging authorization code with Cognito")
     data = {
         "grant_type": "authorization_code",
         "client_id": CLIENT_ID,
@@ -65,6 +70,7 @@ def auth_callback(request: Request, code: str):
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
     response_token = requests.post(settings.token_url(), data=data, headers=headers)
+    logger.debug(f"Token exchange status_code={response_token.status_code}")
 
     if response_token.status_code != 200:
         logger.error(f"Token exchange failed: {response_token.text}")
@@ -73,22 +79,23 @@ def auth_callback(request: Request, code: str):
     token_data = response_token.json()
 
     if token_data["token_type"] != "Bearer":
-        logger.error("Invalid token type received")
+        logger.error("Invalid token type received from Cognito")
         raise HTTPException(status_code=400, detail="Invalid token type")
 
-    # Redirect to home page after successful authentication
+    logger.debug("Authentication successful; redirecting home and setting cookies")
     response = RedirectResponse("/", status_code=302)
-
-    # Yummy cookies
     set_cookies(response, token_data)
 
     return response
 
 
 @router.get("/logout")
-async def protected_route(response: Response):
+async def logout(response: Response):
+    logger.debug("User requested logout; clearing cookies")
+
     response = RedirectResponse(url="/", status_code=303)
 
     for cookie in ["id_token", "access_token", "refresh_token"]:
+        logger.debug(f"Deleting cookie: {cookie}")
         response.delete_cookie(cookie)
     return response
