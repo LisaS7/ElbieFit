@@ -48,9 +48,6 @@ main {
 /* ── Header & Menu ── */
 
 #app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 4rem 15rem;
   margin-bottom: 2rem;
 
@@ -140,11 +137,6 @@ main {
 
 /* ── Page Layout ── */
 
-#page-header {
-  display: flex;
-  justify-content: space-between;
-}
-
 #page-container {
   border-radius: 10px;
   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
@@ -155,6 +147,12 @@ main {
   margin: 1.5rem 0rem;
   max-height: 1rem;
   width: 100%;
+}
+
+.flex-row-spaced {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* ── Footer ── */
@@ -201,8 +199,6 @@ a {
 /* ──────────────────────────────── Workout Detail ──────────────────────────────── */
 
 #workout-detail-header {
-  display: flex;
-  justify-content: space-between;
   align-items: flex-start;
   gap: 1rem;
 }
@@ -215,12 +211,6 @@ a {
 
 .workout-title h2 {
   margin: 0;
-}
-
-#workout-meta #tags-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
 }
 
 #workout-notes {
@@ -257,32 +247,14 @@ a {
 
 .set-form input[type='number'],
 .set-form input[type='text'] {
-  font-size: 1.2rem;
-  padding: 0.7rem 0.9rem;
   max-width: 100%;
+  height: 3rem;
 }
 
 @media (max-width: 480px) {
-  .set-form .form-row {
-    flex-wrap: wrap;
-  }
-
   .set-form .form-row .form-field {
     min-width: 90px;
     flex: 1 1 30%;
-  }
-
-  .set-form input[type='number'],
-  .set-form input[type='text'] {
-    font-size: 1.2rem;
-    padding: 0.7rem 0.9rem;
-    height: 3rem;
-  }
-
-  input[type='number']::-webkit-inner-spin-button {
-    width: 1.8rem;
-    height: 1.8rem;
-    transform: scale(1.5); /* increase spinner size */
   }
 }
 
