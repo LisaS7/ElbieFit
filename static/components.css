@@ -11,20 +11,29 @@ button {
   font-size: 1.3rem;
   letter-spacing: 1px;
   color: whitesmoke;
+}
 
-  /* ── Shadow & Transition ── */
+.elevated {
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-button:hover {
+/* Hovering */
+.elevated:hover,
+.elevated:focus-visible {
   transform: translateY(-2px);
-  box-shadow: rgba(60, 64, 67, 0.35) 0px 3px 4px 0px, rgba(60, 64, 67, 0.2) 0px 4px 10px 3px;
+  box-shadow: rgba(60, 64, 67, 0.35) 0px 4px 6px 0px, rgba(60, 64, 67, 0.2) 0px 8px 14px 2px;
 }
 
-button:active {
-  transform: translateY(1px);
-  box-shadow: rgba(60, 64, 67, 0.25) 0px 0px 1px 0px, rgba(60, 64, 67, 0.12) 0px 1px 3px 1px;
+/* Pressed */
+.elevated:active {
+  transform: translateY(0);
+  box-shadow: rgba(60, 64, 67, 0.25) 0px 1px 2px 0px, rgba(60, 64, 67, 0.1) 0px 2px 4px 1px;
+}
+
+button,
+a.button {
+  cursor: pointer;
 }
 
 /* ── Small Buttons ── */
@@ -38,8 +47,6 @@ a.button.small {
 button.secondary,
 a.button.secondary {
   background: var(--color-button-secondary);
-  box-shadow: 2px 3px 0 var(--color-button-secondary-dark),
-    inset 1px 1px 2px rgba(255, 255, 255, 0.25), inset -1px -1px 2px rgba(0, 0, 0, 0.15);
 }
 
 /* ── Tiny icon buttons── */
@@ -60,17 +67,6 @@ a.button.secondary {
   width: 30px;
   height: 30px;
   object-fit: contain;
-}
-
-.icon-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 3px 4px 0 var(--color-button-dark), inset 1px 1px 2px rgba(255, 255, 255, 0.25),
-    inset -1px -1px 2px rgba(0, 0, 0, 0.15);
-}
-
-.icon-button:active {
-  transform: translateY(1px);
-  box-shadow: rgba(60, 64, 67, 0.25) 0px 0px 1px 0px, rgba(60, 64, 67, 0.12) 0px 1px 3px 1px;
 }
 
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */

@@ -6,7 +6,7 @@
 <header id="page-header" class="flex-row-spaced">
     <h1>Workout Log</h1>
     <button
-        class="icon-button"
+        class="icon-button elevated"
         type="button"
         hx-get="/workout/new-form"
         hx-target="#new-workout-form-container"
@@ -28,8 +28,8 @@
                     {% endfor %}
                 </div>
 
-                <a class="icon-button"
-                href="/workout/{{ workout.date }}/{{ workout.workout_id }}"
+                <a class="icon-button elevated"
+                 href="{{ url_for('view_workout', workout_date=workout.date, workout_id=workout.workout_id) }}"
                 >
                     <img src="{{ url_for('static', path='images/view.png') }}" alt="View">
                 </a>
