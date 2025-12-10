@@ -1,6 +1,5 @@
 <section id="workout-meta">
     <form
-        method="post"
         hx-post="{{ url_for('update_workout_meta',
             workout_date=workout.date,
             workout_id=workout.workout_id
@@ -38,7 +37,7 @@
                 type="text"
                 id="tags"
                 name="tags"
-                value="{% if workout.tags %}{{ workout.tags | join(',') }}{% endif %}"
+                value="{{ workout.tags | join(',') if workout.tags else '' }}"
             >
             <p class="field-help">Comma-separated, e.g.: push, legs, heavy</p>
         </div>
@@ -52,7 +51,7 @@
             <button type="submit" class="button small">Save</button>
             <button
                 type="button"
-                class="button small secondary"
+                class="button small"
                 hx-get="{{ url_for('view_workout',
                     workout_date=workout.date,
                     workout_id=workout.workout_id

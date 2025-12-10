@@ -404,7 +404,7 @@ def test_update_workout_meta_moves_date_and_sets_hx_redirect(
     expected_url = f"/workout/{new_date.isoformat()}/{WORKOUT_ID}"
 
     assert response.status_code == 204
-    assert response.headers.get("HX-Redirect") == expected_url
+    assert response.headers.get("HX-Redirect").endswith(expected_url)
 
 
 # ──────────────────────────── GET /workout/{date}/{id}/edit-meta ────────────────────────────

@@ -365,7 +365,11 @@ def update_workout_meta(
             )
             raise HTTPException(status_code=500, detail="Error updating workout")
 
-        new_url = f"/workout/{workout.date.isoformat()}/{workout.workout_id}"
+        new_url = request.url_for(
+            "view_workout",
+            workout_date=workout.date,
+            workout_id=workout.workout_id,
+        )
 
         logger.info(
             "Workout date changed, issuing HX-Redirect",
@@ -376,7 +380,7 @@ def update_workout_meta(
             },
         )
 
-        return Response(status_code=204, headers={"HX-Redirect": new_url})
+        return Response(status_code=204, headers={"HX-Redirect": str(new_url)})
 
 
 # ---------------------- Delete ---------------------------
