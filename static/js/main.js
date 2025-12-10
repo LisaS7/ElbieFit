@@ -1,3 +1,5 @@
+// Menu toggle
+
 document.addEventListener('DOMContentLoaded', () => {
   const toggle = document.querySelector('#app-header .menu-toggle');
   const nav = document.querySelector('#main-nav');
@@ -11,3 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     toggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
   });
 });
+
+// Cancel form
+
+document.closeForm = function (selector) {
+  const container = document.querySelector(selector);
+  if (container) container.innerHTML = '';
+};
