@@ -20,17 +20,17 @@ def test_workout_model_creates_instance_with_expected_fields(example_workout):
     assert isinstance(example_workout.updated_at, datetime)
 
 
-def test_workout_type_must_be_literal_workout(make_workout):
+def test_workout_type_must_be_literal_workout(workout):
     with pytest.raises(ValidationError):
-        make_workout(type="cardio")
+        workout(type="cardio")
 
 
-def test_workout_notes_is_optional_and_can_be_none(make_workout):
-    workout = make_workout(notes=None)
-    assert workout.notes is None
+def test_workout_notes_is_optional_and_can_be_none(workout):
+    w = workout(notes=None)
+    assert w.notes is None
 
 
-def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, make_workout):
+def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, workout):
     # Track calls to fake converters
     date_calls = []
     dt_calls = []
@@ -51,13 +51,13 @@ def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, make_workout)
     created_at = datetime(2025, 11, 4, 18, 0, 0)
     updated_at = datetime(2025, 11, 4, 18, 30, 0)
 
-    workout = make_workout(
+    w = workout(
         date=workout_date,
         created_at=created_at,
         updated_at=updated_at,
     )
 
-    item = workout.to_ddb_item()
+    item = w.to_ddb_item()
 
     # The dict has the converted values, not raw datetimes
     assert item["date"] == "DATE-20251104"
@@ -87,25 +87,25 @@ def test_workout_set_model_creates_instance_with_expected_fields(example_set):
     assert isinstance(example_set.updated_at, datetime)
 
 
-def test_workoutset_workout_id_extracts_from_SK(make_set):
-    ws = make_set(SK="WORKOUT#2025-11-04#W42#SET#001")
+def test_workoutset_workout_id_extracts_from_SK(workout_set):
+    ws = workout_set(SK="WORKOUT#2025-11-04#W42#SET#001")
     assert ws.workout_id == "W42"
 
 
-def test_workoutset_workout_id_raises_on_invalid_SK(make_set):
-    ws = make_set(SK="WORKOUT#ONLYTWO")
+def test_workoutset_workout_id_raises_on_invalid_SK(workout_set):
+    ws = workout_set(SK="WORKOUT#ONLYTWO")
     with pytest.raises(ValueError) as exc:
         _ = ws.workout_id
 
     assert "Invalid SK format" in str(exc.value)
 
 
-def test_workout_set_type_must_be_literal_set(make_set):
+def test_workout_set_type_must_be_literal_set(workout_set):
     with pytest.raises(ValidationError):
-        make_set(type="workout")  # not allowed per Literal
+        workout_set(type="workout")  # not allowed per Literal
 
 
-def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch, make_set):
+def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch, workout_set):
     dt_calls = []
 
     def fake_dt_to_iso(dt: datetime) -> str:
@@ -117,7 +117,7 @@ def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch, make_set):
     created_at = datetime(2025, 11, 4, 18, 5, 0)
     updated_at = datetime(2025, 11, 4, 18, 5, 30)
 
-    ws = make_set(
+    ws = workout_set(
         created_at=created_at,
         updated_at=updated_at,
     )

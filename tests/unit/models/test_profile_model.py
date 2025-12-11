@@ -4,7 +4,7 @@ from zoneinfo import available_timezones
 import pytest
 from pydantic import ValidationError
 
-from app.models.profile import Preferences, UserProfile
+from app.models.profile import Preferences
 
 # ---------- Preferences ----------
 
@@ -26,38 +26,34 @@ def test_preferences_invalid_units_raises():
 # ---------- UserProfile ----------
 
 
-def test_user_profile_valid_instance_and_default_preferences(user_profile):
-    assert user_profile.PK == "USER#123"
-    assert user_profile.SK == "PROFILE"
-    assert user_profile.display_name == "Lisa Test"
-    assert user_profile.email == "lisa@example.com"
+def test_user_profile_valid_instance_and_default_preferences(example_profile):
+    assert example_profile.PK == "USER#123"
+    assert example_profile.SK == "PROFILE"
+    assert example_profile.display_name == "Lisa Test"
+    assert example_profile.email == "lisa@example.com"
 
     # created/updated are parsed as datetime
-    assert isinstance(user_profile.created_at, datetime)
-    assert isinstance(user_profile.updated_at, datetime)
+    assert isinstance(example_profile.created_at, datetime)
+    assert isinstance(example_profile.updated_at, datetime)
 
     # preferences should be a Preferences instance with defaults
-    assert isinstance(user_profile.preferences, Preferences)
-    assert user_profile.preferences.units == "metric"
-    assert user_profile.preferences.show_tips is True
+    assert isinstance(example_profile.preferences, Preferences)
+    assert example_profile.preferences.units == "metric"
+    assert example_profile.preferences.show_tips is True
 
 
-def test_user_profile_requires_sk_profile_literal(profile_kwargs):
-    kwargs = {**profile_kwargs, "SK": "NOT_PROFILE"}
-
+def test_user_profile_requires_sk_profile_literal(profile):
     with pytest.raises(ValidationError):
-        UserProfile(**kwargs)
+        profile(SK="NOT_PROFILE")
 
 
-def test_user_profile_validates_email(profile_kwargs):
-    kwargs = {**profile_kwargs, "email": "not-an-email"}
-
+def test_user_profile_validates_email(profile):
     with pytest.raises(ValidationError):
-        UserProfile(**kwargs)
+        profile(email="not-an-email")
 
 
-def test_to_ddb_item_serializes_datetimes_and_nests_preferences(user_profile):
-    ddb_item = user_profile.to_ddb_item()
+def test_to_ddb_item_serializes_datetimes_and_nests_preferences(example_profile):
+    ddb_item = example_profile.to_ddb_item()
 
     # top-level keys preserved
     assert ddb_item["PK"] == "USER#123"
@@ -77,15 +73,12 @@ def test_to_ddb_item_serializes_datetimes_and_nests_preferences(user_profile):
     assert prefs["default_view"] == "workouts"
 
 
-def test_userprofile_accepts_valid_timezone(profile_kwargs):
+def test_userprofile_accepts_valid_timezone(profile):
     tz = next(iter(available_timezones()))  # any valid tz
-    kwargs = {**profile_kwargs, "timezone": tz}
-    profile = UserProfile(**kwargs)
-
-    assert profile.timezone == tz
+    p = profile(timezone=tz)
+    assert p.timezone == tz
 
 
-def test_userprofile_rejects_invalid_timezone(profile_kwargs):
-    kwargs = {**profile_kwargs, "timezone": "Narnia/Aslan"}
+def test_userprofile_rejects_invalid_timezone(profile):
     with pytest.raises(ValidationError, match="Invalid timezone: Narnia/Aslan"):
-        UserProfile(**kwargs)
+        profile(timezone="Narnia/Aslan")

@@ -11,113 +11,112 @@ from app.models.workout import Workout, WorkoutSet
 
 
 @pytest.fixture
-def exercise_kwargs() -> dict:
-    return {
-        "PK": "EXERCISE#PUSHUP",
-        "SK": "EXERCISE#PUSHUP",
-        "type": "exercise",
-        "name": "Push-up",
-        "muscles": ["chest", "triceps"],
-        "equipment": "bodyweight",
-        "category": "strength",
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
-        "updated_at": datetime(2025, 1, 2, 12, 0, 0),
-    }
+def exercise():
+    """Factory fixture for Exercise instances."""
 
-
-@pytest.fixture
-def make_exercise(exercise_kwargs):
-
-    def _make(**overrides) -> Exercise:
-        data = {**exercise_kwargs, **overrides}
-        return Exercise(**data)
+    def _make(**overrides):
+        defaults = {
+            "PK": "EXERCISE#PUSHUP",
+            "SK": "EXERCISE#PUSHUP",
+            "type": "exercise",
+            "name": "Push-up",
+            "muscles": ["chest", "triceps"],
+            "equipment": "bodyweight",
+            "category": "strength",
+            "created_at": datetime(2025, 1, 1, 12, 0, 0),
+            "updated_at": datetime(2025, 1, 2, 12, 0, 0),
+        }
+        return Exercise(**{**defaults, **overrides})
 
     return _make
 
 
 @pytest.fixture
-def example_exercise(make_exercise) -> Exercise:
-    return make_exercise()
+def example_exercise(exercise):
+    return exercise()
 
 
 # ───────────── Profile  ─────────────
 @pytest.fixture
-def profile_kwargs() -> dict:
-    return {
-        "PK": "USER#123",
-        "SK": "PROFILE",
-        "display_name": "Lisa Test",
-        "email": "lisa@example.com",
-        "created_at": datetime(2025, 1, 1, 12, 0, 0),
-        "updated_at": datetime(2025, 1, 1, 13, 0, 0),
-        "timezone": "Europe/London",
-    }
+def profile():
+    """Factory fixture for UserProfile instances."""
+
+    def _make(**overrides):
+        defaults = {
+            "PK": "USER#123",
+            "SK": "PROFILE",
+            "display_name": "Lisa Test",
+            "email": "lisa@example.com",
+            "created_at": datetime(2025, 1, 1, 12, 0, 0),
+            "updated_at": datetime(2025, 1, 1, 13, 0, 0),
+            "timezone": "Europe/London",
+        }
+        return UserProfile(**{**defaults, **overrides})
+
+    return _make
 
 
 @pytest.fixture
-def user_profile(profile_kwargs) -> UserProfile:
-    return UserProfile(**profile_kwargs)
+def example_profile(profile):
+    return profile()
 
 
 # ───────────── Workout  ─────────────
 
 
 @pytest.fixture
-def workout_kwargs() -> dict:
-    return {
-        "PK": "USER#abc123",
-        "SK": "WORKOUT#2025-11-04#W1",
-        "type": "workout",
-        "date": date(2025, 11, 4),
-        "name": "Workout A",
-        "tags": ["push", "upper"],
-        "notes": "Felt strong",
-        "created_at": datetime(2025, 11, 4, 18, 0, 0),
-        "updated_at": datetime(2025, 11, 4, 18, 30, 0),
-    }
+def workout():
+    """Factory fixture for Workout instances."""
 
-
-@pytest.fixture
-def make_workout(workout_kwargs):
-
-    def _make(**overrides) -> Workout:
-        data = {**workout_kwargs, **overrides}
-        return Workout(**data)
+    def _make(**overrides):
+        defaults = {
+            "PK": "USER#abc123",
+            "SK": "WORKOUT#2025-11-04#W1",
+            "type": "workout",
+            "date": date(2025, 11, 4),
+            "name": "Workout A",
+            "tags": ["push", "upper"],
+            "notes": "Felt strong",
+            "created_at": datetime(2025, 11, 4, 18, 0, 0),
+            "updated_at": datetime(2025, 11, 4, 18, 30, 0),
+        }
+        return Workout(**{**defaults, **overrides})
 
     return _make
 
 
 @pytest.fixture
-def example_workout(make_workout) -> Workout:
-    return make_workout()
+def example_workout(workout):
+    """Default Workout instance for tests that don't need customization."""
+    return workout()
+
+
+# ───────────── WorkoutSet  ─────────────
 
 
 @pytest.fixture
-def set_kwargs() -> dict:
-    return {
-        "PK": "USER#abc123",
-        "SK": "WORKOUT#2025-11-04#W1#SET#001",
-        "type": "set",
-        "exercise_id": "EXERCISE#BENCH",
-        "set_number": 1,
-        "reps": 8,
-        "weight_kg": Decimal("60.5"),
-        "rpe": 8,
-        "created_at": datetime(2025, 11, 4, 18, 5, 0),
-        "updated_at": datetime(2025, 11, 4, 18, 5, 30),
-    }
+def workout_set():
+    """Factory fixture for WorkoutSet instances."""
 
-
-@pytest.fixture
-def make_set(set_kwargs):
-
-    def _make(**overrides) -> WorkoutSet:
-        data = {**set_kwargs, **overrides}
-        return WorkoutSet(**data)
+    def _make(**overrides):
+        defaults = {
+            "PK": "USER#abc123",
+            "SK": "WORKOUT#2025-11-04#W1#SET#001",
+            "type": "set",
+            "exercise_id": "EXERCISE#BENCH",
+            "set_number": 1,
+            "reps": 8,
+            "weight_kg": Decimal("60.5"),
+            "rpe": 8,
+            "created_at": datetime(2025, 11, 4, 18, 5, 0),
+            "updated_at": datetime(2025, 11, 4, 18, 5, 30),
+        }
+        return WorkoutSet(**{**defaults, **overrides})
 
     return _make
 
 
 @pytest.fixture
-def example_set(make_set) -> WorkoutSet:
-    return make_set()
+def example_set(workout_set):
+    """Default WorkoutSet instance for tests that don't need customization."""
+    return workout_set()
