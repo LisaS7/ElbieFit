@@ -327,7 +327,7 @@ def update_workout_meta(
     # if date hasn't changed then update existing item
     if new_date == old_date:
         try:
-            repo.update_workout(workout)
+            repo.edit_workout(workout)
         except WorkoutRepoError:
             logger.exception(
                 "Error updating workout",
