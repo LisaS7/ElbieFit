@@ -48,7 +48,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
     def _to_model(self, item: dict):
         item_type = item.get("type")
-        logger.debug(f"_to_model: converting item with type={item_type}")
 
         try:
             if item_type == "workout":
