@@ -4,9 +4,17 @@ from decimal import Decimal
 from typing import Annotated, Literal
 
 from fastapi import Form
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 
 from app.utils.dates import date_to_iso, dt_to_iso
+
+NameStr = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+]
+TagStr = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=50),
+]
 
 
 class Workout(BaseModel):
@@ -14,9 +22,9 @@ class Workout(BaseModel):
     SK: str  # "WORKOUT#2025-11-04#W1"
     type: Literal["workout"]
     date: DateType
-    name: str
-    tags: list[str] | None = None
-    notes: str | None = None
+    name: NameStr
+    tags: list[TagStr] | None = None
+    notes: str | None = Field(default=None, max_length=2000)
 
     created_at: datetime
     updated_at: datetime
@@ -35,9 +43,7 @@ class Workout(BaseModel):
 
 class WorkoutCreate(BaseModel):
     date: DateType
-    name: Annotated[
-        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
-    ]
+    name: NameStr
 
     @classmethod
     def as_form(
@@ -49,12 +55,10 @@ class WorkoutCreate(BaseModel):
 
 
 class WorkoutUpdate(BaseModel):
-    name: Annotated[
-        str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
-    ]
     date: DateType
-    notes: str | None = None
-    tags: list[str] | None = None
+    name: NameStr
+    tags: list[TagStr] | None = None
+    notes: str | None = Field(default=None, max_length=2000)
 
     @classmethod
     def as_form(
@@ -77,9 +81,9 @@ class WorkoutSet(BaseModel):
     type: Literal["set"]
     exercise_id: str
     set_number: int
-    reps: int
-    weight_kg: Decimal | None = None
-    rpe: int | None = None  # Rate of Perceived Exertion
+    reps: int = Field(ge=1)
+    weight_kg: Decimal | None = Field(default=None, ge=0)
+    rpe: int | None = Field(default=None, ge=1, le=10)  # Rate of Perceived Exertion
 
     created_at: datetime
     updated_at: datetime
@@ -99,9 +103,9 @@ class WorkoutSet(BaseModel):
 
 
 class WorkoutSetCreate(BaseModel):
-    reps: int
-    weight_kg: Decimal | None = None
-    rpe: int | None = None
+    reps: int = Field(ge=1)
+    weight_kg: Decimal | None = Field(default=None, ge=0)
+    rpe: int | None = Field(default=None, ge=1, le=10)
 
     @classmethod
     def as_form(
@@ -115,3 +119,7 @@ class WorkoutSetCreate(BaseModel):
             weight_kg=weight_kg,
             rpe=rpe,
         )
+
+
+class WorkoutSetUpdate(WorkoutSetCreate):
+    pass
