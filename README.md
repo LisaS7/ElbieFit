@@ -11,19 +11,19 @@ The goal is to provide a simple, fast, modern interface that allows users to log
 - FastAPI application running on AWS Lambda via Mangum
 - Cognito authentication (hosted UI → callback → session cookies)
 - DynamoDB datastore using a repository layer
-- Pydantic models
+- Pydantic models for validation
 
 ## Frontend
 
 - HTMX/Jinja templates rendered server-side
-- TBC: plain CSS or Tailwind #TODO
+- Custom CSS (no Tailwind/Bootstrap) for a simple, responsive UI
 
 ## Tooling & CI/CD
 
-- Fully automated deployment pipeline using GitHub Actions
-- CloudFormation yaml templates to deploy AWS resources
-- OIDC trust for secure AWS deployments
-- Pipeline runs tests and pushes code to test Lambda on every push to main
+- GitHub Actions pipeline for automated tests and deployments
+- CloudFormation templates to provision AWS resources
+- OIDC trust for secure GitHub → AWS deployments (no long-lived AWS keys)
+- Pipeline runs tests and pushes code to the test Lambda on every push to `main`
 
 Bash scripts for:
 
@@ -33,86 +33,52 @@ Bash scripts for:
 - Updating Lambda code in place
 - Unit tests via pytest, including coverage
 
-# Deployment
+# Architechture
 
-- Clone the repo
-- Run script to deploy AWS resources:
-  `./scripts/deploy_stack.sh`
-  This script deploys DynamoDB, Cognito, Lambda, API Gateway, and IAM roles
-  Some resources will not complete on the first run, that's expected, we wire everything up in the next step.
+```mermaid
+flowchart TD
 
-- Create a .env file in the project root. Example contents:
+    subgraph CLIENT["Browser (HTMX + Jinja Templates)"]
+    end
 
-```bash
-REGION="eu-west-2"
-PROJECT_NAME="elbiefit"
-ACCOUNT_ID="123456789"
-ENV="dev"
+    CLIENT -->|HTTPS Requests| APIGW["API Gateway"]
 
-LOG_LEVEL="DEBUG"
-DDB_TABLE_NAME="elbiefit-dev-table"
+    APIGW -->|Invoke| LAMBDA["AWS Lambda<br/>FastAPI + Mangum"]
 
-COGNITO_ISSUER="eu-west-2_abcdef"
-COGNITO_AUDIENCE="slajfhasdjkghhjkafb"
-COGNITO_DOMAIN="elbiefit-dev-123456789-auth"
-COGNITO_REDIRECT_URI="https://abcdef123.execute-api.eu-west-2.amazonaws.com/auth/callback"
+    subgraph APP["FastAPI Application"]
+        AUTH["Auth Layer<br/>(Cognito JWT validation)"]
+        ROUTES["Route Handlers<br/>(HTMX responses)"]
+        REPOS["Repository Layer<br/>(WorkoutRepo, ExerciseRepo)"]
+        MODELS["Pydantic Models"]
+    end
+
+    LAMBDA --> APP
+    AUTH --> ROUTES
+    ROUTES --> REPOS
+    REPOS --> DDB["DynamoDB Table<br/>PK/SK schema"]
+
+    MODELS <--> ROUTES
+
+    subgraph CI["GitHub Actions CI/CD"]
+        TESTS["Run Pytest + Coverage"]
+        BUILD["Package Lambda with uv"]
+        S3["Upload Artifact to S3"]
+        CFN["Deploy via CloudFormation<br/>with OIDC AssumeRole"]
+    end
+
+    CI -->|Updates| LAMBDA
+
+
+
 ```
 
-#### Cognito Issuer
+# 🧪 Live Demo (TODO)
 
-Go to AWS Console → Cognito → User Pools
-Click your user pool
-On the Overview tab, look for Pool Id
-It looks like: eu-west-2_kadjghgh
-That entire string goes in COGNITO_ISSUER.
+App URL: TBC
 
-#### Cognito Audience
+Demo user (shared):
 
-Inside your User Pool → App Integration
-Scroll to App clients and analytics
-Click the client you created (the one for ElbieFit)
-You see Client ID
-Example: 2xy4a0abc00cg0i5u7n17abcd5
-Put that in COGNITO_AUDIENCE.
+- Email: demo+elbiefit@example.com
+- Password: TBC
 
-#### Cognito Domain
-
-User Pool → App Integration
-Under Domain, you will see configured domain:
-elbiefit-dev-123456789-auth
-
-#### Cognito Redirect URI
-
-Go to API Gateway → your API → Stages → dev (or prod)
-
-Base Invoke URL looks like: `https://12abcd34o.execute-api.eu-west-2.amazonaws.com`
-
-Append your callback route: /auth/callback
-
-Final string becomes: `https://12abcd34o.execute-api.eu-west-2.amazonaws.com/auth/callback`
-
-- Run the deploy stack script again:
-  `./scripts/deploy_stack.sh`
-
-  This will pull in the environment variables and connect everything up.
-
-## Code updates
-
-Once the infrastructure is deployed and your .env file is filled in, you can push code changes to the Lambda without redeploying the whole stack.
-
-1. Package your application code
-
-This script builds a zip containing your code and dependencies using uv:
-`./scripts/deploy_code.sh`
-
-This script will:
-Export dependencies using uv
-Create a build directory
-Zip the application
-Upload it to your S3 artifacts bucket
-
-2. Update the Lambda function
-   After the artifact is uploaded, run:
-   `./scripts/update_lambda_code.sh`
-   This forces AWS Lambda to update to the newest zip file.
-   No need to redeploy CloudFormation — this updates only the function's code.
+Note: This is a shared demo account – data may be reset periodically.
