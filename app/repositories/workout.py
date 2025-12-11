@@ -23,6 +23,13 @@ class WorkoutRepository(Protocol):
     def get_workout_with_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]: ...
+    def get_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        set_number: int,
+    ) -> WorkoutSet: ...
     def edit_workout(self, workout: Workout) -> Workout: ...
     def edit_set(
         self,
@@ -246,6 +253,57 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
         return workout[0], sets
 
+    def get_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        set_number: int,
+    ) -> WorkoutSet:
+        """
+        Fetch a single workout set for the given user/workout/set_number.
+        """
+        logger.debug(
+            f"Fetching set {set_number} for workout {workout_id} on {workout_date}"
+        )
+
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_set_sk(workout_date, workout_id, set_number)
+
+        try:
+            raw_item = self._safe_get(Key={"PK": pk, "SK": sk})
+        except RepoError as e:
+            logger.error(
+                f"Failed to load set {set_number} for workout {workout_id}",
+                extra={
+                    "user_sub": user_sub,
+                    "workout_date": workout_date.isoformat(),
+                    "workout_id": workout_id,
+                    "set_number": set_number,
+                },
+            )
+            raise WorkoutRepoError("Failed to load set from database") from e
+
+        if not raw_item:
+            logger.warning(
+                f"Set {set_number} not found for workout {workout_id} on {workout_date}",
+            )
+            raise WorkoutNotFoundError(f"Set {set_number} not found")
+
+        try:
+            return WorkoutSet(**raw_item)
+        except Exception as e:
+            logger.error(
+                f"Failed to parse set {set_number} for workout {workout_id}",
+                extra={
+                    "user_sub": user_sub,
+                    "workout_date": workout_date.isoformat(),
+                    "workout_id": workout_id,
+                    "set_number": set_number,
+                },
+            )
+            raise WorkoutRepoError("Failed to parse workout set from database") from e
+
     # ----------------------- Add -----------------------------
 
     def create_workout(self, user_sub: str, data: WorkoutCreate) -> Workout:
@@ -382,33 +440,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         data: WorkoutSetUpdate,
     ):
         logger.debug(f"Updating set {set_number} for workout {workout_id}")
-
-        pk = db.build_user_pk(user_sub)
-        sk = db.build_set_sk(workout_date, workout_id, set_number)
-
-        try:
-            raw_item = self._safe_get(Key={"PK": pk, "SK": sk})
-        except RepoError as e:
-            logger.error(
-                "Failed to load set %s for workout %s",
-                set_number,
-                workout_id,
-                extra={
-                    "user_sub": user_sub,
-                    "workout_date": workout_date.isoformat(),
-                    "workout_id": workout_id,
-                    "set_number": set_number,
-                },
-            )
-            raise WorkoutRepoError("Failed to load set for update") from e
-
-        if not raw_item:
-            logger.warning(
-                f"Set {set_number} not found for workout {workout_id} on {workout_date}",
-            )
-            raise WorkoutNotFoundError(f"Set {set_number} not found")
-
-        existing = WorkoutSet(**raw_item)
+        existing = self.get_set(user_sub, workout_date, workout_id, set_number)
 
         updated_set = existing.model_copy(
             update={

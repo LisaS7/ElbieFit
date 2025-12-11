@@ -429,6 +429,95 @@ def test_get_workout_with_sets_wraps_unexpected_exception_in_workoutrepoerror(
     assert "Failed to parse workout and sets from response" in str(excinfo.value)
 
 
+# --- Get set ----
+
+
+def test_get_set_returns_parsed_workoutset(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    def fake_get(**kwargs):
+        # Return a copy so tests can't accidentally mutate the global
+        return WORKOUT_W2_SET1_ITEM.copy()
+
+    monkeypatch.setattr(repo, "_safe_get", fake_get)
+
+    result = repo.get_set(
+        user_sub=USER_SUB,
+        workout_date=WORKOUT_DATE_W2,
+        workout_id=WORKOUT_ID_W2,
+        set_number=SET_NUMBER,
+    )
+
+    assert isinstance(result, WorkoutSet)
+    assert result.PK == WORKOUT_W2_SET1_ITEM["PK"]
+    assert result.SK == WORKOUT_W2_SET1_ITEM["SK"]
+    assert result.exercise_id == WORKOUT_W2_SET1_ITEM["exercise_id"]
+    assert result.set_number == WORKOUT_W2_SET1_ITEM["set_number"]
+    assert result.reps == WORKOUT_W2_SET1_ITEM["reps"]
+    assert result.weight_kg == WORKOUT_W2_SET1_ITEM["weight_kg"]
+    assert result.rpe == WORKOUT_W2_SET1_ITEM["rpe"]
+
+
+def test_get_set_raises_workoutrepoerror_on_safe_get_failure(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    def boom(**kwargs):
+        raise RepoError("kaboom")
+
+    monkeypatch.setattr(repo, "_safe_get", boom)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_set(
+            user_sub=USER_SUB,
+            workout_date=WORKOUT_DATE_W2,
+            workout_id=WORKOUT_ID_W2,
+            set_number=SET_NUMBER,
+        )
+
+    assert "Failed to load set from database" in str(excinfo.value)
+
+
+def test_get_set_raises_workoutnotfound_when_item_missing(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # _safe_get returns nothing -> set doesn't exist
+    monkeypatch.setattr(repo, "_safe_get", lambda **kwargs: None)
+
+    with pytest.raises(WorkoutNotFoundError) as excinfo:
+        repo.get_set(
+            user_sub=USER_SUB,
+            workout_date=WORKOUT_DATE_W2,
+            workout_id=WORKOUT_ID_W2,
+            set_number=SET_NUMBER,
+        )
+
+    assert "Set 1 not found" in str(excinfo.value)
+
+
+def test_get_set_wraps_parse_error_in_workoutrepoerror(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # Missing required fields -> WorkoutSet(**raw_item) should explode
+    bad_item = {
+        "PK": WORKOUT_W2_SET1_ITEM["PK"],
+        "SK": WORKOUT_W2_SET1_ITEM["SK"],
+        "type": "set",
+        # no exercise_id, set_number, reps, etc.
+    }
+
+    monkeypatch.setattr(repo, "_safe_get", lambda **kwargs: bad_item)
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.get_set(
+            user_sub=USER_SUB,
+            workout_date=WORKOUT_DATE_W2,
+            workout_id=WORKOUT_ID_W2,
+            set_number=SET_NUMBER,
+        )
+
+    assert "Failed to parse workout set from database" in str(excinfo.value)
+
+
 # --------------- Create ---------------
 
 

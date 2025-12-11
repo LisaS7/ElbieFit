@@ -1,8 +1,4 @@
-<form hx-post="{{ url_for(
-            'add_set',
-            workout_date=workout_date,
-            workout_id=workout_id
-            ) }}?exercise_id={{ exercise_id }}"
+<form hx-post="{{ action_url }}"
     hx-swap="none"
     class="set-form"
     >
@@ -12,7 +8,7 @@
             <label>Reps</label>
             <div class="number-stepper" data-step="1" data-min="1">
                 <button type="button" class="stepper-button elevated" data-action="decrement">−</button>
-                <input type="number" name="reps" min="1" required>
+                <input type="number" name="reps" min="1" required value="{{ set.reps if set else '' }}">
                 <button type="button" class="stepper-button elevated" data-action="increment">+</button>
             </div>
         </div>
@@ -22,7 +18,7 @@
             <label>Weight (kg)</label>
             <div class="number-stepper" data-step="0.5" data-min="0">
                 <button type="button" class="stepper-button elevated" data-action="decrement">−</button>
-                <input type="number" name="weight_kg" step="0.5" min="0">
+                <input type="number" name="weight_kg" step="0.5" min="0" value="{{ set.weight_kg if set else '' }}">
                 <button type="button" class="stepper-button elevated" data-action="increment">+</button>
             </div>
         </div>
@@ -33,18 +29,23 @@
         <label>RPE</label>
         <div class="number-stepper" data-step="1" data-min="1" data-max="10">
             <button type="button" class="stepper-button elevated" data-action="decrement">−</button>
-            <input type="number" name="rpe" min="1" max="10">
+            <input type="number" name="rpe" min="1" max="10" value="{{ set.rpe if set else '' }}">
             <button type="button" class="stepper-button elevated" data-action="increment">+</button>
         </div>
     </div>
 
+    {# keep exercise_id if needed by backend #}
+    {% if exercise_id %}
+        <input type="hidden" name="exercise_id" value="{{ exercise_id }}">
+    {% endif %}
+
     <div class="form-actions">
-        <button type="submit" class="small elevated">Add Set</button>
+        <button type="submit" class="small elevated">{{ submit_label }}</button>
 
         <button
             type="button"
             class="small elevated"
-            hx-on="click: document.closeForm('#new-set-form-container-{{ exercise_id }}')"
+            hx-on="click: document.closeForm('{{ cancel_target }}')"
         >
             Cancel
         </button>

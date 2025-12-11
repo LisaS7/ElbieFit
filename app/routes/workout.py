@@ -8,6 +8,7 @@ from app.models.workout import (
     WorkoutCreate,
     WorkoutSet,
     WorkoutSetCreate,
+    WorkoutSetUpdate,
     WorkoutUpdate,
 )
 from app.repositories.errors import (
@@ -98,14 +99,28 @@ def get_new_set_form(
     logger.debug(
         f"Getting new set form for workout {workout_id} on {workout_date} for exercise {exercise_id}"
     )
+
+    action_url = (
+        str(
+            request.url_for("add_set", workout_date=workout_date, workout_id=workout_id)
+        )
+        + f"?exercise_id={exercise_id}"
+    )
+
+    context = {
+        "workout_date": workout_date,
+        "workout_id": workout_id,
+        "exercise_id": exercise_id,
+        "action_url": action_url,
+        "submit_label": "Add Set",
+        "set": None,
+        "cancel_target": f"#new-set-form-container-{exercise_id}",
+    }
+
     return templates.TemplateResponse(
         request,
-        "workouts/new_set_form.html",
-        {
-            "workout_date": workout_date,
-            "workout_id": workout_id,
-            "exercise_id": exercise_id,
-        },
+        "workouts/set_form.html",
+        context,
     )
 
 
@@ -236,7 +251,7 @@ def view_workout(
 # ---------------------- Edit ---------------------------
 
 
-# ---- Return the form -----
+# ---- Return the workout meta form -----
 @router.get("/{workout_date}/{workout_id}/edit-meta")
 def edit_workout_meta(
     request: Request,
@@ -381,6 +396,88 @@ def update_workout_meta(
         )
 
         return Response(status_code=204, headers={"HX-Redirect": str(new_url)})
+
+
+# ---- Edit sets -----
+
+
+@router.get("/{workout_date}/{workout_id}/set/{set_number}/edit")
+def get_edit_set_form(
+    request: Request,
+    workout_date: DateType,
+    workout_id: str,
+    set_number: int,
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+
+    try:
+        set_ = repo.get_set(user_sub, workout_date, workout_id, set_number)
+    except WorkoutRepoError:
+        logger.exception(
+            "Error fetching set for edit",
+            extra={
+                "user_sub": user_sub,
+                "workout_id": workout_id,
+                "set_number": set_number,
+            },
+        )
+        raise HTTPException(status_code=500, detail="Error fetching set")
+
+    action_url = request.url_for(
+        "edit_set",
+        workout_date=workout_date,
+        workout_id=workout_id,
+        set_number=set_number,
+    )
+
+    cancel_target = f"#edit-set-form-container-{set_number}"
+
+    return templates.TemplateResponse(
+        request,
+        "workouts/set_form.html",
+        {
+            "workout_date": workout_date,
+            "workout_id": workout_id,
+            "set_number": set_number,
+            "set": set_,
+            "exercise_id": None,  # we don't change exercise on edit
+            "action_url": action_url,
+            "submit_label": "Save Set",
+            "cancel_target": cancel_target,
+        },
+    )
+
+
+@router.post("/{workout_date}/{workout_id}/set/{set_number}")
+def edit_set(
+    workout_date: DateType,
+    workout_id: str,
+    set_number: int,
+    form: Annotated[WorkoutSetUpdate, Depends(WorkoutSetUpdate.as_form)],
+    claims=Depends(auth.require_auth),
+    repo: WorkoutRepository = Depends(get_workout_repo),
+):
+    user_sub = claims["sub"]
+
+    try:
+        repo.edit_set(user_sub, workout_date, workout_id, set_number, form)
+    except WorkoutNotFoundError:
+        raise HTTPException(status_code=404, detail="Set not found")
+    except WorkoutRepoError:
+        logger.exception(
+            "Error updating set",
+            extra={
+                "user_sub": user_sub,
+                "workout_date": workout_date.isoformat(),
+                "workout_id": workout_id,
+                "set_number": set_number,
+            },
+        )
+        raise HTTPException(status_code=500, detail="Error updating set")
+
+    return Response(status_code=204, headers={"HX-Trigger": "workoutSetChanged"})
 
 
 # ---------------------- Delete ---------------------------

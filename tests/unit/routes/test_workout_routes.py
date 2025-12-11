@@ -476,6 +476,127 @@ def test_edit_workout_meta_returns_500_when_repo_error(
     assert response.status_code == 500
 
 
+# ──────────────────────────── GET /workout/{date}/{id}/set/{set_number}/edit ────────────────────────────
+
+
+def test_get_edit_set_form_renders_form(authenticated_client, fake_workout_repo):
+    dummy_set = DummySet(set_number=1, reps=10, weight_kg=70, exercise_id="EX-1")
+
+    def fake_get_set(user_sub, workout_date, workout_id, set_number):
+        assert user_sub == "test-user-sub"
+        assert workout_date == WORKOUT_DATE
+        assert workout_id == WORKOUT_ID
+        assert set_number == 1
+        return dummy_set
+
+    fake_workout_repo.get_set = fake_get_set
+
+    response = authenticated_client.get(
+        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/1/edit"
+    )
+
+    assert response.status_code == 200
+    assert "<form" in response.text
+    assert 'name="reps"' in response.text
+    assert "Save Set" in response.text
+    assert "#edit-set-form-container-1" in response.text
+
+
+def test_get_edit_set_form_returns_500_when_repo_error(
+    authenticated_client, fake_workout_repo
+):
+    def broken_get_set(user_sub, workout_date, workout_id, set_number):
+        raise workout_routes.WorkoutRepoError("kaboom")
+
+    fake_workout_repo.get_set = broken_get_set
+
+    response = authenticated_client.get(
+        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/1/edit"
+    )
+
+    assert response.status_code == 500
+
+
+# ──────────────────────────── POST /{workout_date}/{workout_id}/set/{set_number} ────────────────────────────
+
+
+def post_edit_set(
+    client,
+    workout_date=WORKOUT_DATE,
+    workout_id=WORKOUT_ID,
+    set_number=1,
+    **overrides,
+):
+    data = {
+        "reps": "10",
+        "weight_kg": "70.5",
+        "rpe": "8",
+    }
+    data.update(overrides)
+
+    url = f"/workout/{workout_date.isoformat()}/{workout_id}/set/{set_number}"
+
+    return client.post(
+        url,
+        data=data,
+        follow_redirects=False,
+    )
+
+
+def test_edit_set_updates_and_returns_204(authenticated_client, fake_workout_repo):
+    calls: dict = {}
+
+    def fake_edit_set(user_sub, workout_date, workout_id, set_number, form):
+        calls["user_sub"] = user_sub
+        calls["workout_date"] = workout_date
+        calls["workout_id"] = workout_id
+        calls["set_number"] = set_number
+        calls["form"] = form
+
+    fake_workout_repo.edit_set = fake_edit_set
+
+    response = post_edit_set(authenticated_client)
+
+    assert response.status_code == 204
+    assert response.headers.get("HX-Trigger") == "workoutSetChanged"
+
+    assert calls["user_sub"] == "test-user-sub"
+    assert calls["workout_date"] == WORKOUT_DATE
+    assert calls["workout_id"] == WORKOUT_ID
+    assert calls["set_number"] == 1
+
+    form = calls["form"]
+    assert form.reps == 10
+    assert form.weight_kg == Decimal("70.5")
+    assert form.rpe == 8
+
+
+def test_edit_set_returns_404_when_set_not_found(
+    authenticated_client, fake_workout_repo
+):
+    def broken_edit_set(user_sub, workout_date, workout_id, set_number, form):
+        raise workout_routes.WorkoutNotFoundError("nope")
+
+    fake_workout_repo.edit_set = broken_edit_set
+
+    response = post_edit_set(authenticated_client)
+
+    assert response.status_code == 404
+    assert "Set not found" in response.text
+
+
+def test_edit_set_returns_500_when_repo_error(authenticated_client, fake_workout_repo):
+    def broken_edit_set(user_sub, workout_date, workout_id, set_number, form):
+        raise workout_routes.WorkoutRepoError("kaboom")
+
+    fake_workout_repo.edit_set = broken_edit_set
+
+    response = post_edit_set(authenticated_client)
+
+    assert response.status_code == 500
+    assert "Error updating set" in response.text
+
+
 # ──────────────────────────── DELETE /workout/{date}/{id} ────────────────────────────
 
 
