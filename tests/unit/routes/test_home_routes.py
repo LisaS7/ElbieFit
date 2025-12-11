@@ -8,3 +8,12 @@ def test_health_returns_status(client):
     response = client.get("/healthz")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_meta_endpoint_returns_basic_info(client):
+    response = client.get("/meta")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert "app_name" in body
+    assert "version" in body
