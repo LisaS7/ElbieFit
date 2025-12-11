@@ -4,7 +4,13 @@ from typing import List, Protocol
 
 from boto3.dynamodb.conditions import Key
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutSetCreate
+from app.models.workout import (
+    Workout,
+    WorkoutCreate,
+    WorkoutSet,
+    WorkoutSetCreate,
+    WorkoutSetUpdate,
+)
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.utils import dates, db
@@ -17,7 +23,15 @@ class WorkoutRepository(Protocol):
     def get_workout_with_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]: ...
-    def update_workout(self, workout: Workout) -> Workout: ...
+    def edit_workout(self, workout: Workout) -> Workout: ...
+    def edit_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        set_number: int,
+        data: WorkoutSetUpdate,
+    ): ...
     def move_workout_date(
         self,
         user_sub: str,
@@ -302,9 +316,9 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
         return new_set
 
-    # ----------------------- Update -----------------------------
+    # ----------------------- Edit -----------------------------
 
-    def update_workout(self, workout: Workout) -> Workout:
+    def edit_workout(self, workout: Workout) -> Workout:
         """
         Persist changes to an existing workout.
         """
@@ -358,6 +372,66 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             ) from e
 
         return new_workout
+
+    def edit_set(
+        self,
+        user_sub: str,
+        workout_date: DateType,
+        workout_id: str,
+        set_number: int,
+        data: WorkoutSetUpdate,
+    ):
+        logger.debug(f"Updating set {set_number} for workout {workout_id}")
+
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_set_sk(workout_date, workout_id, set_number)
+
+        try:
+            raw_item = self._safe_get(Key={"PK": pk, "SK": sk})
+        except RepoError as e:
+            logger.error(
+                "Failed to load set %s for workout %s",
+                set_number,
+                workout_id,
+                extra={
+                    "user_sub": user_sub,
+                    "workout_date": workout_date.isoformat(),
+                    "workout_id": workout_id,
+                    "set_number": set_number,
+                },
+            )
+            raise WorkoutRepoError("Failed to load set for update") from e
+
+        if not raw_item:
+            logger.warning(
+                f"Set {set_number} not found for workout {workout_id} on {workout_date}",
+            )
+            raise WorkoutNotFoundError(f"Set {set_number} not found")
+
+        existing = WorkoutSet(**raw_item)
+
+        updated_set = existing.model_copy(
+            update={
+                "reps": data.reps,
+                "weight_kg": data.weight_kg,
+                "rpe": data.rpe,
+                "updated_at": dates.now(),
+            }
+        )
+
+        try:
+            self._safe_put(updated_set.to_ddb_item())
+        except RepoError as e:
+            logger.error(
+                f"Failed to update set {set_number} for workout {workout_id}",
+                extra={
+                    "user_sub": user_sub,
+                    "workout_date": workout_date.isoformat(),
+                    "workout_id": workout_id,
+                    "set_number": set_number,
+                },
+            )
+            raise WorkoutRepoError("Failed to update set") from e
 
     # ----------------------- Delete -----------------------------
 

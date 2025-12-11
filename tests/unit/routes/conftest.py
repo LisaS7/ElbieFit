@@ -73,7 +73,7 @@ class FakeWorkoutRepo:
         return self.workout_to_return, self.sets_to_return
 
     # Used by POST /workout/{workout_date}/{workout_id}/meta
-    def update_workout(self, workout):
+    def edit_workout(self, workout):
         if self.should_raise_on_update:
             raise WorkoutRepoError("boom-update")
         self.updated_workouts.append(workout)

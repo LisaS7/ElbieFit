@@ -4,7 +4,13 @@ from decimal import Decimal
 
 import pytest
 
-from app.models.workout import Workout, WorkoutCreate, WorkoutSet, WorkoutSetCreate
+from app.models.workout import (
+    Workout,
+    WorkoutCreate,
+    WorkoutSet,
+    WorkoutSetCreate,
+    WorkoutSetUpdate,
+)
 from app.repositories import workout as workout_repo_module
 from app.repositories.errors import RepoError, WorkoutNotFoundError, WorkoutRepoError
 from app.repositories.workout import DynamoWorkoutRepository
@@ -539,10 +545,10 @@ def test_add_set_raises_workoutrepoerror_on_put_failure(failing_put_table, monke
     assert "Failed to add workout set to database" in str(excinfo.value)
 
 
-# --------------- Update (No New SK) ---------------
+# --------------- Edit (No New SK) ---------------
 
 
-def test_update_workout_does_put_item_and_returns_workout(fake_table):
+def test_edit_workout_does_put_item_and_returns_workout(fake_table):
     repo = DynamoWorkoutRepository(fake_table)
 
     workout = Workout(
@@ -558,13 +564,13 @@ def test_update_workout_does_put_item_and_returns_workout(fake_table):
     )
 
     expected_item = workout.to_ddb_item()
-    returned_item = repo.update_workout(workout)
+    returned_item = repo.edit_workout(workout)
 
     assert fake_table.last_put_kwargs == {"Item": expected_item}
     assert returned_item is workout
 
 
-def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
+def test_edit_workout_raises_repoerror_on_client_error(failing_put_table):
     repo = DynamoWorkoutRepository(table=failing_put_table)
     workout = Workout(
         PK="USER#abc-123",
@@ -577,12 +583,12 @@ def test_update_workout_raises_repoerror_on_client_error(failing_put_table):
     )
 
     with pytest.raises(WorkoutRepoError) as excinfo:
-        repo.update_workout(workout)
+        repo.edit_workout(workout)
 
     assert "Failed to update workout in database" in str(excinfo.value)
 
 
-# --------------- Update (New SK) ---------------
+# --------------- Edit (New SK) ---------------
 def test_move_workout_date_moves_workout_without_sets(fake_table, monkeypatch):
     repo = DynamoWorkoutRepository(fake_table)
 
@@ -745,6 +751,110 @@ def test_move_workout_date_calls_safe_put_for_sets(fake_table, monkeypatch):
     )
 
     assert len(calls) == 2
+
+
+# --- Edit set ---
+
+
+def test_edit_set_updates_fields(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    def fake_get(**kwargs):
+        return WORKOUT_W2_SET1_ITEM.copy()
+
+    monkeypatch.setattr(repo, "_safe_get", fake_get)
+
+    captured: dict = {}
+
+    def fake_put(item: dict) -> None:
+        captured["item"] = item
+
+    monkeypatch.setattr(repo, "_safe_put", fake_put)
+
+    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
+
+    data = WorkoutSetUpdate(
+        reps=10,
+        weight_kg=Decimal("75.5"),
+        rpe=9,
+    )
+
+    repo.edit_set(
+        USER_SUB,
+        WORKOUT_DATE_W2,
+        WORKOUT_ID_W2,
+        SET_NUMBER,
+        data,
+    )
+
+    assert "item" in captured
+    item = captured["item"]
+
+    assert item["PK"] == WORKOUT_W2_SET1_ITEM["PK"]
+    assert item["SK"] == WORKOUT_W2_SET1_ITEM["SK"]
+    assert item["type"] == "set"
+    assert item["exercise_id"] == WORKOUT_W2_SET1_ITEM["exercise_id"]
+    assert item["set_number"] == WORKOUT_W2_SET1_ITEM["set_number"]
+    assert item["created_at"] == WORKOUT_W2_SET1_ITEM["created_at"]
+
+    assert item["reps"] == 10
+    assert item["weight_kg"] == Decimal("75.5")
+    assert item["rpe"] == 9
+
+    assert item["updated_at"] == dates.dt_to_iso(fixed_now)
+
+
+def test_edit_set_raises_workoutrepoerror_on_put_failure(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    monkeypatch.setattr(repo, "_safe_get", lambda **kwargs: WORKOUT_W2_SET1_ITEM.copy())
+
+    def boom(_item: dict) -> None:
+        raise RepoError("kaboom")
+
+    monkeypatch.setattr(repo, "_safe_put", boom)
+
+    data = WorkoutSetUpdate(
+        reps=8,
+        weight_kg=Decimal("60"),
+        rpe=7,
+    )
+
+    with pytest.raises(WorkoutRepoError) as excinfo:
+        repo.edit_set(
+            USER_SUB,
+            WORKOUT_DATE_W2,
+            WORKOUT_ID_W2,
+            SET_NUMBER,
+            data,
+        )
+
+    assert "Failed to update set" in str(excinfo.value)
+
+
+def test_edit_set_raises_workoutnotfound_when_set_missing(fake_table, monkeypatch):
+    repo = DynamoWorkoutRepository(table=fake_table)
+
+    # _safe_get returns nothing -> set doesn't exist
+    monkeypatch.setattr(repo, "_safe_get", lambda **kwargs: None)
+
+    data = WorkoutSetUpdate(
+        reps=8,
+        weight_kg=Decimal("60"),
+        rpe=7,
+    )
+
+    with pytest.raises(WorkoutNotFoundError) as excinfo:
+        repo.edit_set(
+            USER_SUB,
+            WORKOUT_DATE_W2,
+            WORKOUT_ID_W2,
+            SET_NUMBER,
+            data,
+        )
+
+    assert "Set 1 not found" in str(excinfo.value)
 
 
 # --------------- Delete ---------------
