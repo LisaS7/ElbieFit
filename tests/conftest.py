@@ -8,15 +8,15 @@ from app.utils import auth as auth_utils
 # --------------- Request ---------------
 
 
-class DummyRequest:
+class FakeRequest:
     def __init__(self, cookies):
         self.cookies = cookies
 
 
 @pytest.fixture
-def dummy_request():
+def fake_request():
     def _make(cookies):
-        return DummyRequest(cookies)
+        return FakeRequest(cookies)
 
     return _make
 
@@ -55,7 +55,7 @@ def stub_basic_auth_helpers(monkeypatch):
 # --------------- Response ---------------
 
 
-class DummyResponse:
+class FakeResponse:
     def __init__(self, status_code=200, json_data=None, text=""):
         self.status_code = status_code
         self._json = json_data or {}
@@ -66,15 +66,15 @@ class DummyResponse:
 
 
 @pytest.fixture
-def dummy_response():
+def fake_response():
     """
-    Factory fixture that returns a function to build DummyResponse objects.
+    Factory fixture that returns a function to build FakeResponse objects.
     Example:
-        resp = dummy_response(status_code=400, text="boom")
+        resp = fake_response(status_code=400, text="boom")
     """
 
     def _make(status_code=200, json_data=None, text=""):
-        return DummyResponse(status_code=status_code, json_data=json_data, text=text)
+        return FakeResponse(status_code=status_code, json_data=json_data, text=text)
 
     return _make
 

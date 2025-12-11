@@ -8,7 +8,7 @@ WORKOUT_DATE = date(2025, 11, 3)
 WORKOUT_ID = "W2"
 
 
-class DummyWorkout:
+class FakeWorkout:
     def __init__(
         self,
         name="Edit Me",
@@ -30,7 +30,7 @@ class DummyWorkout:
         return self._workout_id
 
 
-class DummySet:
+class FakeSet:
     def __init__(
         self,
         exercise_id="EX-1",
@@ -192,8 +192,8 @@ def test_create_workout_set_returns_500_when_repo_raises(
 
 def test_view_workout_renders_template(authenticated_client, fake_workout_repo):
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet(set_number=1), DummySet(set_number=2)]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet(set_number=1), FakeSet(set_number=2)]
 
     response = authenticated_client.get(
         f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}"
@@ -232,8 +232,8 @@ def test_view_workout_returns_500_when_repo_error(
 def test_view_workout_returns_500_when_exercise_repo_raises(
     authenticated_client, fake_workout_repo
 ):
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet(exercise_id="EX-1")]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet(exercise_id="EX-1")]
 
     class BrokenExerciseRepo:
         def get_exercise_by_id(self, user_sub, exercise_id):
@@ -281,19 +281,19 @@ def test_get_sorted_sets_and_defaults_empty_list():
 
 def test_get_sorted_sets_and_defaults_sorts_and_builds_defaults():
     sets = [
-        DummySet(
+        FakeSet(
             set_number=5,
             exercise_id="EX-2",
             created_at=datetime(2025, 1, 1, 13, 0, tzinfo=timezone.utc),
         ),
-        DummySet(
+        FakeSet(
             set_number=3,
             exercise_id="EX-1",
             created_at=datetime(2025, 1, 1, 11, 0, tzinfo=timezone.utc),
         ),
     ]
 
-    # ok to ignore type error - DummySet behaves like a WorkoutSet here
+    # ok to ignore type error - FakeSet behaves like a WorkoutSet here
     sorted_sets, defaults = workout_routes.get_sorted_sets_and_defaults(sets)  # type: ignore[arg-type]
 
     assert [s.exercise_id for s in sorted_sets] == ["EX-1", "EX-2"]
@@ -310,8 +310,8 @@ def test_update_workout_meta_updates_workout_and_renders(
     fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet()]
 
     response = post_meta(
         authenticated_client,
@@ -367,8 +367,8 @@ def test_update_workout_meta_returns_500_when_update_fails(
     fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet()]
     fake_workout_repo.should_raise_on_update = True
 
     response = post_meta(authenticated_client, WORKOUT_DATE, WORKOUT_ID)
@@ -383,8 +383,8 @@ def test_update_workout_meta_returns_500_when_move_date_fails(
     fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet()]
 
     new_date = date(2025, 11, 4)
 
@@ -404,8 +404,8 @@ def test_update_workout_meta_moves_date_and_sets_hx_redirect(
     fixed_now = datetime(2025, 2, 3, 4, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(workout_routes.dates, "now", lambda: fixed_now)
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
-    fake_workout_repo.sets_to_return = [DummySet()]
+    fake_workout_repo.workout_to_return = FakeWorkout()
+    fake_workout_repo.sets_to_return = [FakeSet()]
     new_date = date(2025, 11, 4)
 
     class MovedWorkout:
@@ -436,7 +436,7 @@ def test_update_workout_meta_moves_date_and_sets_hx_redirect(
 # ──────────────────────────── GET /workout/{date}/{id}/edit-meta ────────────────────────────
 def test_edit_workout_meta_renders_form(authenticated_client, fake_workout_repo):
 
-    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.workout_to_return = FakeWorkout()
     fake_workout_repo.sets_to_return = []
 
     response = authenticated_client.get(
@@ -480,14 +480,14 @@ def test_edit_workout_meta_returns_500_when_repo_error(
 
 
 def test_get_edit_set_form_renders_form(authenticated_client, fake_workout_repo):
-    dummy_set = DummySet(set_number=1, reps=10, weight_kg=70, exercise_id="EX-1")
+    fake_set = FakeSet(set_number=1, reps=10, weight_kg=70, exercise_id="EX-1")
 
     def fake_get_set(user_sub, workout_date, workout_id, set_number):
         assert user_sub == "test-user-sub"
         assert workout_date == WORKOUT_DATE
         assert workout_id == WORKOUT_ID
         assert set_number == 1
-        return dummy_set
+        return fake_set
 
     fake_workout_repo.get_set = fake_get_set
 

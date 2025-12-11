@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from app.main import app
 
 
-# Dummy routes
+# Fake routes
 @app.get("/raise-401")
 def raise_401():
     raise HTTPException(status_code=401, detail="Nope")

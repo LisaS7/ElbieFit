@@ -5,7 +5,7 @@ from app.repositories.base import DynamoRepository
 from app.repositories.errors import RepoError
 
 
-class DummyRepo(DynamoRepository[dict]):
+class FakeRepo(DynamoRepository[dict]):
     """
     Minimal concrete subclass so we can instantiate DynamoRepository.
     We don't call _to_model in these tests, so returning the item is fine.
@@ -27,7 +27,7 @@ def test_base_repo_to_model_raises_not_implemented(fake_table):
 
 
 def test_init_uses_explicit_table(fake_table):
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
     assert repo._table is fake_table
 
 
@@ -42,7 +42,7 @@ def test_init_uses_db_get_table_when_table_not_provided(monkeypatch):
 
     monkeypatch.setattr(db_module, "get_table", fake_get_table)
 
-    repo = DummyRepo()
+    repo = FakeRepo()
     assert repo._table is sentinel_table
 
 
@@ -51,7 +51,7 @@ def test_init_uses_db_get_table_when_table_not_provided(monkeypatch):
 
 def test_safe_query_returns_items(fake_table):
     fake_table.response = {"Items": [{"PK": "USER#1"}, {"PK": "USER#2"}]}
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
 
     result = repo._safe_query(KeyConditionExpression="whatever")
 
@@ -62,7 +62,7 @@ def test_safe_query_returns_items(fake_table):
 def test_safe_query_missing_items_returns_empty_list(fake_table):
     # No "Items" key in response → should safely return []
     fake_table.response = {}
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
 
     result = repo._safe_query()
 
@@ -70,7 +70,7 @@ def test_safe_query_missing_items_returns_empty_list(fake_table):
 
 
 def test_safe_query_wraps_client_error(failing_query_table):
-    repo = DummyRepo(table=failing_query_table)
+    repo = FakeRepo(table=failing_query_table)
 
     with pytest.raises(RepoError) as excinfo:
         repo._safe_query()
@@ -82,7 +82,7 @@ def test_safe_query_wraps_client_error(failing_query_table):
 
 
 def test_safe_put_calls_table_put_item(fake_table):
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
     item = {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}
 
     repo._safe_put(item)
@@ -91,7 +91,7 @@ def test_safe_put_calls_table_put_item(fake_table):
 
 
 def test_safe_put_wraps_client_error(failing_put_table):
-    repo = DummyRepo(table=failing_put_table)
+    repo = FakeRepo(table=failing_put_table)
 
     with pytest.raises(RepoError) as excinfo:
         repo._safe_put({"PK": "USER#1"})
@@ -104,7 +104,7 @@ def test_safe_put_wraps_client_error(failing_put_table):
 
 def test_safe_get_returns_item(fake_table):
     fake_table.response = {"Item": {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}}
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
 
     result = repo._safe_get(Key={"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"})
 
@@ -117,7 +117,7 @@ def test_safe_get_returns_item(fake_table):
 def test_safe_get_returns_none_when_item_missing(fake_table):
     # No "Item" key → should return None
     fake_table.response = {}
-    repo = DummyRepo(table=fake_table)
+    repo = FakeRepo(table=fake_table)
 
     result = repo._safe_get(Key={"PK": "USER#1"})
 
@@ -137,7 +137,7 @@ class FailingGetTable:
 
 
 def test_safe_get_wraps_client_error():
-    repo = DummyRepo(table=FailingGetTable())
+    repo = FakeRepo(table=FailingGetTable())
 
     with pytest.raises(RepoError) as excinfo:
         repo._safe_get(Key={"PK": "USER#1"})
@@ -158,7 +158,7 @@ class DeleteTable:
 
 def test_safe_delete_calls_table_delete_item():
     table = DeleteTable()
-    repo = DummyRepo(table=table)
+    repo = FakeRepo(table=table)
 
     repo._safe_delete(Key={"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"})
 
@@ -173,7 +173,7 @@ class FailingDeleteTable:
 
 
 def test_safe_delete_wraps_client_error():
-    repo = DummyRepo(table=FailingDeleteTable())
+    repo = FakeRepo(table=FailingDeleteTable())
 
     with pytest.raises(RepoError) as excinfo:
         repo._safe_delete(Key={"PK": "USER#1"})

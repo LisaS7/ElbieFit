@@ -121,13 +121,13 @@ class FakeExerciseRepo:
         # record calls so tests *could* assert on them later
         self.calls.append((user_sub, exercise_id))
 
-        # Return a super simple dummy object that behaves enough like an exercise
-        class DummyExercise:
+        # Return a super simple fake object that behaves enough like an exercise
+        class FakeExercise:
             def __init__(self, exercise_id: str):
                 self.exercise_id = exercise_id
                 self.name = f"Exercise {exercise_id}"
 
-        return DummyExercise(exercise_id)
+        return FakeExercise(exercise_id)
 
 
 @pytest.fixture(autouse=True)

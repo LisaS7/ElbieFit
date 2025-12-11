@@ -5,8 +5,8 @@ from app.utils import auth
 
 # The functions under test expect a FastAPI `Request` object, but for unit tests
 # we only need something that provides a `.cookies` attribute. To avoid pulling
-# in the whole FastAPI request machinery, we use a lightweight DummyRequest.
-# This triggers type checker complaints because DummyRequest is not a real
+# in the whole FastAPI request machinery, we use a lightweight FakeRequest.
+# This triggers type checker complaints because FakeRequest is not a real
 # `Request`, so we silence those specific errors with `type: ignore[arg-type]`.
 # Runtime behaviour is unaffected; the tested code only accesses `.cookies`.
 
@@ -50,14 +50,14 @@ def test_get_jwks_url_missing_params():
 # ------------ Get ID Token ------------
 
 
-def test_get_id_token_success(dummy_request):
-    req = dummy_request(cookies={"id_token": "test-token"})
+def test_get_id_token_success(fake_request):
+    req = fake_request(cookies={"id_token": "test-token"})
     result = auth.get_id_token(req)  # type: ignore[arg-type]
     assert result == "test-token"
 
 
-def test_get_id_token_missing(dummy_request):
-    req = dummy_request(cookies={})
+def test_get_id_token_missing(fake_request):
+    req = fake_request(cookies={})
 
     with pytest.raises(HTTPException) as err:
         auth.get_id_token(req)  # type: ignore[arg-type]
@@ -73,24 +73,24 @@ fake_jwks_url = "https://example.com/.well-known/jwks.json"
 fake_token = "header.payload.sig"
 
 
-class DummyKey:
-    key = "dummy-public-key"
+class FakeKey:
+    key = "fake-public-key"
 
 
-class DummyJwksClient:
+class FakeJwksClient:
     def __init__(self, url):
         self.url = url
 
     def get_signing_key_from_jwt(self, token):
         assert token == fake_token
-        return DummyKey()
+        return FakeKey()
 
 
 def test_decode_and_validate_token_success(monkeypatch):
 
-    def dummy_decode(token, signing_key, algorithms, issuer, audience):
+    def fake_decode(token, signing_key, algorithms, issuer, audience):
         assert token == fake_token
-        assert signing_key == "dummy-public-key"
+        assert signing_key == "fake-public-key"
         assert algorithms == ["RS256"]
         return {
             "sub": "user-123",
@@ -99,9 +99,9 @@ def test_decode_and_validate_token_success(monkeypatch):
         }
 
     # patch PyJWKClient used in auth module
-    monkeypatch.setattr(auth, "PyJWKClient", DummyJwksClient)
+    monkeypatch.setattr(auth, "PyJWKClient", FakeJwksClient)
     # patch jwt.decode in auth module
-    monkeypatch.setattr(auth.jwt, "decode", dummy_decode)
+    monkeypatch.setattr(auth.jwt, "decode", fake_decode)
 
     decoded = auth.decode_and_validate_id_token(
         id_token=fake_token,
@@ -117,15 +117,15 @@ def test_decode_and_validate_token_success(monkeypatch):
 
 def test_decode_and_validate_id_token_wrong_token_use(monkeypatch):
 
-    def dummy_decode(token, signing_key, algorithms, issuer, audience):
+    def fake_decode(token, signing_key, algorithms, issuer, audience):
         return {
             "sub": "user-123",
             "exp": 1700000000,
             "token_use": "access",
         }
 
-    monkeypatch.setattr(auth, "PyJWKClient", DummyJwksClient)
-    monkeypatch.setattr(auth.jwt, "decode", dummy_decode)
+    monkeypatch.setattr(auth, "PyJWKClient", FakeJwksClient)
+    monkeypatch.setattr(auth.jwt, "decode", fake_decode)
 
     with pytest.raises(HTTPException) as err:
         auth.decode_and_validate_id_token(
@@ -143,8 +143,8 @@ def test_decode_and_validate_id_token_wrong_token_use(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_require_auth_success(monkeypatch, dummy_request):
-    req = dummy_request(cookies={"id_token": "fake-token"})
+async def test_require_auth_success(monkeypatch, fake_request):
+    req = fake_request(cookies={"id_token": "fake-token"})
 
     # track what gets called
     called = {}
@@ -181,9 +181,9 @@ async def test_require_auth_success(monkeypatch, dummy_request):
 
 @pytest.mark.asyncio
 async def test_require_auth_expired_token(
-    monkeypatch, dummy_request, stub_basic_auth_helpers
+    monkeypatch, fake_request, stub_basic_auth_helpers
 ):
-    req = dummy_request(cookies={"id_token": "fake-token"})
+    req = fake_request(cookies={"id_token": "fake-token"})
 
     def fake_decode_and_validate(id_token, jwks_url, issuer, audience):
         # simulate jwt expired
@@ -200,9 +200,9 @@ async def test_require_auth_expired_token(
 
 @pytest.mark.asyncio
 async def test_require_auth_invalid_token(
-    monkeypatch, dummy_request, stub_basic_auth_helpers
+    monkeypatch, fake_request, stub_basic_auth_helpers
 ):
-    req = dummy_request(cookies={"id_token": "fake-token"})
+    req = fake_request(cookies={"id_token": "fake-token"})
 
     def fake_decode_and_validate(id_token, jwks_url, issuer, audience):
         raise auth.InvalidTokenError("bad token")
@@ -218,9 +218,9 @@ async def test_require_auth_invalid_token(
 
 @pytest.mark.asyncio
 async def test_require_auth_generic_error(
-    monkeypatch, dummy_request, stub_basic_auth_helpers
+    monkeypatch, fake_request, stub_basic_auth_helpers
 ):
-    req = dummy_request(cookies={"id_token": "fake-token"})
+    req = fake_request(cookies={"id_token": "fake-token"})
 
     def fake_decode_and_validate(id_token, jwks_url, issuer, audience):
         raise RuntimeError("something unexpected")

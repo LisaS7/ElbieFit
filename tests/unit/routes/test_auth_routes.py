@@ -65,11 +65,11 @@ def test_auth_callback_missing_code_returns_400(monkeypatch, client):
     assert "ElbieFit" in body
 
 
-def test_auth_callback_token_exchange_failure(monkeypatch, dummy_response, client):
+def test_auth_callback_token_exchange_failure(monkeypatch, fake_response, client):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
-        return dummy_response(
+        return fake_response(
             status_code=400,
             text="something exploded",
         )
@@ -85,11 +85,11 @@ def test_auth_callback_token_exchange_failure(monkeypatch, dummy_response, clien
     assert "ElbieFit" in body
 
 
-def test_auth_callback_invalid_token_type(monkeypatch, dummy_response, client):
+def test_auth_callback_invalid_token_type(monkeypatch, fake_response, client):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
-        return dummy_response(
+        return fake_response(
             status_code=200,
             json_data={
                 "token_type": "NotBearer",
@@ -111,12 +111,12 @@ def test_auth_callback_invalid_token_type(monkeypatch, dummy_response, client):
 
 
 def test_auth_callback_success_sets_cookies_and_redirects(
-    monkeypatch, dummy_response, client
+    monkeypatch, fake_response, client
 ):
     _patch_cognito_config(monkeypatch)
 
     def fake_post(*args, **kwargs):
-        return dummy_response(
+        return fake_response(
             status_code=200,
             json_data={
                 "token_type": "Bearer",
