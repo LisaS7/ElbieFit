@@ -146,7 +146,7 @@ def add_set(
         logger.exception("Error creating workout set")
         raise HTTPException(status_code=500, detail="Error creating workout set")
 
-    return Response(status_code=204, headers={"HX-Trigger": "workoutSetAdded"})
+    return Response(status_code=204, headers={"HX-Trigger": "workoutSetChanged"})
 
 
 # ---------------------- Detail ---------------------------
@@ -437,4 +437,4 @@ def delete_set(
         raise HTTPException(status_code=500, detail="Error deleting set")
 
     # Fire an event which htmx picks up to reload the page
-    return Response(status_code=204, headers={"HX-Trigger": "workoutSetAdded"})
+    return Response(status_code=204, headers={"HX-Trigger": "workoutSetChanged"})

@@ -60,7 +60,7 @@
             workout_date=workout.date,
             workout_id=workout.workout_id
         ) }}"
-    hx-trigger="workoutSetAdded from:body"
+    hx-trigger="workoutSetChanged from:body"
     hx-select="#sets-list"
     hx-target="#sets-list"
     hx-swap="outerHTML"

@@ -97,7 +97,9 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         pk = db.build_user_pk(user_sub)
         new_sets = []
         for s in sets:
-            new_sk = db.build_set_sk(new_workout.date, old_workout_id, s.set_number)
+            new_sk = db.build_set_sk(
+                new_workout.date, new_workout.workout_id, s.set_number
+            )
             now = dates.now()
             logger.debug(f"Moving set {s.set_number} → SK={new_sk}")
             new_set = s.model_copy(update={"PK": pk, "SK": new_sk, "updated_at": now})
