@@ -12,7 +12,7 @@ from app.utils.dates import now
 router = APIRouter()
 
 
-def load_git_meta():
+def load_git_meta():  # pragma: no cover
     meta_file = Path(__file__).parent.parent / "git_meta.json"
     if meta_file.exists():
         return json.loads(meta_file.read_text())

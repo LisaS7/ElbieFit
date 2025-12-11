@@ -1,6 +1,7 @@
 from datetime import date, datetime, timezone
 from decimal import Decimal
 
+from app.main import app
 from app.routes import workout as workout_routes
 
 WORKOUT_DATE = date(2025, 11, 3)
@@ -163,7 +164,7 @@ def test_create_workout_set_adds_set_and_returns_204(
     response = post_set(authenticated_client, exercise_id="EX-BENCH")
 
     assert response.status_code == 204
-    assert response.headers.get("HX-Trigger") == "workoutSetAdded"
+    assert response.headers.get("HX-Trigger") == "workoutSetChanged"
 
     assert len(fake_workout_repo.added_sets) == 1
     user_sub, w_date, w_id, exercise_id, form = fake_workout_repo.added_sets[0]
@@ -226,6 +227,31 @@ def test_view_workout_returns_500_when_repo_error(
     )
 
     assert response.status_code == 500
+
+
+def test_view_workout_returns_500_when_exercise_repo_raises(
+    authenticated_client, fake_workout_repo
+):
+    fake_workout_repo.workout_to_return = DummyWorkout()
+    fake_workout_repo.sets_to_return = [DummySet(exercise_id="EX-1")]
+
+    class BrokenExerciseRepo:
+        def get_exercise_by_id(self, user_sub, exercise_id):
+            raise workout_routes.ExerciseRepoError("kaboom")
+
+    app.dependency_overrides[workout_routes.get_exercise_repo] = (
+        lambda: BrokenExerciseRepo()
+    )
+
+    try:
+        response = authenticated_client.get(
+            f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}"
+        )
+
+        assert response.status_code == 500
+
+    finally:
+        app.dependency_overrides.pop(workout_routes.get_exercise_repo, None)
 
 
 # ──────────────────────────── POST /workout/{date}/{id}/meta ────────────────────────────
@@ -479,3 +505,33 @@ def test_delete_workout_returns_500_when_repo_raises(
     )
 
     assert response.status_code == 500
+
+
+# ──────────────────────────── DELETE /workout/{date}/{id}/set/{set_number} ────────────────────────────
+
+
+def test_delete_set_deletes_and_returns_204(authenticated_client, fake_workout_repo):
+    response = authenticated_client.delete(
+        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/1",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 204
+    assert response.headers.get("HX-Trigger") == "workoutSetChanged"
+
+
+def test_delete_set_returns_500_when_repo_raises(
+    authenticated_client, fake_workout_repo
+):
+    def broken_delete_set(user_sub, workout_date, workout_id, set_number):
+        raise workout_routes.WorkoutRepoError("kaboom")
+
+    fake_workout_repo.delete_set = broken_delete_set
+
+    response = authenticated_client.delete(
+        f"/workout/{WORKOUT_DATE.isoformat()}/{WORKOUT_ID}/set/1",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 500
+    assert "Error deleting set" in response.text

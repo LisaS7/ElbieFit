@@ -1,4 +1,5 @@
 from datetime import datetime
+from zoneinfo import available_timezones
 
 import pytest
 from pydantic import ValidationError
@@ -74,3 +75,17 @@ def test_to_ddb_item_serializes_datetimes_and_nests_preferences(user_profile):
     assert isinstance(prefs, dict)
     assert prefs["units"] == "metric"
     assert prefs["default_view"] == "workouts"
+
+
+def test_userprofile_accepts_valid_timezone(profile_kwargs):
+    tz = next(iter(available_timezones()))  # any valid tz
+    kwargs = {**profile_kwargs, "timezone": tz}
+    profile = UserProfile(**kwargs)
+
+    assert profile.timezone == tz
+
+
+def test_userprofile_rejects_invalid_timezone(profile_kwargs):
+    kwargs = {**profile_kwargs, "timezone": "Narnia/Aslan"}
+    with pytest.raises(ValidationError, match="Invalid timezone: Narnia/Aslan"):
+        UserProfile(**kwargs)

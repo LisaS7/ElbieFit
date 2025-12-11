@@ -90,6 +90,11 @@ class FakeWorkoutRepo:
         self.added_sets.append((user_sub, workout_date, workout_id, exercise_id, form))
         self.user_subs.append(user_sub)
 
+    def delete_set(self, user_sub, workout_date, workout_id, set_number):
+        if self.should_raise_on_delete:
+            raise WorkoutRepoError("boom-delete-set")
+        self.deleted_calls.append((user_sub, workout_date, workout_id, set_number))
+
 
 @pytest.fixture
 def fake_workout_repo(app_instance):
