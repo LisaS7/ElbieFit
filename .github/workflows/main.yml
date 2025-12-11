@@ -74,6 +74,13 @@ jobs:
 
       - name: Update Lambda code from artifact
         run: ./scripts/update_lambda_code.sh
+      - name: Write git metadata
+        run: |
+          echo "{ \"commit\": \"$(git rev-parse --short HEAD)\", \
+                  \"branch\": \"$(git rev-parse --abbrev-ref HEAD)\", \
+                  \"tag\": \"$(git describe --tags --abbrev=0 || echo none)\", \
+                  \"commit_time\": \"$(git show -s --format=%cI HEAD)\" }" \
+          > app/git_meta.json
 
   smoke:
       needs: deploy
