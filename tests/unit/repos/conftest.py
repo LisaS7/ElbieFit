@@ -1,12 +1,5 @@
-from decimal import Decimal
-from typing import Any, Callable
-
 import pytest
 from botocore.exceptions import ClientError
-
-from app.models.workout import Workout, WorkoutSet
-from app.utils import db
-from tests.test_data import TEST_DATE_2, TEST_WORKOUT_ID_2, USER_SUB
 
 # ─────────────────────────────────────────────────────────────
 # Helpers
@@ -163,42 +156,3 @@ def bad_items_table() -> FakeTable:
     Returns malformed Items for parse-error tests.
     """
     return FakeTable(response={"Items": [{"type": "workout"}]})
-
-
-@pytest.fixture
-def workout_factory(fixed_now) -> Callable[..., Workout]:
-    def _make(**overrides: Any) -> Workout:
-        base = Workout(
-            PK=db.build_user_pk(USER_SUB),
-            SK=db.build_workout_sk(TEST_DATE_2, TEST_WORKOUT_ID_2),
-            type="workout",
-            date=TEST_DATE_2,
-            name="Move Me Dino Day",
-            tags=["upper"],
-            notes="Roar",
-            created_at=fixed_now,
-            updated_at=fixed_now,
-        )
-        return base.model_copy(update=overrides)
-
-    return _make
-
-
-@pytest.fixture
-def set_factory(fixed_now) -> Callable[..., WorkoutSet]:
-    def _make(**overrides: Any) -> WorkoutSet:
-        base = WorkoutSet(
-            PK=db.build_user_pk(USER_SUB),
-            SK=db.build_set_sk(TEST_DATE_2, TEST_WORKOUT_ID_2, 1),
-            type="set",
-            exercise_id="squat",
-            set_number=1,
-            reps=8,
-            weight_kg=Decimal("60"),
-            rpe=7,
-            created_at=fixed_now,
-            updated_at=fixed_now,
-        )
-        return base.model_copy(update=overrides)
-
-    return _make
