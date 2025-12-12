@@ -1,10 +1,11 @@
 import uuid
+from datetime import date as DateType
 from datetime import datetime, timezone
+from typing import Any
 
 import pytest
 
 from app.models.workout import Workout
-from app.repositories.errors import WorkoutNotFoundError, WorkoutRepoError
 from app.routes import workout as workout_routes
 from app.utils import db
 
@@ -18,34 +19,24 @@ class FakeWorkoutRepo:
         self.user_subs = []
         self.workouts_to_return = []
         self.created_workouts = []
-        self.should_raise_on_get_all = False
 
         self.workout_to_return = None
         self.sets_to_return = []
-        self.should_raise_on_get_one = False
-        self.should_raise_repo_error_on_get_one = False
 
-        self.should_raise_on_create = False
         self.updated_workouts = []
-        self.should_raise_on_update = False
 
         self.deleted_calls = []
-        self.should_raise_on_delete = False
 
-        self.added_sets: list[tuple[str, str, str, str, dict]] = []
-        self.should_raise_on_add_set = False
+        self.added_sets: list[tuple[str, DateType, str, str, Any]] = []
 
-    # Used by GET /workout/all
+        self.set_to_return = None
+        self.edited_sets: list[tuple[str, DateType, str, int, object]] = []
+
     def get_all_for_user(self, user_sub: str):
         self.user_subs.append(user_sub)
-        if self.should_raise_on_get_all:
-            raise WorkoutRepoError("boom")
         return self.workouts_to_return
 
-    # Used by POST /workout/create
     def create_workout(self, user_sub: str, data):
-        if self.should_raise_on_create:
-            raise WorkoutRepoError("boom-create")
         self.user_subs.append(user_sub)
 
         new_id = str(uuid.uuid4())
@@ -64,36 +55,28 @@ class FakeWorkoutRepo:
         self.created_workouts.append(workout)
         return workout
 
-    # Used by GET /workout/{workout_date}/{workout_id}
     def get_workout_with_sets(self, user_sub, workout_date, workout_id):
-        if self.should_raise_repo_error_on_get_one:
-            raise WorkoutRepoError("boom-get-one")
-        if self.should_raise_on_get_one:
-            raise WorkoutNotFoundError("Workout not found")
         return self.workout_to_return, self.sets_to_return
 
-    # Used by POST /workout/{workout_date}/{workout_id}/meta
     def edit_workout(self, workout):
-        if self.should_raise_on_update:
-            raise WorkoutRepoError("boom-update")
         self.updated_workouts.append(workout)
         return workout
 
     def delete_workout_and_sets(self, user_sub, workout_date, workout_id):
-        if self.should_raise_on_delete:
-            raise WorkoutRepoError("boom-delete")
         self.deleted_calls.append((user_sub, workout_date, workout_id))
 
     def add_set(self, user_sub, workout_date, workout_id, exercise_id, form):
-        if self.should_raise_on_add_set:
-            raise WorkoutRepoError("boom")
         self.added_sets.append((user_sub, workout_date, workout_id, exercise_id, form))
         self.user_subs.append(user_sub)
 
     def delete_set(self, user_sub, workout_date, workout_id, set_number):
-        if self.should_raise_on_delete:
-            raise WorkoutRepoError("boom-delete-set")
         self.deleted_calls.append((user_sub, workout_date, workout_id, set_number))
+
+    def get_set(self, user_sub, workout_date, workout_id, set_number):
+        return self.set_to_return
+
+    def edit_set(self, user_sub, workout_date, workout_id, set_number, form):
+        self.edited_sets.append((user_sub, workout_date, workout_id, set_number, form))
 
 
 @pytest.fixture
@@ -141,3 +124,21 @@ def fake_exercise_repo(app_instance):
         yield repo
     finally:
         app_instance.dependency_overrides.pop(workout_routes.get_exercise_repo, None)
+
+
+@pytest.fixture
+def repo_raises(monkeypatch):
+    """
+    Patch a repo method to raise an exception when called.
+
+    Usage:
+        repo_raises(fake_workout_repo, "delete_set", WorkoutRepoError("kaboom"))
+    """
+
+    def _apply(repo, method_name: str, exc: Exception):
+        def _broken(*args, **kwargs):
+            raise exc
+
+        monkeypatch.setattr(repo, method_name, _broken, raising=True)
+
+    return _apply
