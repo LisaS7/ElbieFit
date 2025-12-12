@@ -1,4 +1,5 @@
 import pytest
+from test_data import USER_EMAIL, USER_PK
 
 from app.routes import profile as profile_routes
 
@@ -27,10 +28,10 @@ def test_get_user_profile_success(authenticated_client):
 
     repo = FakeProfileRepo(
         {
-            "PK": f"USER#{user_sub}",
+            "PK": USER_PK,
             "SK": "PROFILE",
             "display_name": "Lisa Test",
-            "email": "lisa@example.com",
+            "email": USER_EMAIL,
             "timezone": "Europe/London",
             "created_at": "2025-01-01T12:00:00Z",
         },
@@ -43,7 +44,7 @@ def test_get_user_profile_success(authenticated_client):
     response = authenticated_client.get("/profile/")
 
     assert response.status_code == 200
-    assert "lisa@example.com" in response.text
+    assert USER_EMAIL in response.text
 
 
 def test_get_user_profile_not_found_shows_message(authenticated_client):

@@ -1,9 +1,20 @@
+from datetime import datetime, timezone
+
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.utils import auth as auth_utils
+from app.utils import dates
+
+
+@pytest.fixture
+def fixed_now(monkeypatch) -> datetime:
+    now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
+    monkeypatch.setattr(dates, "now", lambda: now)
+    return now
+
 
 # --------------- Request ---------------
 

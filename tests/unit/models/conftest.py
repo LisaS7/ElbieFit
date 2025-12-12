@@ -1,7 +1,15 @@
-from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
+from test_data import (
+    TEST_CREATED_DATETIME,
+    TEST_DATE_1,
+    TEST_SET_SK_1,
+    TEST_UPDATED_DATETIME,
+    TEST_WORKOUT_SK_1,
+    USER_EMAIL,
+    USER_PK,
+)
 
 from app.models.exercise import Exercise
 from app.models.profile import UserProfile
@@ -23,8 +31,8 @@ def exercise():
             "muscles": ["chest", "triceps"],
             "equipment": "bodyweight",
             "category": "strength",
-            "created_at": datetime(2025, 1, 1, 12, 0, 0),
-            "updated_at": datetime(2025, 1, 2, 12, 0, 0),
+            "created_at": TEST_CREATED_DATETIME,
+            "updated_at": TEST_UPDATED_DATETIME,
         }
         return Exercise(**{**defaults, **overrides})
 
@@ -43,12 +51,12 @@ def profile():
 
     def _make(**overrides):
         defaults = {
-            "PK": "USER#123",
+            "PK": USER_PK,
             "SK": "PROFILE",
             "display_name": "Lisa Test",
-            "email": "lisa@example.com",
-            "created_at": datetime(2025, 1, 1, 12, 0, 0),
-            "updated_at": datetime(2025, 1, 1, 13, 0, 0),
+            "email": USER_EMAIL,
+            "created_at": TEST_CREATED_DATETIME,
+            "updated_at": TEST_UPDATED_DATETIME,
             "timezone": "Europe/London",
         }
         return UserProfile(**{**defaults, **overrides})
@@ -70,15 +78,15 @@ def workout():
 
     def _make(**overrides):
         defaults = {
-            "PK": "USER#abc123",
-            "SK": "WORKOUT#2025-11-04#W1",
+            "PK": USER_PK,
+            "SK": TEST_WORKOUT_SK_1,
             "type": "workout",
-            "date": date(2025, 11, 4),
+            "date": TEST_DATE_1,
             "name": "Workout A",
             "tags": ["push", "upper"],
             "notes": "Felt strong",
-            "created_at": datetime(2025, 11, 4, 18, 0, 0),
-            "updated_at": datetime(2025, 11, 4, 18, 30, 0),
+            "created_at": TEST_CREATED_DATETIME,
+            "updated_at": TEST_UPDATED_DATETIME,
         }
         return Workout(**{**defaults, **overrides})
 
@@ -100,16 +108,16 @@ def workout_set():
 
     def _make(**overrides):
         defaults = {
-            "PK": "USER#abc123",
-            "SK": "WORKOUT#2025-11-04#W1#SET#001",
+            "PK": USER_PK,
+            "SK": TEST_SET_SK_1,
             "type": "set",
             "exercise_id": "EXERCISE#BENCH",
             "set_number": 1,
             "reps": 8,
             "weight_kg": Decimal("60.5"),
             "rpe": 8,
-            "created_at": datetime(2025, 11, 4, 18, 5, 0),
-            "updated_at": datetime(2025, 11, 4, 18, 5, 30),
+            "created_at": TEST_CREATED_DATETIME,
+            "updated_at": TEST_UPDATED_DATETIME,
         }
         return WorkoutSet(**{**defaults, **overrides})
 

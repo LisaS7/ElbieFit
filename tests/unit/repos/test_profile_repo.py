@@ -1,14 +1,13 @@
 from app.repositories.profile import DynamoProfileRepository
+from tests.test_data import USER_EMAIL, USER_PK, USER_SUB
 
 
 def test_get_for_user_success(fake_table):
-    user_sub = "test-123"
-
     expected_item = {
-        "PK": f"USER#{user_sub}",
+        "PK": USER_PK,
         "SK": "PROFILE",
         "display_name": "Lisa Test",
-        "email": "lisa@example.com",
+        "email": USER_EMAIL,
         "timezone": "Europe/London",
     }
 
@@ -17,21 +16,24 @@ def test_get_for_user_success(fake_table):
         "ResponseMetadata": {"RequestId": "req-123"},
     }
 
-    repo = DynamoProfileRepository(fake_table)
+    repo = DynamoProfileRepository(table=fake_table)
 
-    profile = repo.get_for_user(user_sub)
+    profile = repo.get_for_user(USER_SUB)
 
     assert profile == expected_item
-
-    # called Dynamo with right key + ConsistentRead
     assert fake_table.last_get_kwargs == {
-        "Key": {"PK": f"USER#{user_sub}", "SK": "PROFILE"},
+        "Key": {"PK": USER_PK, "SK": "PROFILE"},
         "ConsistentRead": True,
     }
 
 
 def test_get_for_user_not_found_returns_none(fake_table):
-    user_sub = "test-123"
-    repo = DynamoProfileRepository(fake_table)
-    result = repo.get_for_user(user_sub)
+    repo = DynamoProfileRepository(table=fake_table)
+    result = repo.get_for_user(USER_SUB)
     assert result is None
+
+
+# def test_get_for_user_wraps_repo_error(failing_get_table):
+#     repo = DynamoProfileRepository(table=failing_get_table)
+#     with pytest.raises(ProfileRepoError):
+#         repo.get_for_user(USER_SUB)

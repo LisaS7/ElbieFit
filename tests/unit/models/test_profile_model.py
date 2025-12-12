@@ -3,6 +3,7 @@ from zoneinfo import available_timezones
 
 import pytest
 from pydantic import ValidationError
+from test_data import USER_EMAIL, USER_PK
 
 from app.models.profile import Preferences
 
@@ -27,10 +28,10 @@ def test_preferences_invalid_units_raises():
 
 
 def test_user_profile_valid_instance_and_default_preferences(example_profile):
-    assert example_profile.PK == "USER#123"
+    assert example_profile.PK == USER_PK
     assert example_profile.SK == "PROFILE"
     assert example_profile.display_name == "Lisa Test"
-    assert example_profile.email == "lisa@example.com"
+    assert example_profile.email == USER_EMAIL
 
     # created/updated are parsed as datetime
     assert isinstance(example_profile.created_at, datetime)
@@ -56,10 +57,10 @@ def test_to_ddb_item_serializes_datetimes_and_nests_preferences(example_profile)
     ddb_item = example_profile.to_ddb_item()
 
     # top-level keys preserved
-    assert ddb_item["PK"] == "USER#123"
+    assert ddb_item["PK"] == USER_PK
     assert ddb_item["SK"] == "PROFILE"
     assert ddb_item["display_name"] == "Lisa Test"
-    assert ddb_item["email"] == "lisa@example.com"
+    assert ddb_item["email"] == USER_EMAIL
     assert ddb_item["timezone"] == "Europe/London"
 
     # datetimes should have been converted to strings by dt_to_iso

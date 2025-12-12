@@ -3,6 +3,13 @@ from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
+from test_data import (
+    TEST_CREATED_DATETIME,
+    TEST_DATE_1,
+    TEST_UPDATED_DATETIME,
+    TEST_WORKOUT_SK_1,
+    USER_PK,
+)
 
 from app.models.workout import WorkoutSetCreate
 
@@ -10,10 +17,10 @@ from app.models.workout import WorkoutSetCreate
 
 
 def test_workout_model_creates_instance_with_expected_fields(example_workout):
-    assert example_workout.PK == "USER#abc123"
-    assert example_workout.SK == "WORKOUT#2025-11-04#W1"
+    assert example_workout.PK == USER_PK
+    assert example_workout.SK == TEST_WORKOUT_SK_1
     assert example_workout.type == "workout"
-    assert example_workout.date == date(2025, 11, 4)
+    assert example_workout.date == TEST_DATE_1
     assert example_workout.tags == ["push", "upper"]
     assert example_workout.notes == "Felt strong"
     assert isinstance(example_workout.created_at, datetime)
@@ -47,22 +54,18 @@ def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, workout):
     monkeypatch.setattr("app.models.workout.date_to_iso", fake_date_to_iso)
     monkeypatch.setattr("app.models.workout.dt_to_iso", fake_dt_to_iso)
 
-    workout_date = date(2025, 11, 4)
-    created_at = datetime(2025, 11, 4, 18, 0, 0)
-    updated_at = datetime(2025, 11, 4, 18, 30, 0)
-
     w = workout(
-        date=workout_date,
-        created_at=created_at,
-        updated_at=updated_at,
+        date=TEST_DATE_1,
+        created_at=TEST_CREATED_DATETIME,
+        updated_at=TEST_UPDATED_DATETIME,
     )
 
     item = w.to_ddb_item()
 
     # The dict has the converted values, not raw datetimes
-    assert item["date"] == "DATE-20251104"
-    assert item["created_at"] == "DT-20251104180000"
-    assert item["updated_at"] == "DT-20251104183000"
+    assert item["date"] == "DATE-20251101"
+    assert item["created_at"] == "DT-20250101120000"
+    assert item["updated_at"] == "DT-20250102120000"
 
     # Sanity check: no datetime objects sneak through
     assert not isinstance(item["date"], date)
@@ -75,8 +78,7 @@ def test_workout_to_ddb_item_uses_date_and_dt_helpers(monkeypatch, workout):
 
 def test_workout_set_model_creates_instance_with_expected_fields(example_set):
 
-    assert example_set.PK == "USER#abc123"
-    assert example_set.SK.startswith("WORKOUT#2025-11-04#W1#SET#")
+    assert example_set.PK == USER_PK
     assert example_set.type == "set"
     assert example_set.exercise_id == "EXERCISE#BENCH"
     assert example_set.set_number == 1

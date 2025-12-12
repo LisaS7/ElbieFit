@@ -1,8 +1,10 @@
 import pytest
-from botocore.exceptions import ClientError
+from test_data import TEST_WORKOUT_SK_1, USER_PK
 
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import RepoError
+
+TEST_DATA = {"PK": USER_PK, "SK": TEST_WORKOUT_SK_1}
 
 
 class FakeRepo(DynamoRepository[dict]):
@@ -20,7 +22,7 @@ def test_base_repo_to_model_raises_not_implemented(fake_table):
     repo = DynamoRepository(table=fake_table)
 
     with pytest.raises(NotImplementedError):
-        repo._to_model({"PK": "USER#1"})
+        repo._to_model({"PK": USER_PK})
 
 
 # ──────────────────────────── __init__ behaviour ────────────────────────────
@@ -50,7 +52,7 @@ def test_init_uses_db_get_table_when_table_not_provided(monkeypatch):
 
 
 def test_safe_query_returns_items(fake_table):
-    fake_table.response = {"Items": [{"PK": "USER#1"}, {"PK": "USER#2"}]}
+    fake_table.response = {"Items": [{"PK": USER_PK}, {"PK": "USER#2"}]}
     repo = FakeRepo(table=fake_table)
 
     result = repo._safe_query(KeyConditionExpression="whatever")
@@ -60,7 +62,6 @@ def test_safe_query_returns_items(fake_table):
 
 
 def test_safe_query_missing_items_returns_empty_list(fake_table):
-    # No "Items" key in response → should safely return []
     fake_table.response = {}
     repo = FakeRepo(table=fake_table)
 
@@ -83,18 +84,17 @@ def test_safe_query_wraps_client_error(failing_query_table):
 
 def test_safe_put_calls_table_put_item(fake_table):
     repo = FakeRepo(table=fake_table)
-    item = {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}
 
-    repo._safe_put(item)
+    repo._safe_put(TEST_DATA)
 
-    assert fake_table.last_put_kwargs == {"Item": item}
+    assert fake_table.last_put_kwargs == {"Item": TEST_DATA}
 
 
 def test_safe_put_wraps_client_error(failing_put_table):
     repo = FakeRepo(table=failing_put_table)
 
     with pytest.raises(RepoError) as excinfo:
-        repo._safe_put({"PK": "USER#1"})
+        repo._safe_put({"PK": USER_PK})
 
     assert "Failed to write to database" in str(excinfo.value)
 
@@ -103,44 +103,29 @@ def test_safe_put_wraps_client_error(failing_put_table):
 
 
 def test_safe_get_returns_item(fake_table):
-    fake_table.response = {"Item": {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}}
+    fake_table.response = {"Item": TEST_DATA}
     repo = FakeRepo(table=fake_table)
 
-    result = repo._safe_get(Key={"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"})
+    result = repo._safe_get(Key=TEST_DATA)
 
-    assert result == {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}
-    assert fake_table.last_get_kwargs == {
-        "Key": {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}
-    }
+    assert result == TEST_DATA
+    assert fake_table.last_get_kwargs == {"Key": TEST_DATA}
 
 
 def test_safe_get_returns_none_when_item_missing(fake_table):
-    # No "Item" key → should return None
     fake_table.response = {}
     repo = FakeRepo(table=fake_table)
 
-    result = repo._safe_get(Key={"PK": "USER#1"})
+    result = repo._safe_get(Key={"PK": USER_PK})
 
     assert result is None
 
 
-def _client_error(op_name: str) -> ClientError:
-    return ClientError(
-        error_response={"Error": {"Code": "500", "Message": f"Boom in {op_name}"}},
-        operation_name=op_name,
-    )
-
-
-class FailingGetTable:
-    def get_item(self, **kwargs):
-        raise _client_error("GetItem")
-
-
-def test_safe_get_wraps_client_error():
-    repo = FakeRepo(table=FailingGetTable())
+def test_safe_get_wraps_client_error(failing_get_table):
+    repo = FakeRepo(table=failing_get_table)
 
     with pytest.raises(RepoError) as excinfo:
-        repo._safe_get(Key={"PK": "USER#1"})
+        repo._safe_get(Key={"PK": USER_PK})
 
     assert "Failed to read from database" in str(excinfo.value)
 
@@ -148,34 +133,18 @@ def test_safe_get_wraps_client_error():
 # ──────────────────────────── _safe_delete ────────────────────────────
 
 
-class DeleteTable:
-    def __init__(self):
-        self.last_delete_kwargs = None
+def test_safe_delete_calls_table_delete_item(fake_table):
+    repo = FakeRepo(table=fake_table)
 
-    def delete_item(self, **kwargs):
-        self.last_delete_kwargs = kwargs
+    repo._safe_delete(Key=TEST_DATA)
 
-
-def test_safe_delete_calls_table_delete_item():
-    table = DeleteTable()
-    repo = FakeRepo(table=table)
-
-    repo._safe_delete(Key={"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"})
-
-    assert table.last_delete_kwargs == {
-        "Key": {"PK": "USER#1", "SK": "WORKOUT#2025-11-03#W1"}
-    }
+    assert fake_table.last_delete_kwargs == {"Key": TEST_DATA}
 
 
-class FailingDeleteTable:
-    def delete_item(self, **kwargs):
-        raise _client_error("DeleteItem")
-
-
-def test_safe_delete_wraps_client_error():
-    repo = FakeRepo(table=FailingDeleteTable())
+def test_safe_delete_wraps_client_error(failing_delete_table):
+    repo = FakeRepo(table=failing_delete_table)
 
     with pytest.raises(RepoError) as excinfo:
-        repo._safe_delete(Key={"PK": "USER#1"})
+        repo._safe_delete(Key={"PK": USER_PK})
 
     assert "Failed to delete from database" in str(excinfo.value)
