@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 
 from app.utils import auth as auth_utils
+from app.utils import db
 from tests.test_data import USER_SUB
 
 
@@ -49,3 +50,46 @@ def auth_pipeline(monkeypatch):
     monkeypatch.setattr(auth_utils, "log_sub_and_exp", fake_log_sub_and_exp)
 
     return calls
+
+
+@pytest.fixture
+def frozen_time(monkeypatch):
+    """
+    Freeze db.time.time() to a known timestamp.
+    now=125 -> window_id=2, retry_after=55
+    """
+    now = 125
+    monkeypatch.setattr(db.time, "time", lambda: now)
+    return now
+
+
+class FakeTable:
+    def __init__(self, count: int):
+        self.count = count
+        self.last_kwargs = None
+
+    def update_item(self, **kwargs):
+        self.last_kwargs = kwargs
+        return {"Attributes": {"count": self.count}}
+
+
+@pytest.fixture
+def fake_table_factory():
+    def _make(count: int) -> FakeTable:
+        return FakeTable(count=count)
+
+    return _make
+
+
+@pytest.fixture
+def use_table(monkeypatch):
+    """
+    Helper to install a specific fake table as db.get_table().
+    Returns the table so the test can inspect captured kwargs.
+    """
+
+    def _use(table):
+        monkeypatch.setattr(db, "get_table", lambda: table)
+        return table
+
+    return _use

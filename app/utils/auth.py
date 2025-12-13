@@ -94,7 +94,7 @@ async def require_auth(request: Request):
     Validate ID token from cookies and return decoded claims.
     """
 
-    if settings.DISABLE_AUTH_FOR_LOCAL_DEV:
+    if settings.DISABLE_AUTH_FOR_LOCAL_DEV:  # pragma: no cover
         logger.warning("Auth bypass enabled: returning fake LOCAL-DEV-USER claims")
         fake_claims = {
             "sub": settings.DEV_USER_SUB or "LOCAL-DEV-USER",
