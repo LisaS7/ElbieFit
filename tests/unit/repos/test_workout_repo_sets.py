@@ -200,7 +200,7 @@ def test_get_set_wraps_parse_error(fake_table, set_factory):
 # ──────────────────────────── edit_set ────────────────────────────
 
 
-def test_edit_set_updates_fields(fake_table, set_factory, fixed_now, monkeypatch):
+def test_edit_set_updates_fields(fake_table, set_factory, fixed_now):
     set_item = set_factory()
     fake_table.response = {"Item": set_item.to_ddb_item()}
     repo = DynamoWorkoutRepository(table=fake_table)
