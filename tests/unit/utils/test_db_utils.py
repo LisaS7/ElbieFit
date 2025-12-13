@@ -4,6 +4,7 @@ import boto3
 
 from app.settings import settings
 from app.utils import db
+from tests.test_data import USER_SUB
 
 
 def test_get_dynamo_resource(monkeypatch):
@@ -40,7 +41,7 @@ def test_get_table(monkeypatch):
 
 
 def test_build_user_pk_formats_correctly():
-    assert db.build_user_pk("abc-123") == "USER#abc-123"
+    assert db.build_user_pk(USER_SUB) == "USER#abc-123"
 
 
 def test_build_workout_sk_formats_correctly():

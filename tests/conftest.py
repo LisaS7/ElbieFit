@@ -23,19 +23,6 @@ def fixed_now(monkeypatch) -> datetime:
 # --------------- Request ---------------
 
 
-class FakeRequest:
-    def __init__(self, cookies):
-        self.cookies = cookies
-
-
-@pytest.fixture
-def fake_request():
-    def _make(cookies):
-        return FakeRequest(cookies)
-
-    return _make
-
-
 @pytest.fixture
 def make_request_with_cookies():
     """
@@ -53,18 +40,6 @@ def make_request_with_cookies():
         return Request(scope)
 
     return _build
-
-
-@pytest.fixture
-def stub_basic_auth_helpers(monkeypatch):
-    def fake_get_id_token(request):
-        return "fake-token"
-
-    def fake_get_jwks_url(region, issuer):
-        return "https://example.com/jwks.json"
-
-    monkeypatch.setattr(auth_utils, "get_id_token", fake_get_id_token)
-    monkeypatch.setattr(auth_utils, "get_jwks_url", fake_get_jwks_url)
 
 
 # --------------- Response ---------------

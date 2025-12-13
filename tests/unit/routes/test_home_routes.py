@@ -15,5 +15,6 @@ def test_meta_endpoint_returns_basic_info(client):
     body = response.json()
 
     assert response.status_code == 200
-    assert "app_name" in body
-    assert "version" in body
+    assert body["app_name"] == "ElbieFit"
+    assert isinstance(body["version"], str)
+    assert body["version"]

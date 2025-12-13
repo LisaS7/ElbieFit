@@ -24,8 +24,6 @@ class FakeProfileRepo:
 
 
 def test_get_user_profile_success(authenticated_client):
-    user_sub = "abc-123"
-
     repo = FakeProfileRepo(
         {
             "PK": USER_PK,
