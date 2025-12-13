@@ -91,15 +91,12 @@ def test_get_next_set_number_wraps_client_error(failing_query_table):
 # ──────────────────────────── add_set ────────────────────────────
 
 
-def test_add_set_creates_set_and_writes_to_dynamo(fake_table, monkeypatch):
+def test_add_set_creates_set_and_writes_to_dynamo(fake_table, fixed_now):
     repo = DynamoWorkoutRepository(table=fake_table)
 
     # Existing set #1 → next should be #2
     base_sk = db.build_workout_sk(TEST_DATE_2, TEST_WORKOUT_ID_2) + "#SET#"
     fake_table.response = {"Items": [{"PK": USER_PK, "SK": base_sk + "001"}]}
-
-    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
-    monkeypatch.setattr(dates, "now", lambda: fixed_now)
 
     data = WorkoutSetCreate(reps=8, weight_kg=Decimal("60.5"), rpe=7)
 
@@ -207,8 +204,6 @@ def test_edit_set_updates_fields(fake_table, set_factory, fixed_now, monkeypatch
     set_item = set_factory()
     fake_table.response = {"Item": set_item.to_ddb_item()}
     repo = DynamoWorkoutRepository(table=fake_table)
-
-    monkeypatch.setattr(dates, "now", lambda: fixed_now)
 
     data = WorkoutSetUpdate(reps=10, weight_kg=Decimal("75.5"), rpe=9)
 

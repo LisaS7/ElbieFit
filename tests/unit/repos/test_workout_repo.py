@@ -1,5 +1,4 @@
 import uuid
-from datetime import datetime, timezone
 
 import pytest
 
@@ -210,16 +209,16 @@ def test_get_workout_with_sets_wraps_unexpected_exception_in_workoutrepoerror(
 # ──────────────────────────── create_workout ────────────────────────────
 
 
-def test_create_workout_does_put_item_and_returns_workout(fake_table, monkeypatch):
+def test_create_workout_does_put_item_and_returns_workout(
+    fake_table, monkeypatch, fixed_now
+):
     fixed_uuid = "12345678-1234-5678-1234-567812345678"
-    fixed_now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
 
     # Patch uuid4 and now for determinism
 
     monkeypatch.setattr(
         workout_repo_module.uuid, "uuid4", lambda: uuid.UUID(fixed_uuid)
     )
-    monkeypatch.setattr(workout_repo_module.dates, "now", lambda: fixed_now)
 
     repo = DynamoWorkoutRepository(table=fake_table)
 
