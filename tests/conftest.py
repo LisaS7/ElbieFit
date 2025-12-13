@@ -8,9 +8,17 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.workout import Workout, WorkoutSet
+from app.settings import settings
 from app.utils import auth as auth_utils
 from app.utils import dates, db
 from tests.test_data import TEST_DATE_2, TEST_WORKOUT_ID_2, USER_SUB
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiting_for_tests():
+    settings.RATE_LIMIT_ENABLED = False
+    yield
+    settings.RATE_LIMIT_ENABLED = True
 
 
 @pytest.fixture

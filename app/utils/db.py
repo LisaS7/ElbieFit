@@ -1,8 +1,11 @@
+import time
 from datetime import date as DateType
 
 import boto3
+from botocore.exceptions import ClientError
 
 from app.settings import settings
+from app.utils.log import logger
 
 REGION_NAME = settings.REGION
 TABLE_NAME = settings.DDB_TABLE_NAME
@@ -56,3 +59,87 @@ def build_exercise_sk(exercise_id: str) -> str:
     Example: EXERCISE#E1
     """
     return f"EXERCISE#{exercise_id}"
+
+
+# ─────────────────────────────────────────────────────────────
+# Rate limiting
+# ─────────────────────────────────────────────────────────────
+
+
+def build_rate_limit_pk(client_id: str) -> str:
+    return f"RATE#{client_id}"
+
+
+def build_rate_limit_sk(window_id: int) -> str:
+    return f"WIN#{window_id}"
+
+
+class RateLimitDdbError(Exception):
+    pass
+
+
+def rate_limit_hit(
+    *, client_id: str, limit: int, ttl_seconds: int = 600
+) -> tuple[bool, int]:
+    """
+    Increment rate-limit counter for the current minute window.
+
+    Returns: (allowed, retry_after_seconds)
+    - allowed: True if within limit, False if exceeded
+    - retry_after_seconds: seconds until next window (only meaningful when allowed=False)
+
+    Notes:
+    - Fixed window: 60 seconds
+    - Uses DynamoDB UpdateItem ADD for atomic increment
+    - Sets expires_at for TTL cleanup
+    """
+    now = int(time.time())
+    window_id = now // 60
+
+    pk = build_rate_limit_pk(client_id)
+    sk = build_rate_limit_sk(window_id)
+
+    expires_at = now + ttl_seconds
+    retry_after = 60 - (now % 60)
+
+    table = get_table()
+
+    try:
+        resp = table.update_item(
+            Key={"PK": pk, "SK": sk},
+            UpdateExpression="ADD #count :inc SET #expires_at = :expires_at",
+            ExpressionAttributeNames={
+                "#count": "count",
+                "#expires_at": "expires_at",
+            },
+            ExpressionAttributeValues={
+                ":inc": 1,
+                ":expires_at": expires_at,
+            },
+            ReturnValues="UPDATED_NEW",
+        )
+    except ClientError as e:
+        logger.warning(
+            "Rate limit storage error; failing open",
+            extra={
+                "client_bucket": client_id[:64],  # avoid logging huge strings
+                "error": e.response.get("Error", {}).get("Code"),
+            },
+        )
+        raise RateLimitDdbError(str(e)) from e
+
+    count = int(resp["Attributes"]["count"])
+    if count > limit:
+        logger.info(
+            "Rate limit exceeded",
+            extra={
+                "client_bucket": client_id[:64],
+                "count": count,
+                "limit": limit,
+                "window_id": window_id,
+                "retry_after": retry_after,
+            },
+        )
+        return (False, retry_after)
+
+    return (True, retry_after)
