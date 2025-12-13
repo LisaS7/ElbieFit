@@ -30,10 +30,7 @@ def test_app(monkeypatch: pytest.MonkeyPatch) -> FastAPI:
     )
     monkeypatch.setattr(settings, "RATE_LIMIT_READ_PER_MIN", 120)
     monkeypatch.setattr(settings, "RATE_LIMIT_WRITE_PER_MIN", 30)
-    monkeypatch.setattr(settings, "DEMO_RATE_LIMIT_READ_PER_MIN", 60)
-    monkeypatch.setattr(settings, "DEMO_RATE_LIMIT_WRITE_PER_MIN", 15)
     monkeypatch.setattr(settings, "RATE_LIMIT_TTL_SECONDS", 600)
-    monkeypatch.setattr(settings, "DEMO_SESSION_COOKIE_NAME", "demo_session_id")
 
     app = FastAPI()
     app.add_middleware(RateLimitMiddleware)
@@ -122,13 +119,34 @@ def test_excluded_prefix_bypasses_rate_limit(
 def test_get_uses_read_limit_for_real_users(
     client: TestClient, rate_limit_allows: list[dict]
 ):
-    resp = client.get("/ok")
+    resp = client.get("/ok", headers={"X-Forwarded-For": "203.0.113.42"})
     assert resp.status_code == 200
 
     assert len(rate_limit_allows) == 1
     assert rate_limit_allows[0]["limit"] == settings.RATE_LIMIT_READ_PER_MIN
     assert rate_limit_allows[0]["ttl_seconds"] == settings.RATE_LIMIT_TTL_SECONDS
-    assert rate_limit_allows[0]["client_id"].startswith("ip:")
+    assert rate_limit_allows[0]["client_id"].startswith("ip:203.0.113.42:")
+
+
+def test_x_forwarded_for_uses_first_ip(
+    client: TestClient, rate_limit_allows: list[dict]
+):
+    resp = client.get("/ok", headers={"X-Forwarded-For": "203.0.113.42, 70.132.1.8"})
+    assert resp.status_code == 200
+
+    cid = rate_limit_allows[0]["client_id"]
+    assert cid.startswith("ip:203.0.113.42:")
+
+
+def test_get_client_ip_returns_unknown_when_no_client_and_no_xff():
+    app = FastAPI()
+    mw = RateLimitMiddleware(app)
+
+    class DummyRequest:
+        headers = {}
+        client = None
+
+    assert mw._get_client_ip(DummyRequest()) == "unknown"  # type: ignore
 
 
 def test_post_uses_write_limit_for_real_users(
@@ -139,30 +157,6 @@ def test_post_uses_write_limit_for_real_users(
 
     assert len(rate_limit_allows) == 1
     assert rate_limit_allows[0]["limit"] == settings.RATE_LIMIT_WRITE_PER_MIN
-
-
-def test_demo_cookie_uses_demo_limits(
-    client: TestClient, rate_limit_allows: list[dict]
-):
-    client.cookies.set(settings.DEMO_SESSION_COOKIE_NAME, "demo-abc")
-
-    # Demo GET -> demo read limit
-    resp = client.get("/ok")
-    assert resp.status_code == 200
-
-    assert len(rate_limit_allows) == 1
-    assert rate_limit_allows[0]["client_id"].startswith("demo:")
-    assert rate_limit_allows[0]["limit"] == settings.DEMO_RATE_LIMIT_READ_PER_MIN
-
-    rate_limit_allows.clear()
-
-    # Demo POST -> demo write limit
-    resp = client.post("/ok")
-    assert resp.status_code == 200
-
-    assert len(rate_limit_allows) == 1
-    assert rate_limit_allows[0]["client_id"].startswith("demo:")
-    assert rate_limit_allows[0]["limit"] == settings.DEMO_RATE_LIMIT_WRITE_PER_MIN
 
 
 def test_rate_limited_request_returns_429_and_retry_after(

@@ -41,17 +41,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         self.excluded_prefixes = settings.RATE_LIMIT_EXCLUDED_PREFIXES
 
-        self.real_limits = LimitConfig(
+        self.limits = LimitConfig(
             read_per_min=settings.RATE_LIMIT_READ_PER_MIN,
             write_per_min=settings.RATE_LIMIT_WRITE_PER_MIN,
         )
-        self.demo_limits = LimitConfig(
-            read_per_min=settings.DEMO_RATE_LIMIT_READ_PER_MIN,
-            write_per_min=settings.DEMO_RATE_LIMIT_WRITE_PER_MIN,
-        )
 
         self.ttl_seconds = settings.RATE_LIMIT_TTL_SECONDS
-        self.demo_cookie_name = settings.DEMO_SESSION_COOKIE_NAME
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         if not settings.RATE_LIMIT_ENABLED:
@@ -62,11 +57,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if self._is_excluded(path):
             return await call_next(request)
 
-        client_id, is_demo = self._identify_client(request)
+        client_id = self._identify_client(request)
 
         is_write = request.method.upper() not in ("GET", "HEAD", "OPTIONS")
-        limits = self.demo_limits if is_demo else self.real_limits
-        limit = limits.write_per_min if is_write else limits.read_per_min
+        limit = self.limits.write_per_min if is_write else self.limits.read_per_min
 
         try:
             allowed, retry_after = rate_limit_hit(
@@ -81,7 +75,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 extra={
                     "path": path,
                     "method": request.method,
-                    "is_demo": is_demo,
                 },
             )
             return await call_next(request)
@@ -92,7 +85,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 extra={
                     "path": path,
                     "method": request.method,
-                    "is_demo": is_demo,
                     "retry_after": retry_after,
                 },
             )
@@ -111,20 +103,21 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     def _is_excluded(self, path: str) -> bool:
         return any(path.startswith(prefix) for prefix in self.excluded_prefixes)
 
-    def _identify_client(self, request: Request) -> tuple[str, bool]:
+    def _get_client_ip(self, request: Request) -> str:
         """
-        Returns (client_id, is_demo)
-
-        Priority:
-        1) demo session cookie => demo bucket
-        2) fallback => IP + small UA hash bucket
+        Extract client IP, preferring X-Forwarded-For.
         """
-        demo_session = request.cookies.get(self.demo_cookie_name)
-        if demo_session:
-            # Avoid logging/storing raw cookies; this is just the bucket key.
-            return (f"demo:{demo_session}", True)
+        xff = request.headers.get("x-forwarded-for")
+        if xff:
+            return xff.split(",")[0].strip()
 
-        ip = request.client.host if request.client else "unknown"
+        if request.client:
+            return request.client.host
+
+        return "unknown"
+
+    def _identify_client(self, request: Request) -> str:
+        ip = self._get_client_ip(request)
         ua = request.headers.get("user-agent", "unknown")
         ua_hash = str(abs(hash(ua)) % 10_000_000)
-        return (f"ip:{ip}:ua:{ua_hash}", False)
+        return f"ip:{ip}:ua:{ua_hash}"

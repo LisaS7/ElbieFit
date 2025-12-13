@@ -27,9 +27,6 @@ class Settings(BaseSettings):
     RATE_LIMIT_READ_PER_MIN: int = 120
     RATE_LIMIT_WRITE_PER_MIN: int = 30
 
-    DEMO_RATE_LIMIT_READ_PER_MIN: int = 60
-    DEMO_RATE_LIMIT_WRITE_PER_MIN: int = 15
-
     RATE_LIMIT_TTL_SECONDS: int = 600
 
     # Prefixes that should never be rate limited
@@ -40,9 +37,6 @@ class Settings(BaseSettings):
         "/health",
         "/meta",
     )
-
-    # Demo
-    DEMO_SESSION_COOKIE_NAME: str = "demo_session_id"
 
     # ─────────────────────────────────────────
 
