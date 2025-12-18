@@ -8,33 +8,31 @@ from jwt import InvalidTokenError, PyJWKClient
 from app.settings import settings
 from app.utils.log import logger
 
-REGION = settings.REGION
-ISSUER = settings.COGNITO_ISSUER
+ISSUER_URL = settings.COGNITO_ISSUER_URL
 AUDIENCE = settings.COGNITO_AUDIENCE
 
 
-def get_jwks_url(region: str, issuer: str) -> str:
+def get_jwks_url(issuer_url: str) -> str:
     """
-    Build and return the JWKS (JSON Web Key Set) endpoint URL for a Cognito user pool.
+    Return the JWKS endpoint URL for a Cognito user pool.
 
-    Cognito publishes its public signing keys at a well-known JWKS URL using the pattern:
-        https://cognito-idp.<region>.amazonaws.com/<user_pool_id>/.well-known/jwks.json
+    Pattern:
+        <issuer_url>/.well-known/jwks.json
 
-    These keys are used to verify the signatures of ID and access tokens issued by that pool.
+    Example issuer_url:
+        https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_XXXX
     """
 
-    if not region or not issuer:
-        logger.error("Missing REGION or COGNITO_ISSUER env vars")
+    if not issuer_url:
+        logger.error("Missing COGNITO_ISSUER_URL env var")
         raise HTTPException(
             status_code=500,
-            detail="Missing REGION or COGNITO_ISSUER in environment variables.",
+            detail="Missing COGNITO_ISSUER_URL in environment variables.",
         )
 
     # Construct JWKS URL
-    base_issuer_url = f"https://cognito-idp.{region}.amazonaws.com/{issuer}"
-    jwks_url = f"{base_issuer_url}/.well-known/jwks.json"
-
-    return jwks_url
+    base = issuer_url.rstrip("/")
+    return f"{base}/.well-known/jwks.json"
 
 
 def get_id_token(request: Request) -> str:
@@ -105,8 +103,8 @@ async def require_auth(request: Request):
 
     id_token = get_id_token(request)
 
-    issuer_url = f"https://cognito-idp.{REGION}.amazonaws.com/{ISSUER}"
-    jwks_url = get_jwks_url(REGION, ISSUER)
+    issuer_url = (ISSUER_URL or "").rstrip("/")
+    jwks_url = get_jwks_url(issuer_url)
 
     try:
         decoded_token = decode_and_validate_id_token(

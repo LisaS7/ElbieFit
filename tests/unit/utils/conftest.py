@@ -12,7 +12,7 @@ def stub_basic_auth_helpers(monkeypatch):
     def fake_get_id_token(request):
         return "fake-token"
 
-    def fake_get_jwks_url(region, issuer):
+    def fake_get_jwks_url(issuer):
         return "https://example.com/jwks.json"
 
     monkeypatch.setattr(auth_utils, "get_id_token", fake_get_id_token)
@@ -31,8 +31,8 @@ def auth_pipeline(monkeypatch):
         calls["get_id_token"] = True
         return "fake-token"
 
-    def fake_get_jwks_url(region, issuer):
-        calls["get_jwks_url"] = (region, issuer)
+    def fake_get_jwks_url(issuer_url):
+        calls["get_jwks_url"] = issuer_url
         return "https://example.com/jwks.json"
 
     def fake_decode_and_validate(id_token, jwks_url, issuer, audience):

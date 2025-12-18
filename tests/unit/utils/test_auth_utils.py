@@ -30,24 +30,19 @@ def _disable_auth_bypass(monkeypatch):
 
 
 def test_get_jwks_url_success():
-    issuer = "fake_issuer"
-    result = auth_utils.get_jwks_url("eu-west-2", issuer)
+    issuer_url = "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_fakepool"
+
+    result = auth_utils.get_jwks_url(issuer_url)
+
     assert (
-        result
-        == f"https://cognito-idp.eu-west-2.amazonaws.com/{issuer}/.well-known/jwks.json"
+        result == "https://cognito-idp.eu-west-2.amazonaws.com/"
+        "eu-west-2_fakepool/.well-known/jwks.json"
     )
 
 
 def test_get_jwks_url_missing_params():
-    # missing region
-    with pytest.raises(HTTPException) as err:
-        auth_utils.get_jwks_url("", "issuer")
-
-    assert err.value.status_code == 500
-
-    # missing issuer
     with pytest.raises(HTTPException) as err2:
-        auth_utils.get_jwks_url("eu-west-2", "")
+        auth_utils.get_jwks_url("")
 
     assert err2.value.status_code == 500
 
@@ -94,7 +89,7 @@ def test_decode_and_validate_token_success(monkeypatch):
     decoded = auth_utils.decode_and_validate_id_token(
         id_token=fake_token,
         jwks_url=fake_jwks_url,
-        issuer=auth_utils.ISSUER,
+        issuer=auth_utils.ISSUER_URL,
         audience=auth_utils.AUDIENCE,
     )
 
@@ -119,7 +114,7 @@ def test_decode_and_validate_id_token_wrong_token_use(monkeypatch):
         auth_utils.decode_and_validate_id_token(
             id_token=fake_token,
             jwks_url=fake_jwks_url,
-            issuer=auth_utils.ISSUER,
+            issuer=auth_utils.ISSUER_URL,
             audience=auth_utils.AUDIENCE,
         )
 

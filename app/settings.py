@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     COGNITO_AUDIENCE: str = ""
     COGNITO_DOMAIN: str = ""
     COGNITO_REDIRECT_URI: str = ""
-    COGNITO_ISSUER: str = ""
+    COGNITO_ISSUER_URL: str = ""
 
     # ──────────────────── Demo User ─────────────────────
 

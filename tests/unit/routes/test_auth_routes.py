@@ -14,7 +14,9 @@ class FakeSettings:
     COGNITO_AUDIENCE = "fake-aud"
     COGNITO_DOMAIN = "fake-domain"
     COGNITO_REDIRECT_URI = "https://example.com/auth/callback"
-    COGNITO_ISSUER = "fake-iss"
+    COGNITO_ISSUER_URL = (
+        "https://cognito-idp.eu-west-2.amazonaws.com/eu-west-2_fakepool"
+    )
 
     def cognito_base_url(self) -> str:
         return f"https://{self.COGNITO_DOMAIN}.auth.{self.REGION}.amazoncognito.com"
