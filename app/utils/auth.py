@@ -95,12 +95,7 @@ async def require_auth(request: Request):
     """
 
     logger.debug(
-        "Auth config snapshot",
-        extra={
-            "disable_auth": settings.DISABLE_AUTH_FOR_LOCAL_DEV,
-            "issuer_url": settings.COGNITO_ISSUER_URL,
-            "audience": settings.COGNITO_AUDIENCE,
-        },
+        f"Auth config snapshot\nDisable auth: {settings.DISABLE_AUTH_FOR_LOCAL_DEV}\nIssuer URL: {settings.COGNITO_ISSUER_URL}\nAudience: {settings.COGNITO_AUDIENCE}",
     )
 
     if settings.DISABLE_AUTH_FOR_LOCAL_DEV:  # pragma: no cover
@@ -117,7 +112,7 @@ async def require_auth(request: Request):
     issuer_url = (ISSUER_URL or "").rstrip("/")
     jwks_url = get_jwks_url(issuer_url)
 
-    logger.debug("Derived urls", extra={"issuer_url": issuer_url, "jwks_url": jwks_url})
+    logger.debug(f"Derived urls: issuer={issuer_url}. JWKS={jwks_url}")
 
     try:
         decoded_token = decode_and_validate_id_token(

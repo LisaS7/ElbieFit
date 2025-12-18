@@ -71,22 +71,13 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         except RateLimitDdbError:
             # Fail open so limiter issues don't break the whole app.
             logger.warning(
-                "Rate limiter storage error; allowing request",
-                extra={
-                    "path": path,
-                    "method": request.method,
-                },
+                f"Rate limiter storage error; allowing request. Path: {path}. Method: {request.method}",
             )
             return await call_next(request)
 
         if not allowed:
             logger.info(
-                "Request blocked by rate limiter",
-                extra={
-                    "path": path,
-                    "method": request.method,
-                    "retry_after": retry_after,
-                },
+                f"Request blocked by rate limiter.\nPath: {path}\nMethod:{request.method}\nRetry after: {retry_after}",
             )
             return PlainTextResponse(
                 "Rate limit exceeded. Please try again shortly.",

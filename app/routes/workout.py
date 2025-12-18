@@ -185,32 +185,17 @@ def view_workout(
         )
     except WorkoutNotFoundError:
         logger.warning(
-            "Workout not found",
-            extra={
-                "user_sub": user_sub,
-                "workout_date": workout_date.isoformat(),
-                "workout_id": workout_id,
-            },
+            f"Workout {workout_id} not found for {user_sub}",
         )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
         logger.exception(
-            "Error fetching workout",
-            extra={
-                "user_sub": user_sub,
-                "workout_date": workout_date.isoformat(),
-                "workout_id": workout_id,
-            },
+            f"Error fetching workout {workout_id}",
         )
         raise HTTPException(status_code=500, detail="Error fetching workout")
 
     logger.debug(
-        "Fetched workout and sets",
-        extra={
-            "workout_id_attr": getattr(workout, "workout_id", None),
-            "sets_count": len(sets),
-            "set_numbers": [getattr(s, "set_number", None) for s in sets],
-        },
+        f"Fetched workout {workout_id} and {len(sets)} sets. Set numbers: {[s.set_number for s in sets]}",
     )
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
@@ -227,11 +212,7 @@ def view_workout(
                     exercise_map[exercise_id] = exercise
     except ExerciseRepoError:
         logger.exception(
-            "Error fetching exercise details",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-            },
+            f"Error fetching exercise details for user {user_sub} and {workout_id}",
         )
         raise HTTPException(status_code=500, detail="Error fetching exercise details")
 
@@ -266,21 +247,12 @@ def edit_workout_meta(
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
     except WorkoutNotFoundError:
         logger.warning(
-            "Workout not found for edit",
-            extra={
-                "user_sub": user_sub,
-                "workout_date": workout_date.isoformat(),
-                "workout_id": workout_id,
-            },
+            f"Workout {workout_id} on {workout_date.isoformat()} not found for edit",
         )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
         logger.exception(
-            "Error fetching workout for edit",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-            },
+            f"Error fetching workout {workout_id} for edit",
         )
         raise HTTPException(status_code=500, detail="Error fetching workout")
 
@@ -304,30 +276,19 @@ def update_workout_meta(
     user_sub = claims["sub"]
 
     logger.info(
-        "Updating workout meta",
-        extra={
-            "user_sub": user_sub,
-            "workout_date": workout_date.isoformat(),
-            "workout_id": workout_id,
-            "form_date": form.date.isoformat() if form.date else None,
-        },
+        f"Updating workout meta\nUser: {user_sub}\nDate: {workout_date.isoformat()}\nID: {workout_id}",
     )
 
     try:
         workout, sets = repo.get_workout_with_sets(user_sub, workout_date, workout_id)
     except WorkoutNotFoundError:
         logger.warning(
-            "Workout not found for update",
-            extra={"user_sub": user_sub, "workout_id": workout_id},
+            f"Workout {workout_id} not found for update",
         )
         raise HTTPException(status_code=404, detail="Workout not found")
     except WorkoutRepoError:
         logger.exception(
-            "Error fetching workout for update",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-            },
+            f"Error fetching workout {workout_id} for update",
         )
         raise HTTPException(status_code=500, detail="Error fetching workout")
 
@@ -345,11 +306,7 @@ def update_workout_meta(
             repo.edit_workout(workout)
         except WorkoutRepoError:
             logger.exception(
-                "Error updating workout",
-                extra={
-                    "user_sub": user_sub,
-                    "workout_id": workout_id,
-                },
+                f"Error updating workout{workout_id}",
             )
             raise HTTPException(status_code=500, detail="Error updating workout")
 
@@ -372,11 +329,7 @@ def update_workout_meta(
             workout = repo.move_workout_date(user_sub, workout, new_date, sets)
         except WorkoutRepoError:
             logger.exception(
-                "Error updating workout with date change",
-                extra={
-                    "user_sub": user_sub,
-                    "workout_id": workout_id,
-                },
+                f"Error updating workout {workout_id} with date change {old_date} to {new_date}",
             )
             raise HTTPException(status_code=500, detail="Error updating workout")
 
@@ -387,12 +340,7 @@ def update_workout_meta(
         )
 
         logger.info(
-            "Workout date changed, issuing HX-Redirect",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-                "redirect_url": new_url,
-            },
+            f"Workout date changed for {workout_id}, issuing HX-Redirect to {new_url}",
         )
 
         return Response(status_code=204, headers={"HX-Redirect": str(new_url)})
@@ -416,12 +364,7 @@ def get_edit_set_form(
         set_ = repo.get_set(user_sub, workout_date, workout_id, set_number)
     except WorkoutRepoError:
         logger.exception(
-            "Error fetching set for edit",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-                "set_number": set_number,
-            },
+            f"Error fetching set {set_number} for edit in workout {workout_id}",
         )
         raise HTTPException(status_code=500, detail="Error fetching set")
 
@@ -467,13 +410,7 @@ def edit_set(
         raise HTTPException(status_code=404, detail="Set not found")
     except WorkoutRepoError:
         logger.exception(
-            "Error updating set",
-            extra={
-                "user_sub": user_sub,
-                "workout_date": workout_date.isoformat(),
-                "workout_id": workout_id,
-                "set_number": set_number,
-            },
+            f"Error updating set {set_number} for {workout_id} on {workout_date.isoformat()}",
         )
         raise HTTPException(status_code=500, detail="Error updating set")
 
@@ -497,11 +434,7 @@ def delete_workout(
         repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
     except WorkoutRepoError:
         logger.exception(
-            "Error deleting workout",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-            },
+            f"Error deleting workout {workout_id}",
         )
         raise HTTPException(status_code=500, detail="Error deleting workout")
 
@@ -526,10 +459,6 @@ def delete_set(
     except WorkoutRepoError:
         logger.exception(
             f"Error deleting set {set_number} from workout {workout_id}",
-            extra={
-                "user_sub": user_sub,
-                "workout_id": workout_id,
-            },
         )
         raise HTTPException(status_code=500, detail="Error deleting set")
 

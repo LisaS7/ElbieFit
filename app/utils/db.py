@@ -120,25 +120,14 @@ def rate_limit_hit(
         )
     except ClientError as e:
         logger.warning(
-            "Rate limit storage error; failing open",
-            extra={
-                "client_bucket": client_id[:64],  # avoid logging huge strings
-                "error": e.response.get("Error", {}).get("Code"),
-            },
+            f"Rate limit storage error; failing open.\nClient bucket: {client_id[:64]}\nError: {e.response.get("Error", {}).get("Code")}",
         )
         raise RateLimitDdbError(str(e)) from e
 
     count = int(resp["Attributes"]["count"])
     if count > limit:
         logger.info(
-            "Rate limit exceeded",
-            extra={
-                "client_bucket": client_id[:64],
-                "count": count,
-                "limit": limit,
-                "window_id": window_id,
-                "retry_after": retry_after,
-            },
+            f"Rate limit exceeded.\nClient bucket: {client_id[:64]}\nCount: {count}\nLimit: {limit}\nWindow id: {window_id}\nRetry after: {retry_after}",
         )
         return (False, retry_after)
 

@@ -274,13 +274,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             raw_item = self._safe_get(Key={"PK": pk, "SK": sk})
         except RepoError as e:
             logger.error(
-                f"Failed to load set {set_number} for workout {workout_id}",
-                extra={
-                    "user_sub": user_sub,
-                    "workout_date": workout_date.isoformat(),
-                    "workout_id": workout_id,
-                    "set_number": set_number,
-                },
+                f"Failed to load set {set_number} for workout {workout_id} on {workout_date.isoformat()}",
             )
             raise WorkoutRepoError("Failed to load set from database") from e
 
@@ -294,13 +288,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             return WorkoutSet(**raw_item)
         except Exception as e:
             logger.error(
-                f"Failed to parse set {set_number} for workout {workout_id}",
-                extra={
-                    "user_sub": user_sub,
-                    "workout_date": workout_date.isoformat(),
-                    "workout_id": workout_id,
-                    "set_number": set_number,
-                },
+                f"Failed to parse set {set_number} for workout {workout_id} on {workout_date.isoformat()}",
             )
             raise WorkoutRepoError("Failed to parse workout set from database") from e
 
@@ -455,13 +443,7 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             self._safe_put(updated_set.to_ddb_item())
         except RepoError as e:
             logger.error(
-                f"Failed to update set {set_number} for workout {workout_id}",
-                extra={
-                    "user_sub": user_sub,
-                    "workout_date": workout_date.isoformat(),
-                    "workout_id": workout_id,
-                    "set_number": set_number,
-                },
+                f"Failed to update set {set_number} for workout {workout_id} on {workout_date.isoformat()}",
             )
             raise WorkoutRepoError("Failed to update set") from e
 
