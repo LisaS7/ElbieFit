@@ -113,6 +113,7 @@ deploy_stack "${PROJECT_NAME}-${ENV}-cognito" "infra/cognito.yaml" \
 USER_POOL_ID=$(aws cloudformation list-exports \
   --query "Exports[?Name=='${PROJECT_NAME}-${ENV}-UserPoolId'].Value" \
   --output text)
+export USER_POOL_ID
 
 COGNITO_ISSUER=$(aws cloudformation list-exports \
   --query "Exports[?Name=='${PROJECT_NAME}-${ENV}-IssuerUrl'].Value" \
@@ -136,6 +137,14 @@ if [[ -z "$USER_POOL_ID" || -z "$COGNITO_AUDIENCE" ]]; then
   exit 1
 fi
 
+# ====== Create Demo User =======
+DEMO_USER_SUB=$(./scripts/create_demo_user.sh | grep "^DEMO_USER_SUB=" | cut -d= -f2)
+
+if [[ -z "$DEMO_USER_SUB" ]]; then
+  echo "Failed to capture DEMO_USER_SUB"
+  exit 1
+fi
+
 
 # ====== Set Env Vars =======
 echo -e "\n\n--------------- ENV VARS ------------------"
@@ -149,7 +158,8 @@ DDB_TABLE_NAME=${DDB_TABLE_NAME},\
 COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}, \
 COGNITO_ISSUER=${COGNITO_ISSUER},\
 COGNITO_AUDIENCE=${COGNITO_AUDIENCE},\
-COGNITO_DOMAIN=${COGNITO_DOMAIN}}" > /dev/null
+COGNITO_DOMAIN=${COGNITO_DOMAIN},\
+DEMO_USER_SUB=${DEMO_USER_SUB}}" > /dev/null
 
 echo "✅ Environment variables set for Lambda ${PROJECT_NAME}-${ENV}-app:"
 echo "------------------------------------------------------------"
@@ -160,4 +170,5 @@ echo "COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}"
 echo "COGNITO_ISSUER=${COGNITO_ISSUER}"
 echo "COGNITO_AUDIENCE=${COGNITO_AUDIENCE}"
 echo "COGNITO_DOMAIN=${COGNITO_DOMAIN}"
+echo "DEMO_USER_SUB=${DEMO_USER_SUB}"
 echo "------------------------------------------------------------"
