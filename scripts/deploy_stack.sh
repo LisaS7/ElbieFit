@@ -149,6 +149,7 @@ fi
 # ====== Set Env Vars =======
 echo -e "\n\n--------------- ENV VARS ------------------"
 aws lambda update-function-configuration \
+  --region "$REGION" \
   --no-cli-pager \
   --function-name "${PROJECT_NAME}-${ENV}-app" \
   --environment "Variables={\
