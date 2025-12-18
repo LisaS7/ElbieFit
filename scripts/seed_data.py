@@ -21,6 +21,25 @@ exercise_ids = {
 }
 
 
+def build_exercise_ids(dataset: str) -> dict[str, str]:
+    """
+    Deterministic exercise IDs per dataset (demo/test).
+    """
+    base = uuid.UUID("00000000-0000-0000-0000-000000000000")
+    return {
+        "PUSHUP": str(uuid.uuid5(base, f"{dataset}-PUSHUP")),
+        "ROW": str(uuid.uuid5(base, f"{dataset}-ROW")),
+        "SQUAT": str(uuid.uuid5(base, f"{dataset}-SQUAT")),
+        "DEADLIFT": str(uuid.uuid5(base, f"{dataset}-DEADLIFT")),
+        "PLANK": str(uuid.uuid5(base, f"{dataset}-PLANK")),
+        "BURPEE": str(uuid.uuid5(base, f"{dataset}-BURPEE")),
+        "KETTLEBELL_SWING": str(uuid.uuid5(base, f"{dataset}-KETTLEBELL_SWING")),
+        "LUNGE": str(uuid.uuid5(base, f"{dataset}-LUNGE")),
+        "BENCH_PRESS": str(uuid.uuid5(base, f"{dataset}-BENCH_PRESS")),
+        "SHOULDER_PRESS": str(uuid.uuid5(base, f"{dataset}-SHOULDER_PRESS")),
+    }
+
+
 def build_profile(pk: str) -> UserProfile:
     """
     Build the test user profile.
@@ -37,11 +56,25 @@ def build_profile(pk: str) -> UserProfile:
     )
 
 
-def build_exercises(pk: str) -> List[Exercise]:
+def build_demo_profile(pk: str) -> UserProfile:
+    ts = now()
+    return UserProfile(
+        PK=pk,
+        SK="PROFILE",
+        display_name="Demo User",
+        email="demo@elbiefit.co.uk",
+        created_at=ts,
+        updated_at=ts,
+        timezone="Europe/London",
+    )
+
+
+def build_exercises(pk: str, dataset: str) -> List[Exercise]:
     """
     Build all exercises used by the seed workouts.
     """
     ts = now()
+    exercise_ids = build_exercise_ids(dataset)
 
     return [
         Exercise(
@@ -157,12 +190,13 @@ def build_exercises(pk: str) -> List[Exercise]:
     ]
 
 
-def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
+def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
     """
     Build all workouts and their sets.
     Returns a list of (Workout, [WorkoutSet, ...]) tuples.
     """
     ts = now()
+    exercise_ids = build_exercise_ids(dataset)
     workouts: List[Tuple[Workout, List[WorkoutSet]]] = []
 
     # Workout 1: Push/Pull B
