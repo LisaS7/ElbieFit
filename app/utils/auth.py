@@ -24,7 +24,9 @@ def get_jwks_url(issuer_url: str) -> str:
     """
 
     if not issuer_url:
-        logger.error("Missing COGNITO_ISSUER_URL env var")
+        logger.error(
+            f"Missing COGNITO_ISSUER_URL env var. Value={settings.COGNITO_ISSUER_URL}"
+        )
         raise HTTPException(
             status_code=500,
             detail="Missing COGNITO_ISSUER_URL in environment variables.",
@@ -92,6 +94,15 @@ async def require_auth(request: Request):
     Validate ID token from cookies and return decoded claims.
     """
 
+    logger.debug(
+        "Auth config snapshot",
+        extra={
+            "disable_auth": settings.DISABLE_AUTH_FOR_LOCAL_DEV,
+            "issuer_url": settings.COGNITO_ISSUER_URL,
+            "audience": settings.COGNITO_AUDIENCE,
+        },
+    )
+
     if settings.DISABLE_AUTH_FOR_LOCAL_DEV:  # pragma: no cover
         logger.warning("Auth bypass enabled: returning fake LOCAL-DEV-USER claims")
         fake_claims = {
@@ -105,6 +116,8 @@ async def require_auth(request: Request):
 
     issuer_url = (ISSUER_URL or "").rstrip("/")
     jwks_url = get_jwks_url(issuer_url)
+
+    logger.debug("Derived urls", extra={"issuer_url": issuer_url, "jwks_url": jwks_url})
 
     try:
         decoded_token = decode_and_validate_id_token(
