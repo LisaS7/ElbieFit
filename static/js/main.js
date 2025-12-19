@@ -20,3 +20,18 @@ document.closeForm = function (selector) {
   const container = document.querySelector(selector);
   if (container) container.innerHTML = '';
 };
+
+// Toast is yummy
+document.body.addEventListener('demoResetDone', () => {
+  const toast = document.getElementById('toast');
+  if (!toast) return;
+
+  toast.textContent = 'Demo reset complete.';
+  toast.hidden = false;
+
+  // re-hide after 2.5s
+  window.clearTimeout(toast._t);
+  toast._t = window.setTimeout(() => {
+    toast.hidden = true;
+  }, 2500);
+});

@@ -28,4 +28,4 @@ def reset_demo(
 
     reset_user(user_sub)
 
-    return Response(status_code=204)
+    return Response(status_code=204, headers={"HX-Trigger": "demoResetDone"})

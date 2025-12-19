@@ -6,7 +6,24 @@
         <h2>{{ profile.display_name or "Your Profile" }}</h2>
         <p>Email: {{ profile.email }}</p>
         <p>Member since: {{ profile.created_at_readable }}</p>
-        <!-- whatever else -->
+
+         {% if is_demo_user %}
+            <div class="demo-reset">
+                <button
+                class="btn btn-danger"
+                hx-post="/demo/reset"
+                hx-trigger="click"
+                hx-swap="none"
+                hx-disabled-elt="this"
+                hx-on::response-error="alert('Too soon. Try again in a few minutes.')"
+                >
+                Reset demo data
+                </button>
+                <p class="demo-reset-note">
+                This will reset all demo workouts and exercises.
+                </p>
+            </div>
+        {% endif %}
     {% else %}
         <h2>Profile not found</h2>
         <p>We couldn’t find a profile for this user. 🙃</p>
