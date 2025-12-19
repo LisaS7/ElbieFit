@@ -18,7 +18,7 @@ from app.repositories.errors import (
 )
 from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
-from app.templates.templates import templates
+from app.templates.templates import render_template
 from app.utils import auth, dates
 from app.utils.log import logger
 
@@ -76,10 +76,10 @@ def get_all_workouts(
     except WorkoutRepoError:
         logger.exception(f"Error fetching workouts for user {user_sub}")
         raise HTTPException(status_code=500, detail="Error fetching workouts")
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "workouts/workouts.html",
-        {"workouts": workouts},
+        context={"workouts": workouts},
         status_code=200,
     )
 
@@ -89,7 +89,7 @@ def get_all_workouts(
 
 @router.get("/new-form")
 def get_new_form(request: Request):
-    return templates.TemplateResponse(request, "workouts/new_form.html")
+    return render_template(request, "workouts/new_form.html")
 
 
 @router.get("/{workout_date}/{workout_id}/set/form")
@@ -117,10 +117,10 @@ def get_new_set_form(
         "cancel_target": f"#new-set-form-container-{exercise_id}",
     }
 
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "workouts/set_form.html",
-        context,
+        context=context,
     )
 
 
@@ -217,10 +217,10 @@ def view_workout(
         raise HTTPException(status_code=500, detail="Error fetching exercise details")
 
     # ---- Finish ----
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "workouts/workout_detail.html",
-        {
+        context={
             "workout": workout,
             "sets": sets,
             "defaults": defaults,
@@ -258,8 +258,8 @@ def edit_workout_meta(
 
     logger.debug(f"Loading edit meta form for workout {workout.workout_id}")
 
-    return templates.TemplateResponse(
-        request, "workouts/edit_meta_form.html", {"workout": workout}
+    return render_template(
+        request, "workouts/edit_meta_form.html", context={"workout": workout}
     )
 
 
@@ -314,10 +314,10 @@ def update_workout_meta(
 
         logger.debug(f"Updated metadata for workout {workout_id}. No date change.")
 
-        return templates.TemplateResponse(
+        return render_template(
             request,
             "workouts/workout_detail.html",
-            {"workout": workout, "sets": sets, "defaults": defaults},
+            context={"workout": workout, "sets": sets, "defaults": defaults},
         )
 
     # if date has changed then create new and delete old
@@ -377,10 +377,10 @@ def get_edit_set_form(
 
     cancel_target = f"#edit-set-form-container-{set_number}"
 
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "workouts/set_form.html",
-        {
+        context={
             "workout_date": workout_date,
             "workout_id": workout_id,
             "set_number": set_number,

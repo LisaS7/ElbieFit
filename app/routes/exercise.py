@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
-from app.templates.templates import templates
+from app.templates.templates import render_template
 from app.utils import auth
 from app.utils.log import logger
 
@@ -28,6 +28,9 @@ def get_all_exercises(
     except Exception:
         logger.exception(f"Error fetching workouts for user {user_sub}")
         raise HTTPException(status_code=500, detail="Error fetching workouts")
-    return templates.TemplateResponse(
-        request, "exercises/exercises.html", {"exercises": exercises}, status_code=200
+    return render_template(
+        request,
+        "exercises/exercises.html",
+        context={"exercises": exercises},
+        status_code=200,
     )

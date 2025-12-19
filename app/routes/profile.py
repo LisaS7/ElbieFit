@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.repositories.profile import DynamoProfileRepository, ProfileRepository
-from app.templates.templates import templates
+from app.templates.templates import render_template
 from app.utils import auth, dates
 from app.utils.log import logger
 
@@ -31,10 +31,10 @@ def profile(
 
     if not profile:
         logger.warning(f"No profile found for user_sub={user_sub}")
-        return templates.TemplateResponse(
+        return render_template(
             request,
             "profile.html",
-            {
+            context={
                 "request": request,
                 "profile": None,
                 "user_sub": user_sub,
@@ -48,9 +48,9 @@ def profile(
         profile["created_at_readable"] = dt.strftime("%d %B %Y")
 
     logger.debug(f"Profile retrieved: {profile}")
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "profile.html",
-        {"request": request, "profile": profile, "user_sub": user_sub},
+        context={"request": request, "profile": profile, "user_sub": user_sub},
         status_code=200,
     )

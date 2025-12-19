@@ -1,17 +1,17 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
-from app.templates.templates import templates
+from app.templates.templates import render_template
 from app.utils.log import logger
 
 
 async def http_exception_handler(request: Request, exc: HTTPException):
     if exc.status_code == 401:
         return RedirectResponse(url="/auth/login")
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "error.html",
-        {
+        context={
             "request": request,
             "status_code": exc.status_code,
             "message": exc.detail,
@@ -23,10 +23,10 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 async def unhandled_exception_handler(request: Request, exc: Exception):
     logger.exception("Unhandled exception")
 
-    return templates.TemplateResponse(
+    return render_template(
         request,
         "error.html",
-        {
+        context={
             "request": request,
             "status_code": 500,
             "message": "Gremlins.",
