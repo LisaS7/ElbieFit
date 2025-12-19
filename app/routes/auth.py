@@ -13,7 +13,7 @@ REDIRECT_URI = settings.COGNITO_REDIRECT_URI
 COMMON_COOKIE_OPTS = {
     "httponly": True,
     "secure": True,
-    "samesite": "none",
+    "samesite": "lax",
 }
 
 
