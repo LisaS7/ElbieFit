@@ -135,6 +135,17 @@ main {
   }
 }
 
+/* ── Demo Banner ── */
+.demo-banner {
+  background: #3b2f2f;
+  color: #f5e9d3;
+  text-align: center;
+  padding: 0.5rem 1rem;
+  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
 /* ── Page Layout ── */
 
 #page-container {
