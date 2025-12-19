@@ -27,10 +27,6 @@ class Settings(BaseSettings):
     DEMO_USER_EMAIL: str | None = None
     DEMO_RESET_COOLDOWN_SECONDS: int = 300
 
-    @property
-    def is_demo(self) -> bool:
-        return self.DEMO_USER_SUB is not None
-
     # ──────────────────── Rate limiting ─────────────────────
     RATE_LIMIT_ENABLED: bool = True
 
