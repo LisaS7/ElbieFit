@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from app.settings import settings
 from app.utils.db import build_user_pk, get_table
 from app.utils.log import logger
-from scripts.seed_data import build_demo_profile, build_exercises, build_workouts
+from app.utils.seed_data import build_demo_profile, build_exercises, build_workouts
 
 # ─────────────────────────────────────────────────────────
 # Cooldown

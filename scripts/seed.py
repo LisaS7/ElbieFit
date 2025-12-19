@@ -8,7 +8,7 @@ import argparse
 import boto3
 
 from app.settings import settings
-from scripts.seed_data import (
+from app.utils.seed_data import (
     build_demo_profile,
     build_exercises,
     build_profile,

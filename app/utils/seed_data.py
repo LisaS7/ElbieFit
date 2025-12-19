@@ -1,4 +1,3 @@
-# scripts/seed_data.py
 import uuid
 from datetime import date
 from decimal import Decimal
@@ -7,18 +6,33 @@ from typing import List, Tuple
 from app.models import Exercise, UserProfile, Workout, WorkoutSet
 from app.utils.dates import now
 
-exercise_ids = {
-    "PUSHUP": str(uuid.uuid4()),
-    "ROW": str(uuid.uuid4()),
-    "SQUAT": str(uuid.uuid4()),
-    "DEADLIFT": str(uuid.uuid4()),
-    "PLANK": str(uuid.uuid4()),
-    "BURPEE": str(uuid.uuid4()),
-    "KETTLEBELL_SWING": str(uuid.uuid4()),
-    "LUNGE": str(uuid.uuid4()),
-    "BENCH_PRESS": str(uuid.uuid4()),
-    "SHOULDER_PRESS": str(uuid.uuid4()),
-}
+
+def _build_base_profile(pk: str, display_name: str, email: str) -> UserProfile:
+    ts = now()
+    return UserProfile(
+        PK=pk,
+        SK="PROFILE",
+        display_name=display_name,
+        email=email,
+        created_at=ts,
+        updated_at=ts,
+        timezone="Europe/London",
+    )
+
+
+def build_profile(pk: str) -> UserProfile:
+    """
+    Build the test user profile.
+    """
+    return _build_base_profile(
+        pk=pk, display_name="Lisa Test", email="lisa@example.com"
+    )
+
+
+def build_demo_profile(pk: str) -> UserProfile:
+    return _build_base_profile(
+        pk=pk, display_name="Demo User", email="demo@elbiefit.co.uk"
+    )
 
 
 def build_exercise_ids(dataset: str) -> dict[str, str]:
@@ -38,35 +52,6 @@ def build_exercise_ids(dataset: str) -> dict[str, str]:
         "BENCH_PRESS": str(uuid.uuid5(base, f"{dataset}-BENCH_PRESS")),
         "SHOULDER_PRESS": str(uuid.uuid5(base, f"{dataset}-SHOULDER_PRESS")),
     }
-
-
-def build_profile(pk: str) -> UserProfile:
-    """
-    Build the test user profile.
-    """
-    ts = now()
-    return UserProfile(
-        PK=pk,
-        SK="PROFILE",
-        display_name="Lisa Test",
-        email="lisa@example.com",
-        created_at=ts,
-        updated_at=ts,
-        timezone="Europe/London",
-    )
-
-
-def build_demo_profile(pk: str) -> UserProfile:
-    ts = now()
-    return UserProfile(
-        PK=pk,
-        SK="PROFILE",
-        display_name="Demo User",
-        email="demo@elbiefit.co.uk",
-        created_at=ts,
-        updated_at=ts,
-        timezone="Europe/London",
-    )
 
 
 def build_exercises(pk: str, dataset: str) -> List[Exercise]:
