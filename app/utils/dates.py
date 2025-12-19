@@ -25,3 +25,13 @@ def iso_to_dt(d: str) -> datetime:
 
 def now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def format_duration(seconds: int) -> str:
+    if seconds <= 0:
+        return "0s"
+
+    minutes, secs = divmod(seconds, 60)
+    if minutes:
+        return f"{minutes}m {secs}s"
+    return f"{secs}s"

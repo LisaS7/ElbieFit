@@ -5,6 +5,7 @@ from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from app.settings import settings
+from app.utils.dates import format_duration
 from app.utils.db import build_user_pk, get_table
 from app.utils.log import logger
 from app.utils.seed_data import build_demo_profile, build_exercises, build_workouts
@@ -33,7 +34,24 @@ def enforce_cooldown(user_sub: str, cooldown_seconds: int) -> None:
         code = e.response.get("Error", {}).get("Code")
 
         if code == "ConditionalCheckFailedException":
-            logger.info(f"Demo reset cooldown active for {user_sub}")
+
+            resp = table.get_item(
+                Key={"PK": pk, "SK": sk},
+                ConsistentRead=True,
+            )
+            item = resp.get("Item", {})
+            last_reset_at = item.get("last_reset_at")
+
+            remaining = 0
+            if last_reset_at:
+                remaining = max(
+                    0,
+                    (last_reset_at + cooldown_seconds) - now,
+                )
+
+            logger.info(
+                f"Demo reset cooldown active for {user_sub}. Remaining={format_duration(remaining)}"
+            )
             raise HTTPException(
                 status_code=429, detail="Demo reset is on cooldown. Try again soon."
             )
