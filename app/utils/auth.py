@@ -89,6 +89,14 @@ def log_sub_and_exp(decoded_token: Dict[str, Any]):  # pragma: no cover
     logger.info(f"Authenticated user sub={sub}, token exp={exp_time}")
 
 
+def set_state(sub, request):
+
+    request.state.user_sub = sub
+    request.state.is_demo_user = bool(
+        settings.DEMO_USER_SUB and sub and sub == settings.DEMO_USER_SUB
+    )
+
+
 async def require_auth(request: Request):
     """
     Validate ID token from cookies and return decoded claims.
@@ -120,6 +128,11 @@ async def require_auth(request: Request):
         )
 
         log_sub_and_exp(decoded_token)
+        sub = decoded_token.get("sub")
+        set_state(sub, request)
+        logger.debug(
+            f"Demo check: sub={sub} DEMO_USER_SUB={settings.DEMO_USER_SUB} is_demo_user={request.state.is_demo_user}"
+        )
 
         return decoded_token
 
