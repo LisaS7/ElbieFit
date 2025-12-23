@@ -100,7 +100,7 @@
                 <div class="sets-table-header">
                     <span>Set</span>
                     <span>Reps</span>
-                    <span>Weight</span>
+                    <span>Weight ({{ weight_unit|default('kg') }})</span>
                     <span>RPE</span>
                     <span>Actions</span>
                 </div>
@@ -112,7 +112,13 @@
                         <div id="{{ set_row_id }}" class="set-row">
                             <span>{{s.set_number}}</span>
                             <span>{{s.reps}}</span>
-                            <span>{{s.weight_kg}}</span>
+                            <span>
+                                {% if s.weight_kg is not none %}
+                                    {{ s.weight_kg }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </span>
                             <span>{{s.rpe}}</span>
                             <span>
                                 <button

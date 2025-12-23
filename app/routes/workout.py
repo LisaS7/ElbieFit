@@ -1,5 +1,5 @@
 from datetime import date as DateType
-from typing import Annotated, Sequence
+from typing import Annotated, Literal, Sequence
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
@@ -17,10 +17,12 @@ from app.repositories.errors import (
     WorkoutRepoError,
 )
 from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
+from app.repositories.profile import DynamoProfileRepository, ProfileRepository
 from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
 from app.templates.templates import render_template
 from app.utils import auth, dates
 from app.utils.log import logger
+from app.utils.units import kg_to_lb, lb_to_kg
 
 router = APIRouter(prefix="/workout", tags=["workout"])
 
@@ -33,6 +35,23 @@ def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
 def get_exercise_repo() -> ExerciseRepository:  # pragma: no cover
     """Fetch the exercise repo"""
     return DynamoExerciseRepository()
+
+
+def get_profile_repo() -> ProfileRepository:  # pragma: no cover
+    """Fetch the profile repo"""
+    return DynamoProfileRepository()
+
+
+def get_weight_unit_for_user(
+    user_sub: str,
+    profile_repo: ProfileRepository,
+) -> Literal["kg", "lb"]:
+    try:
+        profile = profile_repo.get_for_user(user_sub)
+    except Exception:
+        logger.exception(f"Error fetching profile for user_sub={user_sub}")
+        return "kg"
+    return profile.weight_unit if profile else "kg"
 
 
 def get_sorted_sets_and_defaults(
@@ -94,11 +113,19 @@ def get_new_form(request: Request):
 
 @router.get("/{workout_date}/{workout_id}/set/form")
 def get_new_set_form(
-    request: Request, workout_date: DateType, workout_id: str, exercise_id: str
+    request: Request,
+    workout_date: DateType,
+    workout_id: str,
+    exercise_id: str,
+    claims=Depends(auth.require_auth),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
 ):
     logger.debug(
         f"Getting new set form for workout {workout_id} on {workout_date} for exercise {exercise_id}"
     )
+
+    user_sub = claims["sub"]
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
 
     action_url = (
         str(
@@ -115,6 +142,7 @@ def get_new_set_form(
         "submit_label": "Add Set",
         "set": None,
         "cancel_target": f"#new-set-form-container-{exercise_id}",
+        "weight_unit": unit,
     }
 
     return render_template(
@@ -152,8 +180,13 @@ def add_set(
     form: Annotated[WorkoutSetCreate, Depends(WorkoutSetCreate.as_form)],
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
+
+    if unit == "lb" and form.weight_kg is not None:
+        form.weight_kg = lb_to_kg(form.weight_kg)
 
     try:
         repo.add_set(user_sub, workout_date, workout_id, exercise_id, form)
@@ -175,6 +208,7 @@ def view_workout(
     claims=Depends(auth.require_auth),
     workout_repo: WorkoutRepository = Depends(get_workout_repo),
     exercise_repo: ExerciseRepository = Depends(get_exercise_repo),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
@@ -199,6 +233,17 @@ def view_workout(
     )
 
     sets, defaults = get_sorted_sets_and_defaults(sets)
+
+    # ---- Sort out units -----
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
+
+    if unit == "lb":
+        for s in sets:
+            if s.weight_kg is not None:
+                s.weight_kg = kg_to_lb(s.weight_kg)
+
+        if defaults.get("weight") is not None and defaults.get("weight") != "":
+            defaults["weight"] = kg_to_lb(defaults["weight"])
 
     # ---- Fetch exercise details -----
     exercise_map = {}
@@ -225,6 +270,7 @@ def view_workout(
             "sets": sets,
             "defaults": defaults,
             "exercises": exercise_map,
+            "weight_unit": unit,
         },
     )
 
@@ -357,6 +403,7 @@ def get_edit_set_form(
     set_number: int,
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
@@ -368,6 +415,11 @@ def get_edit_set_form(
         )
         raise HTTPException(status_code=500, detail="Error fetching set")
 
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
+
+    if unit == "lb" and set_.weight_kg is not None:
+        set_.weight_kg = kg_to_lb(set_.weight_kg)
+
     action_url = request.url_for(
         "edit_set",
         workout_date=workout_date,
@@ -375,7 +427,7 @@ def get_edit_set_form(
         set_number=set_number,
     )
 
-    cancel_target = f"#edit-set-form-container-{set_number}"
+    cancel_target = f"#edit-set-form-container-{set_.exercise_id}-{set_number}"
 
     return render_template(
         request,
@@ -389,6 +441,7 @@ def get_edit_set_form(
             "action_url": action_url,
             "submit_label": "Save Set",
             "cancel_target": cancel_target,
+            "weight_unit": unit,
         },
     )
 
@@ -401,8 +454,14 @@ def edit_set(
     form: Annotated[WorkoutSetUpdate, Depends(WorkoutSetUpdate.as_form)],
     claims=Depends(auth.require_auth),
     repo: WorkoutRepository = Depends(get_workout_repo),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
+
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
+
+    if unit == "lb" and form.weight_kg is not None:
+        form.weight_kg = lb_to_kg(form.weight_kg)
 
     try:
         repo.edit_set(user_sub, workout_date, workout_id, set_number, form)

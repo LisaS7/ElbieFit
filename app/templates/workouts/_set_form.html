@@ -15,7 +15,7 @@
 
         <!-- Weight -->
         <div class="form-field">
-            <label>Weight (kg)</label>
+            <label for="weight_kg">Weight ({{ weight_unit|default('kg') }})</label>
             <div class="number-stepper" data-step="0.5" data-min="0">
                 <button type="button" class="stepper-button elevated" data-action="decrement">−</button>
                 <input type="number" name="weight_kg" step="0.5" min="0" value="{{ set.weight_kg if set else '' }}">

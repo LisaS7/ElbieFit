@@ -1,13 +1,15 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Callable
+from typing import Any, Callable, Literal
 
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.models.profile import Preferences, UserProfile
 from app.models.workout import Workout, WorkoutSet
+from app.routes import workout as workout_routes
 from app.settings import settings
 from app.utils import auth as auth_utils
 from app.utils import dates, db
@@ -26,6 +28,24 @@ def fixed_now(monkeypatch) -> datetime:
     now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
     monkeypatch.setattr(dates, "now", lambda: now)
     return now
+
+
+class FakeProfileRepo:
+    def __init__(self, unit: Literal["metric", "imperial"] = "metric"):
+        self.unit = unit
+
+    def get_for_user(self, user_sub: str):
+        # Return a valid profile model with units set
+        return UserProfile(
+            PK=f"USER#{user_sub}",
+            SK="PROFILE",
+            display_name="Test User",
+            email="test@example.com",
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+            timezone="Europe/London",
+            preferences=Preferences(units=self.unit),
+        )
 
 
 # --------------- Request ---------------
@@ -102,6 +122,9 @@ def authenticated_client(app_instance):
         return {"sub": "test-user-sub"}
 
     app_instance.dependency_overrides[auth_utils.require_auth] = fake_require_auth
+    app_instance.dependency_overrides[workout_routes.get_profile_repo] = (
+        lambda: FakeProfileRepo(unit="metric")
+    )
     client = TestClient(app_instance, raise_server_exceptions=False)
 
     try:

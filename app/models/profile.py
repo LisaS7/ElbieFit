@@ -41,6 +41,10 @@ class UserProfile(BaseModel):
             raise ValueError(f"Invalid timezone: {self.timezone}")
         return self
 
+    @property
+    def weight_unit(self) -> Literal["kg", "lb"]:
+        return "lb" if self.preferences.units == "imperial" else "kg"
+
     def to_ddb_item(self) -> dict:
         data = self.model_dump()
         data["created_at"] = dt_to_iso(self.created_at)
