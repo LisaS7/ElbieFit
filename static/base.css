@@ -166,6 +166,24 @@ main {
   justify-content: space-between;
 }
 
+/* ── Toast ── */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  padding: 1.5rem 2rem;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  background: #f5e9d3;
+  color: #2b241f;
+  font-size: 3rem;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  font-family: 'Passero One', sans-serif;
+}
+
 /* ── Footer ── */
 
 #page-footer {
