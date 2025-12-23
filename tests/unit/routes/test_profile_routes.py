@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 import pytest
 from test_data import USER_EMAIL, USER_PK
 
+from app.models.profile import UserProfile
 from app.routes import profile as profile_routes
 
 
@@ -13,27 +16,29 @@ def clear_dependency_overrides_after_each_test(client):
 
 
 class FakeProfileRepo:
-    def __init__(self, profile: dict | None, raise_error: bool = False):
+    def __init__(self, profile: UserProfile | None, raise_error: bool = False):
         self._profile = profile
         self._raise_error = raise_error
 
-    def get_for_user(self, user_sub: str) -> dict | None:
+    def get_for_user(self, user_sub: str) -> UserProfile | None:
         if self._raise_error:
             raise RuntimeError("boom")
         return self._profile
 
 
 def test_get_user_profile_success(authenticated_client):
-    repo = FakeProfileRepo(
-        {
-            "PK": USER_PK,
-            "SK": "PROFILE",
-            "display_name": "Lisa Test",
-            "email": USER_EMAIL,
-            "timezone": "Europe/London",
-            "created_at": "2025-01-01T12:00:00Z",
-        },
+    profile = UserProfile(
+        PK=USER_PK,
+        SK="PROFILE",
+        display_name="Lisa Test",
+        email=USER_EMAIL,
+        timezone="Europe/London",
+        created_at=datetime(2025, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+        updated_at=datetime(2025, 1, 2, 12, 0, 0, tzinfo=timezone.utc),
+        # preferences omitted -> defaults are fine
     )
+
+    repo = FakeProfileRepo(profile)
 
     authenticated_client.app.dependency_overrides[profile_routes.get_profile_repo] = (
         lambda: repo
@@ -43,17 +48,15 @@ def test_get_user_profile_success(authenticated_client):
 
     assert response.status_code == 200
     assert USER_EMAIL in response.text
+    assert "Lisa Test" in response.text
+    assert "Europe/London" in response.text
 
 
 def test_get_user_profile_not_found_shows_message(authenticated_client):
+    repo = FakeProfileRepo(profile=None)
 
-    class FakeProfileRepoNotFound:
-        def get_for_user(self, user_sub: str):
-            return None
-
-    fake_repo = FakeProfileRepoNotFound()
     authenticated_client.app.dependency_overrides[profile_routes.get_profile_repo] = (
-        lambda: fake_repo
+        lambda: repo
     )
 
     response = authenticated_client.get("/profile/")
@@ -63,14 +66,10 @@ def test_get_user_profile_not_found_shows_message(authenticated_client):
 
 
 def test_profile_db_error_returns_500(authenticated_client):
+    repo = FakeProfileRepo(profile=None, raise_error=True)
 
-    class ExplodingProfileRepo:
-        def get_for_user(self, user_sub: str) -> dict | None:
-            raise RuntimeError("database is on fire")
-
-    exploding_repo = ExplodingProfileRepo()
     authenticated_client.app.dependency_overrides[profile_routes.get_profile_repo] = (
-        lambda: exploding_repo
+        lambda: repo
     )
 
     response = authenticated_client.get("/profile/")

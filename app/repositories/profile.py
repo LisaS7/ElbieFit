@@ -1,14 +1,17 @@
 from typing import Protocol
 
+from app.models.profile import UserProfile
+from app.repositories.base import DynamoRepository
+from app.repositories.errors import ProfileRepoError, RepoError
 from app.utils import db
 from app.utils.log import logger
 
 
 class ProfileRepository(Protocol):
-    def get_for_user(self, user_sub: str) -> dict | None: ...
+    def get_for_user(self, user_sub: str) -> UserProfile | None: ...
 
 
-class DynamoProfileRepository:
+class DynamoProfileRepository(DynamoRepository[UserProfile]):
     """
     Repository for the user profile
     """
@@ -16,19 +19,25 @@ class DynamoProfileRepository:
     def __init__(self, table=None):
         self._table = table or db.get_table()
 
-    def get_for_user(self, user_sub: str) -> dict | None:
+    def _to_model(self, item: dict) -> UserProfile:
+        try:
+            return UserProfile.model_validate(item)
+        except Exception as e:
+            logger.error(f"_to_model failed for profile: {e}")
+            raise ProfileRepoError("Failed to create profile model from item") from e
+
+    def get_for_user(self, user_sub: str) -> UserProfile | None:
         pk = db.build_user_pk(user_sub)
-
         key = {"PK": pk, "SK": "PROFILE"}
-        response = self._table.get_item(Key=key, ConsistentRead=True)
 
-        request_id = response.get("ResponseMetadata", {}).get("RequestId")
-        profile = response.get("Item")
+        try:
+            item = self._safe_get(Key=key, ConsistentRead=True)
+        except RepoError as e:
+            logger.error(f"Repo error fetching profile for {user_sub}: {e}")
+            raise ProfileRepoError("Failed to fetch profile from database") from e
 
-        if not profile:
-            logger.warning(
-                f"User profile not found. \nRequest id: {request_id} \nKey: {key}"
-            )
+        if not item:
+            logger.warning(f"User profile not found for user_sub={user_sub}")
             return None
 
-        return profile
+        return self._to_model(item)

@@ -24,3 +24,8 @@ class ExerciseRepoError(RepoError):
     """Generic exercise repository error"""
 
     pass
+
+
+# ------------------------- PROFILE -------------------------
+class ProfileRepoError(RepoError):
+    pass

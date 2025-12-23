@@ -1,8 +1,11 @@
+from zoneinfo import available_timezones
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.repositories.profile import DynamoProfileRepository, ProfileRepository
+from app.settings import settings
 from app.templates.templates import render_template
-from app.utils import auth, dates
+from app.utils import auth
 from app.utils.log import logger
 
 router = APIRouter(prefix="/profile", tags=["profile"])
@@ -20,7 +23,6 @@ def profile(
 ):
     """Get the profile of the current authenticated user."""
     user_sub = claims["sub"]
-
     logger.info(f"Fetching profile for user_sub={user_sub}")
 
     try:
@@ -33,7 +35,7 @@ def profile(
         logger.warning(f"No profile found for user_sub={user_sub}")
         return render_template(
             request,
-            "profile.html",
+            "profile/profile.html",
             context={
                 "request": request,
                 "profile": None,
@@ -42,15 +44,27 @@ def profile(
             status_code=404,
         )
 
-    raw = profile.get("created_at")
-    if raw:
-        dt = dates.iso_to_dt(raw)
-        profile["created_at_readable"] = dt.strftime("%d %B %Y")
+    tz_options = sorted(available_timezones())
+    is_demo_user = bool(settings.DEMO_USER_SUB and user_sub == settings.DEMO_USER_SUB)
 
-    logger.debug(f"Profile retrieved: {profile}")
+    logger.debug(f"Profile retrieved for user_sub={user_sub}")
+
     return render_template(
         request,
-        "profile.html",
-        context={"request": request, "profile": profile, "user_sub": user_sub},
+        "profile/profile.html",
+        context={
+            "request": request,
+            "profile": profile,
+            "user_sub": user_sub,
+            "tz_options": tz_options,
+            "is_demo_user": is_demo_user,
+            # placeholders for card swaps / validation later
+            "account_form": None,
+            "account_errors": None,
+            "account_success": False,
+            "prefs_form": None,
+            "prefs_errors": None,
+            "prefs_success": False,
+        },
         status_code=200,
     )

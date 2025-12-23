@@ -1,0 +1,24 @@
+{% if is_demo_user %}
+  <section class="card danger-zone">
+    <header class="card-header">
+      <h3>Danger zone</h3>
+    </header>
+
+    <div class="card-body">
+      <button
+        class="btn btn-danger"
+        hx-post="/demo/reset"
+        hx-trigger="click"
+        hx-swap="none"
+        hx-disabled-elt="this"
+        hx-on::response-error="alert('Too soon. Try again in a few minutes.')"
+      >
+        Reset demo data
+      </button>
+
+      <p class="demo-reset-note">
+        This will reset all demo workouts and exercises.
+      </p>
+    </div>
+  </section>
+{% endif %}

@@ -1,0 +1,73 @@
+<section id="account-card" class="card">
+  <header class="card-header">
+    <h3>Account</h3>
+    {% if account_success %}
+      <p class="form-success">Saved ✅</p>
+    {% endif %}
+  </header>
+
+  <div class="card-body">
+    <dl class="kv">
+      <div class="kv-row">
+        <dt>Email</dt>
+        <dd>{{ profile.email }}</dd>
+      </div>
+      <div class="kv-row">
+        <dt>Member since</dt>
+        <dd>{{ profile.created_at.strftime("%d %B %Y") }}</dd>
+      </div>
+    </dl>
+
+    <form
+      class="form"
+      hx-post="/profile/account"
+      hx-target="#account-card"
+      hx-swap="outerHTML"
+      hx-disabled-elt="find button[type=submit]"
+    >
+      <div class="form-row">
+        <label for="display_name">Display name</label>
+        <input
+          id="display_name"
+          name="display_name"
+          type="text"
+          value="{{ account_form.display_name if account_form else profile.display_name }}"
+          maxlength="100"
+          autocomplete="name"
+          {% if account_errors and account_errors.display_name %}aria-invalid="true"{% endif %}
+        />
+        {% if account_errors and account_errors.display_name %}
+          <p class="form-error">{{ account_errors.display_name }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-row">
+        <label for="timezone">Timezone</label>
+        <select
+          id="timezone"
+          name="timezone"
+          {% if account_errors and account_errors.timezone %}aria-invalid="true"{% endif %}
+        >
+          {# tz_options should be a list of timezone strings #}
+          {% for tz in tz_options %}
+            <option
+              value="{{ tz }}"
+              {% if (account_form and account_form.timezone == tz) or (not account_form and profile.timezone == tz) %}
+                selected
+              {% endif %}
+            >
+              {{ tz }}
+            </option>
+          {% endfor %}
+        </select>
+        {% if account_errors and account_errors.timezone %}
+          <p class="form-error">{{ account_errors.timezone }}</p>
+        {% endif %}
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save account</button>
+      </div>
+    </form>
+  </div>
+</section>
