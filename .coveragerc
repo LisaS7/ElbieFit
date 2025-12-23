@@ -2,3 +2,4 @@
 omit =
     app/handler.py
     app/settings.py
+    app/utils/seed_data.py

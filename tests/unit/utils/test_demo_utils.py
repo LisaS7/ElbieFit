@@ -61,6 +61,8 @@ class FakeDynamoTable:
         self._query_responses: list[dict[str, Any]] = []
         self.put_side_effect: Exception | None = None
 
+        self._items: dict[tuple[str, str], dict[str, Any]] = {}
+
     def queue_query_responses(self, responses: list[dict[str, Any]]) -> None:
         self._query_responses = list(responses)
 
@@ -68,7 +70,21 @@ class FakeDynamoTable:
         if self.put_side_effect:
             raise self.put_side_effect
         self.put_calls.append(kwargs)
+
+        item = kwargs.get("Item")
+        if item and "PK" in item and "SK" in item:
+            self._items[(item["PK"], item["SK"])] = dict(item)
+
         return {}
+
+    def get_item(self, **kwargs) -> dict[str, Any]:
+        key = kwargs.get("Key") or {}
+        pk = key.get("PK")
+        sk = key.get("SK")
+        if pk is None or sk is None:
+            return {}
+        item = self._items.get((pk, sk))
+        return {"Item": dict(item)} if item else {}
 
     def query(self, **kwargs) -> dict[str, Any]:
         self.query_calls.append(kwargs)
