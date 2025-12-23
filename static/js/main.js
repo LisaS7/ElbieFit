@@ -22,16 +22,18 @@ document.closeForm = function (selector) {
 };
 
 // Toast is yummy
-document.body.addEventListener('demoResetDone', () => {
-  const toast = document.getElementById('toast');
-  if (!toast) return;
+document.body.addEventListener('DOMContentLoaded', () => {
+  document.body.addEventListener('demoResetDone', () => {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
 
-  toast.textContent = 'Demo reset complete.';
-  toast.hidden = false;
+    toast.textContent = 'Demo reset complete.';
+    toast.hidden = false;
 
-  // re-hide after 2.5s
-  window.clearTimeout(toast._t);
-  toast._t = window.setTimeout(() => {
-    toast.hidden = true;
-  }, 2500);
+    // re-hide after 2.5s
+    window.clearTimeout(toast._t);
+    toast._t = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 2500);
+  });
 });
