@@ -89,7 +89,7 @@ def get_all_workouts(
 
 @router.get("/new-form")
 def get_new_form(request: Request):
-    return render_template(request, "workouts/new_form.html")
+    return render_template(request, "workouts/_new_form.html")
 
 
 @router.get("/{workout_date}/{workout_id}/set/form")
@@ -119,7 +119,7 @@ def get_new_set_form(
 
     return render_template(
         request,
-        "workouts/set_form.html",
+        "workouts/_set_form.html",
         context=context,
     )
 
@@ -259,7 +259,7 @@ def edit_workout_meta(
     logger.debug(f"Loading edit meta form for workout {workout.workout_id}")
 
     return render_template(
-        request, "workouts/edit_meta_form.html", context={"workout": workout}
+        request, "workouts/_edit_meta_form.html", context={"workout": workout}
     )
 
 
