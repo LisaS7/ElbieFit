@@ -154,6 +154,7 @@ form {
 input[type='text'],
 input[type='date'],
 input[type='number'],
+select,
 textarea {
   background: var(--color-card);
   border: 2px solid var(--color-borders);
@@ -173,6 +174,37 @@ textarea:focus {
   outline: none;
   border-color: var(--color-heading-dark);
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 6px var(--color-heading-dark);
+}
+
+/* --- Select --- */
+
+select {
+  /* kill default OS styling so ours shows up */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* custom arrow */
+  background-image: linear-gradient(45deg, transparent 50%, var(--color-heading-dark) 50%),
+    linear-gradient(135deg, var(--color-heading-dark) 50%, transparent 50%),
+    linear-gradient(to right, transparent, transparent);
+  background-position: calc(100% - 1.2rem) 1.15rem, calc(100% - 0.9rem) 1.15rem, 0 0;
+  background-size: 0.35rem 0.35rem, 0.35rem 0.35rem, 100% 100%;
+  background-repeat: no-repeat;
+}
+
+select:focus {
+  outline: none;
+  border-color: var(--color-heading-dark);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15), 0 0 6px var(--color-heading-dark);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  select {
+    font-size: 1.3rem;
+    padding-right: 2.5rem;
+  }
 }
 
 /* ── Number Input Spinner ── */
