@@ -379,7 +379,7 @@ def get_edit_set_form(
 
     return render_template(
         request,
-        "workouts/set_form.html",
+        "workouts/_set_form.html",
         context={
             "workout_date": workout_date,
             "workout_id": workout_id,
