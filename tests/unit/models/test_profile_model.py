@@ -5,7 +5,7 @@ import pytest
 from pydantic import ValidationError
 from test_data import USER_EMAIL, USER_PK
 
-from app.models.profile import Preferences
+from app.models.profile import AccountUpdateForm, Preferences
 
 # ---------- Preferences ----------
 
@@ -81,3 +81,14 @@ def test_userprofile_accepts_valid_timezone(profile):
 def test_userprofile_rejects_invalid_timezone(profile):
     with pytest.raises(ValidationError, match="Invalid timezone: Narnia/Aslan"):
         profile(timezone="Narnia/Aslan")
+
+
+def test_account_update_form_accepts_valid_timezone():
+    tz = next(iter(available_timezones()))
+    form = AccountUpdateForm(display_name="Lisa Test", timezone=tz)
+    assert form.timezone == tz
+
+
+def test_account_update_form_rejects_invalid_timezone():
+    with pytest.raises(ValidationError, match="Invalid timezone: Narnia/Aslan"):
+        AccountUpdateForm(display_name="Lisa Test", timezone="Narnia/Aslan")
