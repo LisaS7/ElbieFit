@@ -60,7 +60,10 @@ class DynamoProfileRepository(DynamoRepository[UserProfile]):
         try:
             resp = self._safe_update(
                 Key=key,
-                UpdateExpression="SET display_name = :dn, timezone = :tz, updated_at = :ua",
+                UpdateExpression="SET display_name = :dn, #tz = :tz, updated_at = :ua",
+                ExpressionAttributeNames={
+                    "#tz": "timezone",
+                },
                 ExpressionAttributeValues={
                     ":dn": display_name,
                     ":tz": timezone,
