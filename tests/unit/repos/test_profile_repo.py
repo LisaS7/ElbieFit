@@ -116,8 +116,9 @@ def test_update_account_success(fake_table):
     assert kwargs["Key"] == {"PK": USER_PK, "SK": "PROFILE"}
     assert (
         kwargs["UpdateExpression"]
-        == "SET display_name = :dn, timezone = :tz, updated_at = :ua"
+        == "SET display_name = :dn, #tz = :tz, updated_at = :ua"
     )
+    assert kwargs["ExpressionAttributeNames"] == {"#tz": "timezone"}
     assert kwargs["ExpressionAttributeValues"][":dn"] == "New Name"
     assert kwargs["ExpressionAttributeValues"][":tz"] == "Europe/London"
     assert isinstance(kwargs["ExpressionAttributeValues"][":ua"], str)
