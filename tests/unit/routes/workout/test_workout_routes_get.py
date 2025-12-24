@@ -270,7 +270,7 @@ def test_get_edit_set_form_renders_form(
     assert "<form" in response.text
     assert 'name="reps"' in response.text
     assert "Save Set" in response.text
-    assert "#edit-set-form-container-1" in response.text
+    assert "#edit-set-form-container-EX-1-1" in response.text
     assert "Weight (kg)" in response.text
 
 
