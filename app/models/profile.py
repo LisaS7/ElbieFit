@@ -2,7 +2,14 @@ from datetime import datetime
 from typing import Annotated, Literal
 from zoneinfo import available_timezones
 
-from pydantic import BaseModel, EmailStr, Field, StringConstraints, model_validator
+from pydantic import (
+    BaseModel,
+    EmailStr,
+    Field,
+    StringConstraints,
+    field_validator,
+    model_validator,
+)
 
 from app.utils.dates import dt_to_iso
 
@@ -58,11 +65,12 @@ class AccountUpdateForm(BaseModel):
     display_name: DisplayNameStr
     timezone: str = Field(..., min_length=1)
 
-    @model_validator(mode="after")
-    def validate_timezone(self) -> "AccountUpdateForm":
-        if self.timezone not in available_timezones():
-            raise ValueError(f"Invalid timezone: {self.timezone}")
-        return self
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, v: str) -> str:
+        if v not in available_timezones():
+            raise ValueError(f"Invalid timezone: {v}")
+        return v
 
 
 class PreferencesUpdateForm(BaseModel):

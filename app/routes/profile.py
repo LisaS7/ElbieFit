@@ -1,7 +1,10 @@
 from zoneinfo import available_timezones
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import ValidationError
 
+from app.models.profile import AccountUpdateForm, PreferencesUpdateForm, UserProfile
+from app.repositories.errors import ProfileRepoError
 from app.repositories.profile import DynamoProfileRepository, ProfileRepository
 from app.settings import settings
 from app.templates.templates import render_template
@@ -10,9 +13,35 @@ from app.utils.log import logger
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
+# ------------------------- Helpers ------------------------
+
+
+def _tz_options() -> list[str]:
+    return sorted(available_timezones())
+
+
+def _errors_dict(e: ValidationError) -> dict[str, str]:
+    return {str(err["loc"][0]): err["msg"] for err in e.errors() if err["loc"]}
+
 
 def get_profile_repo() -> ProfileRepository:  # pragma: no cover
     return DynamoProfileRepository()
+
+
+def _get_profile_or_404(repo: ProfileRepository, user_sub: str) -> UserProfile:
+    try:
+        profile = repo.get_for_user(user_sub)
+    except ProfileRepoError as e:
+        logger.exception(f"Error fetching profile user_sub={user_sub} err={e}")
+        raise HTTPException(status_code=500, detail="Internal error reading profile")
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    return profile
+
+
+# ------------------------- GET ------------------------
 
 
 @router.get("/")
@@ -26,25 +55,17 @@ def profile(
     logger.info(f"Fetching profile for user_sub={user_sub}")
 
     try:
-        profile = repo.get_for_user(user_sub)
-    except Exception as e:
-        logger.exception(f"Error fetching user profile: {e}")
-        raise HTTPException(status_code=500, detail="Internal error reading profile")
+        profile = _get_profile_or_404(repo, user_sub)
+    except HTTPException as e:
+        if e.status_code == 404:
+            return render_template(
+                request,
+                "profile/profile.html",
+                context={"request": request, "profile": None, "user_sub": user_sub},
+                status_code=404,
+            )
+        raise
 
-    if not profile:
-        logger.warning(f"No profile found for user_sub={user_sub}")
-        return render_template(
-            request,
-            "profile/profile.html",
-            context={
-                "request": request,
-                "profile": None,
-                "user_sub": user_sub,
-            },
-            status_code=404,
-        )
-
-    tz_options = sorted(available_timezones())
     is_demo_user = bool(settings.DEMO_USER_SUB and user_sub == settings.DEMO_USER_SUB)
 
     logger.debug(f"Profile retrieved for user_sub={user_sub}")
@@ -56,7 +77,7 @@ def profile(
             "request": request,
             "profile": profile,
             "user_sub": user_sub,
-            "tz_options": tz_options,
+            "tz_options": _tz_options(),
             "is_demo_user": is_demo_user,
             # placeholders for card swaps / validation later
             "account_form": None,
@@ -65,6 +86,133 @@ def profile(
             "prefs_form": None,
             "prefs_errors": None,
             "prefs_success": False,
+        },
+        status_code=200,
+    )
+
+
+# ------------------------- POST ------------------------
+
+
+@router.post("/account")
+async def update_account(
+    request: Request,
+    claims=Depends(auth.require_auth),
+    repo: ProfileRepository = Depends(get_profile_repo),
+):
+    user_sub = claims["sub"]
+    logger.info(f"Updating account user_sub={user_sub}")
+
+    form = await request.form()
+    data = {
+        "display_name": form.get("display_name") or "",
+        "timezone": form.get("timezone") or "",
+    }
+
+    try:
+        account_form = AccountUpdateForm.model_validate(data)
+    except ValidationError as e:
+
+        profile = _get_profile_or_404(repo, user_sub)
+
+        errors = _errors_dict(e)
+
+        return render_template(
+            request,
+            "profile/_account_card.html",
+            context={
+                "request": request,
+                "profile": profile,
+                "tz_options": _tz_options(),
+                "account_form": data,
+                "account_errors": errors,
+                "account_success": False,
+            },
+            status_code=400,
+        )
+
+    try:
+        profile = repo.update_account(
+            user_sub,
+            display_name=account_form.display_name,
+            timezone=account_form.timezone,
+        )
+    except ProfileRepoError as e:
+        logger.exception(f"Error updating account user_sub={user_sub} err={e}")
+        raise HTTPException(status_code=500, detail="Internal error updating account")
+
+    return render_template(
+        request,
+        "profile/_account_card.html",
+        context={
+            "request": request,
+            "profile": profile,
+            "tz_options": _tz_options(),
+            "account_form": None,
+            "account_errors": None,
+            "account_success": True,
+        },
+        status_code=200,
+    )
+
+
+@router.post("/preferences")
+async def update_preferences(
+    request: Request,
+    claims=Depends(auth.require_auth),
+    repo: ProfileRepository = Depends(get_profile_repo),
+):
+    user_sub = claims["sub"]
+    logger.info(f"Updating preferences user_sub={user_sub}")
+
+    form = await request.form()
+    data = {
+        "show_tips": form.get("show_tips") == "true",
+        "theme": form.get("theme") or "",
+        "units": form.get("units") or "",
+    }
+
+    try:
+        validated = PreferencesUpdateForm.model_validate(data)
+    except ValidationError as e:
+        profile = _get_profile_or_404(repo, user_sub)
+        errors = _errors_dict(e)
+
+        return render_template(
+            request,
+            "profile/_preferences_card.html",
+            context={
+                "request": request,
+                "profile": profile,
+                "prefs_form": data,
+                "prefs_errors": errors,
+                "prefs_success": False,
+            },
+            status_code=400,
+        )
+
+    try:
+        profile = repo.update_preferences(
+            user_sub,
+            show_tips=validated.show_tips,
+            theme=validated.theme,
+            units=validated.units,
+        )
+    except ProfileRepoError as e:
+        logger.exception(f"Error updating preferences user_sub={user_sub} err={e}")
+        raise HTTPException(
+            status_code=500, detail="Internal error updating preferences"
+        )
+
+    return render_template(
+        request,
+        "profile/_preferences_card.html",
+        context={
+            "request": request,
+            "profile": profile,
+            "prefs_form": None,
+            "prefs_errors": None,
+            "prefs_success": True,
         },
         status_code=200,
     )

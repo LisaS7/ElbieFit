@@ -5,9 +5,14 @@ from typing import Any
 
 import pytest
 
+from app.models.profile import UserProfile
 from app.models.workout import Workout
+from app.repositories.errors import ProfileRepoError
+from app.routes import profile as profile_routes
 from app.routes import workout as workout_routes
 from app.utils import db
+
+# ---------------- Workout --------------------
 
 
 class FakeWorkoutRepo:
@@ -92,6 +97,9 @@ def fake_workout_repo(app_instance):
         app_instance.dependency_overrides.pop(workout_routes.get_workout_repo, None)
 
 
+# ------------------ Exercise ----------------------
+
+
 class FakeExerciseRepo:
     """
     Tiny fake to stand in for DynamoExerciseRepository in route tests.
@@ -142,3 +150,76 @@ def repo_raises(monkeypatch):
         monkeypatch.setattr(repo, method_name, _broken, raising=True)
 
     return _apply
+
+
+# ----------------------- Profile ------------------------
+
+
+class FakeProfileRepo:
+    def __init__(
+        self,
+        profile: UserProfile | None = None,
+        *,
+        raise_on_get: bool = False,
+        raise_on_update: bool = False,
+        updated_profile: UserProfile | None = None,
+    ):
+        self._profile = profile
+        self._raise_on_get = raise_on_get
+        self._raise_on_update = raise_on_update
+        self._updated_profile = updated_profile or profile
+
+        # optional: capture calls
+        self.last_update_account = None
+        self.last_update_prefs = None
+
+    def get_for_user(self, user_sub: str) -> UserProfile | None:
+        if self._raise_on_get:
+            raise ProfileRepoError("boom")
+        return self._profile
+
+    def update_account(
+        self, user_sub: str, *, display_name: str, timezone: str
+    ) -> UserProfile:
+        if self._raise_on_update:
+            raise ProfileRepoError("boom update")
+        self.last_update_account = {
+            "user_sub": user_sub,
+            "display_name": display_name,
+            "timezone": timezone,
+        }
+        return self._updated_profile  # type: ignore[return-value]
+
+    def update_preferences(
+        self, user_sub: str, *, show_tips: bool, theme: str, units: str
+    ) -> UserProfile:
+        if self._raise_on_update:
+            raise ProfileRepoError("boom update")
+        self.last_update_prefs = {
+            "user_sub": user_sub,
+            "show_tips": show_tips,
+            "theme": theme,
+            "units": units,
+        }
+        return self._updated_profile  # type: ignore[return-value]
+
+
+@pytest.fixture
+def fake_profile_repo(app_instance):
+    """
+    Override get_profile_repo() for the duration of a test.
+    """
+    created = []
+
+    def _make(**kwargs) -> FakeProfileRepo:
+        repo = FakeProfileRepo(**kwargs)
+        app_instance.dependency_overrides[profile_routes.get_profile_repo] = (
+            lambda: repo
+        )
+        created.append(repo)
+        return repo
+
+    try:
+        yield _make
+    finally:
+        app_instance.dependency_overrides.pop(profile_routes.get_profile_repo, None)
