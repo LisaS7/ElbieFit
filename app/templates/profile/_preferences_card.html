@@ -31,18 +31,6 @@
       </div>
 
       <div class="form-row">
-        <label for="default_view">Default view</label>
-        {% set default_view_value = (prefs_form.default_view if prefs_form else profile.preferences.default_view) %}
-        <select id="default_view" name="default_view">
-          <option value="workouts" {% if default_view_value == "workouts" %}selected{% endif %}>Workouts</option>
-          <option value="exercises" {% if default_view_value == "exercises" %}selected{% endif %}>Exercises</option>
-        </select>
-        {% if prefs_errors and prefs_errors.default_view %}
-          <p class="form-error">{{ prefs_errors.default_view }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-row">
         <label for="theme">Theme</label>
         {% set theme_value = (prefs_form.theme if prefs_form else profile.preferences.theme) %}
         <select id="theme" name="theme">

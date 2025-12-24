@@ -32,7 +32,6 @@ def test_get_for_user_success(fake_table):
     assert profile.display_name == "Lisa Test"
     assert str(profile.email) == USER_EMAIL
     assert profile.timezone == "Europe/London"
-    assert profile.preferences.default_view == "workouts"  # default sanity check
 
     assert fake_table.last_get_kwargs == {
         "Key": {"PK": USER_PK, "SK": "PROFILE"},

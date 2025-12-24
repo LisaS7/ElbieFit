@@ -6,25 +6,27 @@ from pydantic import BaseModel, EmailStr, Field, StringConstraints, model_valida
 
 from app.utils.dates import dt_to_iso
 
-
-class Preferences(BaseModel):
-    show_tips: bool = True
-    default_view: Literal["workouts", "exercises"] = "workouts"
-    theme: Literal["light", "dark", "system"] = "light"
-    units: Literal["metric", "imperial"] = "metric"
-    # allows arbitrary extra keys
-    model_config = {"extra": "allow"}
-
-
 DisplayNameStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
 ]
+Theme = Literal["light", "dark", "system"]
+Units = Literal["metric", "imperial"]
+WeightUnit = Literal["kg", "lb"]
+ProfileSK = Literal["PROFILE"]
+
+
+class Preferences(BaseModel):
+    show_tips: bool = True
+    theme: Theme = "light"
+    units: Units = "metric"
+    # allows arbitrary extra keys
+    model_config = {"extra": "allow"}
 
 
 class UserProfile(BaseModel):
     PK: str
-    SK: Literal["PROFILE"]
+    SK: ProfileSK
 
     display_name: DisplayNameStr
     email: EmailStr
@@ -50,3 +52,20 @@ class UserProfile(BaseModel):
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
         return data
+
+
+class AccountUpdateForm(BaseModel):
+    display_name: DisplayNameStr
+    timezone: str = Field(..., min_length=1)
+
+    @model_validator(mode="after")
+    def validate_timezone(self) -> "AccountUpdateForm":
+        if self.timezone not in available_timezones():
+            raise ValueError(f"Invalid timezone: {self.timezone}")
+        return self
+
+
+class PreferencesUpdateForm(BaseModel):
+    show_tips: bool = False
+    theme: Theme
+    units: Units

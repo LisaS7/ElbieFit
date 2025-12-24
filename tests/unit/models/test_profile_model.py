@@ -14,7 +14,6 @@ def test_preferences_defaults():
     prefs = Preferences()
 
     assert prefs.show_tips is True
-    assert prefs.default_view == "workouts"
     assert prefs.theme == "light"
     assert prefs.units == "metric"
 
@@ -71,7 +70,6 @@ def test_to_ddb_item_serializes_datetimes_and_nests_preferences(example_profile)
     prefs = ddb_item["preferences"]
     assert isinstance(prefs, dict)
     assert prefs["units"] == "metric"
-    assert prefs["default_view"] == "workouts"
 
 
 def test_userprofile_accepts_valid_timezone(profile):
