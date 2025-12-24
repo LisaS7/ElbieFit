@@ -26,9 +26,6 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
     Implementation for DynamoExerciseRepository
     """
 
-    def __init__(self, table=None):
-        self._table = table or db.get_table()
-
     def _to_model(self, item: dict):
         """
         Map a DynamoDB item (from the resource API) into an Exercise model.
