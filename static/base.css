@@ -48,6 +48,7 @@ main {
 /* ── Header & Menu ── */
 
 #app-header {
+  z-index: 1000;
   padding: 4rem 15rem;
   margin-bottom: 2rem;
 
@@ -78,6 +79,7 @@ main {
 }
 
 .nav-panel {
+  z-index: 1100;
   background: var(--color-stone);
   border: 2px solid var(--color-borders);
   border-radius: 14px 14px 8px 8px;
