@@ -1,4 +1,4 @@
-from typing import Generic, List, TypeVar
+from typing import Any, Dict, Generic, List, TypeVar
 
 from botocore.exceptions import ClientError
 
@@ -38,6 +38,14 @@ class DynamoRepository(Generic[T]):
         except ClientError as e:
             logger.exception("DynamoDB put_item failed")
             raise RepoError("Failed to write to database") from e
+
+    def _safe_update(self, **kwargs) -> Dict[str, Any]:
+        try:
+            resp = self._table.update_item(**kwargs)
+            return resp
+        except ClientError as e:
+            logger.exception("DynamoDB update_item failed")
+            raise RepoError("Failed to update database") from e
 
     def _safe_get(self, **kwargs) -> dict | None:
         try:

@@ -39,6 +39,7 @@ OP_NAMES = {
     "get_item": "GetItem",
     "put_item": "PutItem",
     "delete_item": "DeleteItem",
+    "update_item": "UpdateItem",
 }
 
 
@@ -84,6 +85,8 @@ class FakeTable:
 
         self.deleted_keys: list[dict] = []
 
+        self.last_update_kwargs: dict | None = None
+
     def _maybe_fail(self, op: str):
         name = OP_NAMES[op]
         if op in self.fail_on or name in self.fail_on:
@@ -110,6 +113,11 @@ class FakeTable:
         key = kwargs.get("Key")
         if key is not None:
             self.deleted_keys.append(key)
+        return self.response
+
+    def update_item(self, **kwargs):
+        self._maybe_fail("update_item")
+        self.last_update_kwargs = kwargs
         return self.response
 
     def batch_writer(self):
@@ -148,6 +156,11 @@ def failing_put_table() -> FakeTable:
 @pytest.fixture
 def failing_delete_table() -> FakeTable:
     return FakeTable(fail_on={"delete_item"})
+
+
+@pytest.fixture
+def failing_update_table() -> FakeTable:
+    return FakeTable(fail_on={"update_item"})
 
 
 @pytest.fixture

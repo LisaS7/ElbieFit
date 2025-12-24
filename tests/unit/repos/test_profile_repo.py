@@ -5,6 +5,8 @@ from app.repositories.errors import ProfileRepoError
 from app.repositories.profile import DynamoProfileRepository
 from tests.test_data import USER_EMAIL, USER_PK, USER_SUB
 
+# ──────────────────────────── GET ────────────────────────────
+
 
 def test_get_for_user_success(fake_table):
     expected_item = {
@@ -78,3 +80,126 @@ def test_get_for_user_invalid_item_raises_profile_repo_error(fake_table):
         repo.get_for_user(USER_SUB)
 
     assert "Failed to create profile model from item" in str(exc.value)
+
+
+# ──────────────────────────── UPDATE ────────────────────────────
+
+
+def test_update_account_success(fake_table):
+    expected_attrs = {
+        "PK": USER_PK,
+        "SK": "PROFILE",
+        "display_name": "New Name",
+        "email": USER_EMAIL,
+        "timezone": "Europe/London",
+        "created_at": "2025-01-01T12:00:00Z",
+        "updated_at": "2025-01-03T12:00:00Z",
+        "preferences": {"show_tips": True, "theme": "light", "units": "metric"},
+    }
+
+    fake_table.response = {"Attributes": expected_attrs}
+
+    repo = DynamoProfileRepository(table=fake_table)
+
+    profile = repo.update_account(
+        USER_SUB,
+        display_name="New Name",
+        timezone="Europe/London",
+    )
+
+    assert isinstance(profile, UserProfile)
+    assert profile.display_name == "New Name"
+    assert profile.timezone == "Europe/London"
+
+    # Verify update_item call shape (don't assert exact updated_at value, it's "now()")
+    kwargs = fake_table.last_update_kwargs
+    assert kwargs["Key"] == {"PK": USER_PK, "SK": "PROFILE"}
+    assert (
+        kwargs["UpdateExpression"]
+        == "SET display_name = :dn, timezone = :tz, updated_at = :ua"
+    )
+    assert kwargs["ExpressionAttributeValues"][":dn"] == "New Name"
+    assert kwargs["ExpressionAttributeValues"][":tz"] == "Europe/London"
+    assert isinstance(kwargs["ExpressionAttributeValues"][":ua"], str)
+
+    assert (
+        kwargs["ConditionExpression"] == "attribute_exists(PK) AND attribute_exists(SK)"
+    )
+    assert kwargs["ReturnValues"] == "ALL_NEW"
+
+
+def test_update_account_wraps_repo_error(failing_update_table):
+    repo = DynamoProfileRepository(table=failing_update_table)
+
+    with pytest.raises(ProfileRepoError):
+        repo.update_account(USER_SUB, display_name="New Name", timezone="Europe/London")
+
+
+def test_update_account_no_attributes_raises(fake_table):
+    fake_table.response = {}  # missing Attributes
+
+    repo = DynamoProfileRepository(table=fake_table)
+
+    with pytest.raises(ProfileRepoError, match="Account update returned no attributes"):
+        repo.update_account(USER_SUB, display_name="New Name", timezone="Europe/London")
+
+
+def test_update_preferences_success(fake_table):
+    expected_attrs = {
+        "PK": USER_PK,
+        "SK": "PROFILE",
+        "display_name": "Lisa Test",
+        "email": USER_EMAIL,
+        "timezone": "Europe/London",
+        "created_at": "2025-01-01T12:00:00Z",
+        "updated_at": "2025-01-03T12:00:00Z",
+        "preferences": {"show_tips": False, "theme": "dark", "units": "imperial"},
+    }
+
+    fake_table.response = {"Attributes": expected_attrs}
+
+    repo = DynamoProfileRepository(table=fake_table)
+
+    profile = repo.update_preferences(
+        USER_SUB,
+        show_tips=False,
+        theme="dark",
+        units="imperial",
+    )
+
+    assert isinstance(profile, UserProfile)
+    assert profile.preferences.show_tips is False
+    assert profile.preferences.theme == "dark"
+    assert profile.preferences.units == "imperial"
+
+    kwargs = fake_table.last_update_kwargs
+    assert kwargs["Key"] == {"PK": USER_PK, "SK": "PROFILE"}
+
+    assert "preferences.show_tips" in kwargs["UpdateExpression"]
+    assert "preferences.theme" in kwargs["UpdateExpression"]
+    assert "preferences.units" in kwargs["UpdateExpression"]
+    assert "updated_at" in kwargs["UpdateExpression"]
+
+    eav = kwargs["ExpressionAttributeValues"]
+    assert eav[":st"] is False
+    assert eav[":th"] == "dark"
+    assert eav[":un"] == "imperial"
+    assert isinstance(eav[":ua"], str)
+
+
+def test_update_preferences_wraps_repo_error(failing_update_table):
+    repo = DynamoProfileRepository(table=failing_update_table)
+
+    with pytest.raises(ProfileRepoError):
+        repo.update_preferences(USER_SUB, show_tips=True, theme="light", units="metric")
+
+
+def test_update_preferences_no_attributes_raises(fake_table):
+    fake_table.response = {}
+
+    repo = DynamoProfileRepository(table=fake_table)
+
+    with pytest.raises(
+        ProfileRepoError, match="Preferences update returned no attributes"
+    ):
+        repo.update_preferences(USER_SUB, show_tips=True, theme="light", units="metric")
