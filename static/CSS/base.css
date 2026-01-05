@@ -20,6 +20,9 @@
   /* nav panel & cards */
   --color-stone: #f0ebe5;
   --color-nav-hover: #6d583f;
+
+  /* Theme assets */
+  --header-bg-image: url('/static/images/header/prehistoric.png');
 }
 
 /* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
@@ -52,7 +55,7 @@ main {
   padding: 4rem 15rem;
   margin-bottom: 2rem;
 
-  background-image: url('/static/images/header_bg.png');
+  background-image: var(--header-bg-image);
   background-size: 100% 100%;
   background-repeat: no-repeat;
   background-position: center;

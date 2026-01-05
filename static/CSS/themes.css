@@ -1,0 +1,21 @@
+/* ──────────────────────────────── Themes ──────────────────────────────── */
+
+/* Default: Prehistoric */
+html[data-theme='prehistoric'] {
+  --header-bg-image: url('/static/images/header/prehistoric.png');
+}
+
+/* Apothecary */
+html[data-theme='apothecary'] {
+  --color-bg: #161412;
+  --color-card: #1f1b16;
+  --color-borders: #6e5f4a;
+
+  --color-heading-dark: #f1e7d6;
+  --color-font-light: #c7b8a2;
+
+  --color-stone: #241f19;
+  --color-nav-hover: #bfa47a;
+
+  --header-bg-image: url('/static/images/headers/apothecary.png');
+}
