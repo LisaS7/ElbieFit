@@ -191,6 +191,21 @@ async def update_preferences(
             status_code=400,
         )
 
+    if validated.theme not in settings.THEMES:
+        profile = _get_profile_or_404(repo, user_sub)
+        return render_template(
+            request,
+            "profile/_preferences_card.html",
+            context={
+                "request": request,
+                "profile": profile,
+                "prefs_form": data,
+                "prefs_errors": {"theme": "Invalid theme selected."},
+                "prefs_success": False,
+            },
+            status_code=400,
+        )
+
     try:
         profile = repo.update_preferences(
             user_sub,
@@ -204,7 +219,9 @@ async def update_preferences(
             status_code=500, detail="Internal error updating preferences"
         )
 
-    return render_template(
+    headers = {"HX-Refresh": "true"}
+
+    response = render_template(
         request,
         "profile/_preferences_card.html",
         context={
@@ -215,4 +232,17 @@ async def update_preferences(
             "prefs_success": True,
         },
         status_code=200,
+        headers=headers,
     )
+
+    # Set cookie so ThemeMiddleware picks it up next request
+    response.set_cookie(
+        key="theme",
+        value=validated.theme,
+        samesite="lax",
+        secure=not settings.DISABLE_AUTH_FOR_LOCAL_DEV,
+        httponly=False,
+        max_age=60 * 60 * 24,
+    )
+
+    return response
