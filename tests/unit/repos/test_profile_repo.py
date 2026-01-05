@@ -94,7 +94,7 @@ def test_update_account_success(fake_table):
         "timezone": "Europe/London",
         "created_at": "2025-01-01T12:00:00Z",
         "updated_at": "2025-01-03T12:00:00Z",
-        "preferences": {"show_tips": True, "theme": "light", "units": "metric"},
+        "preferences": {"show_tips": True, "theme": "prehistoric", "units": "metric"},
     }
 
     fake_table.response = {"Attributes": expected_attrs}
@@ -154,7 +154,11 @@ def test_update_preferences_success(fake_table):
         "timezone": "Europe/London",
         "created_at": "2025-01-01T12:00:00Z",
         "updated_at": "2025-01-03T12:00:00Z",
-        "preferences": {"show_tips": False, "theme": "dark", "units": "imperial"},
+        "preferences": {
+            "show_tips": False,
+            "theme": "apothecary",
+            "units": "imperial",
+        },
     }
 
     fake_table.response = {"Attributes": expected_attrs}
@@ -164,13 +168,13 @@ def test_update_preferences_success(fake_table):
     profile = repo.update_preferences(
         USER_SUB,
         show_tips=False,
-        theme="dark",
+        theme="apothecary",
         units="imperial",
     )
 
     assert isinstance(profile, UserProfile)
     assert profile.preferences.show_tips is False
-    assert profile.preferences.theme == "dark"
+    assert profile.preferences.theme == "apothecary"
     assert profile.preferences.units == "imperial"
 
     kwargs = fake_table.last_update_kwargs
@@ -183,7 +187,7 @@ def test_update_preferences_success(fake_table):
 
     eav = kwargs["ExpressionAttributeValues"]
     assert eav[":st"] is False
-    assert eav[":th"] == "dark"
+    assert eav[":th"] == "apothecary"
     assert eav[":un"] == "imperial"
     assert isinstance(eav[":ua"], str)
 

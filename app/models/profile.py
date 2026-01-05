@@ -11,13 +11,13 @@ from pydantic import (
     model_validator,
 )
 
+from app.settings import settings
 from app.utils.dates import dt_to_iso
 
 DisplayNameStr = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
 ]
-Theme = Literal["light", "dark", "system"]
 Units = Literal["metric", "imperial"]
 WeightUnit = Literal["kg", "lb"]
 ProfileSK = Literal["PROFILE"]
@@ -25,10 +25,17 @@ ProfileSK = Literal["PROFILE"]
 
 class Preferences(BaseModel):
     show_tips: bool = True
-    theme: Theme = "light"
+    theme: str = settings.DEFAULT_THEME
     units: Units = "metric"
     # allows arbitrary extra keys
     model_config = {"extra": "allow"}
+
+    @field_validator("theme")
+    @classmethod
+    def validate_theme(cls, v: str) -> str:
+        if v not in settings.THEMES:
+            raise ValueError(f"Invalid theme: {v}")
+        return v
 
 
 class UserProfile(BaseModel):
@@ -75,5 +82,12 @@ class AccountUpdateForm(BaseModel):
 
 class PreferencesUpdateForm(BaseModel):
     show_tips: bool = False
-    theme: Theme
+    theme: str
     units: Units
+
+    @field_validator("theme")
+    @classmethod
+    def validate_theme(cls, v: str) -> str:
+        if v not in settings.THEMES:
+            raise ValueError(f"Invalid theme: {v}")
+        return v

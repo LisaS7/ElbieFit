@@ -14,7 +14,7 @@ def test_preferences_defaults():
     prefs = Preferences()
 
     assert prefs.show_tips is True
-    assert prefs.theme == "light"
+    assert prefs.theme == "prehistoric"
     assert prefs.units == "metric"
 
 

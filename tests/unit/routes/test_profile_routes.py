@@ -157,7 +157,7 @@ def test_post_preferences_success_returns_card_with_saved(
     updated = original.model_copy(
         update={
             "preferences": original.preferences.model_copy(
-                update={"show_tips": True, "theme": "dark", "units": "imperial"}
+                update={"show_tips": True, "theme": "prehistoric", "units": "imperial"}
             )
         }
     )
@@ -166,7 +166,7 @@ def test_post_preferences_success_returns_card_with_saved(
 
     resp = authenticated_client.post(
         "/profile/preferences",
-        data={"show_tips": "true", "theme": "dark", "units": "imperial"},
+        data={"show_tips": "true", "theme": "prehistoric", "units": "imperial"},
     )
 
     assert resp.status_code == 200
@@ -175,7 +175,7 @@ def test_post_preferences_success_returns_card_with_saved(
     assert repo.last_update_prefs == {
         "user_sub": repo.last_update_prefs["user_sub"],
         "show_tips": True,
-        "theme": "dark",
+        "theme": "prehistoric",
         "units": "imperial",
     }
 
@@ -187,7 +187,7 @@ def test_post_preferences_unchecked_checkbox_sends_false(
     updated = original.model_copy(
         update={
             "preferences": original.preferences.model_copy(
-                update={"show_tips": False, "theme": "light", "units": "metric"}
+                update={"show_tips": False, "theme": "prehistoric", "units": "metric"}
             )
         }
     )
@@ -197,7 +197,7 @@ def test_post_preferences_unchecked_checkbox_sends_false(
     # omit show_tips entirely => should become False
     resp = authenticated_client.post(
         "/profile/preferences",
-        data={"theme": "light", "units": "metric"},
+        data={"theme": "prehistoric", "units": "metric"},
     )
 
     assert resp.status_code == 200
@@ -211,7 +211,7 @@ def test_post_preferences_validation_error_returns_400(
 
     resp = authenticated_client.post(
         "/profile/preferences",
-        data={"theme": "dark", "units": "goblin"},
+        data={"theme": "prehistoric", "units": "goblin"},
     )
 
     assert resp.status_code == 400
@@ -233,7 +233,7 @@ def test_post_preferences_repo_error_returns_500(
         "/profile/preferences",
         data={
             "show_tips": "true",
-            "theme": "dark",
+            "theme": "prehistoric",
             "units": "metric",
         },
     )
