@@ -34,9 +34,11 @@
         <label for="theme">Theme</label>
         {% set theme_value = (prefs_form.theme if prefs_form else profile.preferences.theme) %}
         <select id="theme" name="theme">
-          <option value="light" {% if theme_value == "light" %}selected{% endif %}>Light</option>
-          <option value="dark" {% if theme_value == "dark" %}selected{% endif %}>Dark</option>
-          <option value="system" {% if theme_value == "system" %}selected{% endif %}>System</option>
+          {% for t in themes %}
+            <option value="{{ t }}" {% if theme_value == t %}selected{% endif %}>
+              {{ t|replace("_", " ")|title }}
+            </option>
+          {% endfor %}
         </select>
         {% if prefs_errors and prefs_errors.theme %}
           <p class="form-error">{{ prefs_errors.theme }}</p>

@@ -75,6 +75,7 @@ def profile(
         "profile/profile.html",
         context={
             "request": request,
+            "themes": settings.THEMES,
             "profile": profile,
             "user_sub": user_sub,
             "tz_options": _tz_options(),
@@ -183,6 +184,7 @@ async def update_preferences(
             "profile/_preferences_card.html",
             context={
                 "request": request,
+                "themes": settings.THEMES,
                 "profile": profile,
                 "prefs_form": data,
                 "prefs_errors": errors,
@@ -198,6 +200,7 @@ async def update_preferences(
             "profile/_preferences_card.html",
             context={
                 "request": request,
+                "themes": settings.THEMES,
                 "profile": profile,
                 "prefs_form": data,
                 "prefs_errors": {"theme": "Invalid theme selected."},
@@ -226,6 +229,7 @@ async def update_preferences(
         "profile/_preferences_card.html",
         context={
             "request": request,
+            "themes": settings.THEMES,
             "profile": profile,
             "prefs_form": None,
             "prefs_errors": None,
