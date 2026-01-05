@@ -196,7 +196,9 @@ def test_update_preferences_wraps_repo_error(failing_update_table):
     repo = DynamoProfileRepository(table=failing_update_table)
 
     with pytest.raises(ProfileRepoError):
-        repo.update_preferences(USER_SUB, show_tips=True, theme="light", units="metric")
+        repo.update_preferences(
+            USER_SUB, show_tips=True, theme="prehistoric", units="metric"
+        )
 
 
 def test_update_preferences_no_attributes_raises(fake_table):
@@ -207,4 +209,6 @@ def test_update_preferences_no_attributes_raises(fake_table):
     with pytest.raises(
         ProfileRepoError, match="Preferences update returned no attributes"
     ):
-        repo.update_preferences(USER_SUB, show_tips=True, theme="light", units="metric")
+        repo.update_preferences(
+            USER_SUB, show_tips=True, theme="prehistoric", units="metric"
+        )
