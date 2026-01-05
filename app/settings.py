@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from dotenv import find_dotenv, load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -43,6 +45,9 @@ class Settings(BaseSettings):
         "/health",
         "/meta",
     )
+    # ──────────────────── Theme ─────────────────────
+    DEFAULT_THEME: str = "prehistoric"
+    THEME_EXCLUDED_PREFIXES: Tuple[str, ...] = ("/static",)
 
     # ─────────────────────────────────────────
 

@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.middleware.rate_limit import RateLimitMiddleware
+from app.middleware.theme import ThemeMiddleware
 
 from .error_handlers import register_error_handlers
 from .routes import auth, demo, exercise, home, profile, workout
@@ -12,6 +13,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 register_error_handlers(app)
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(ThemeMiddleware)
 
 app.include_router(home.router)
 app.include_router(auth.router)
