@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     )
     # ──────────────────── Theme ─────────────────────
     DEFAULT_THEME: str = "prehistoric"
-    THEMES: Tuple[str, ...] = ("prehistoric", "apothecary")
+    THEMES: Tuple[str, ...] = ("apothecary", "ink", "prehistoric")
     THEME_EXCLUDED_PREFIXES: Tuple[str, ...] = ("/static",)
 
     # ─────────────────────────────────────────

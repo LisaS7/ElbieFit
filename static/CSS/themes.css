@@ -1,5 +1,3 @@
-/* ──────────────────────────────── Themes ──────────────────────────────── */
-
 html[data-theme='apothecary'] {
   /* Page + surfaces */
   --color-bg: #f5efe4;
@@ -33,4 +31,39 @@ html[data-theme='apothecary'] {
 
   --color-toast-bg: #f8f2e6;
   --color-toast-text: #3a342b;
+}
+
+html[data-theme='ink'] {
+  /* Page + surfaces */
+  --color-bg: #1b1a24;
+  --color-panel: #242336;
+  --color-card: #2b2a3d;
+  --color-card-shadow-base: #12111a;
+  --color-borders: #4c4a6a;
+
+  /* Text */
+  --color-heading-dark: #f1ecff;
+  --color-font-light: #c6c2e2;
+  --color-input-text: #f1ecff;
+
+  /* Accents */
+  --color-tag: #7a74a6;
+
+  /* Buttons */
+  --color-button: #5b628f;
+  --color-button-dark: #474d73;
+  --color-button-text: #f6f4ff;
+
+  --color-button-secondary: #8b7fae;
+  --color-button-secondary-dark: #6f648f;
+
+  /* Nav + hover */
+  --color-nav-hover: #3f456b;
+
+  /* Banner & toast */
+  --color-banner-bg: #12101d;
+  --color-banner-text: #e6e2ff;
+
+  --color-toast-bg: #e6e2ff;
+  --color-toast-text: #1b1a24;
 }
