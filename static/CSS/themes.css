@@ -2,7 +2,6 @@
 
 /* Default: Prehistoric */
 html[data-theme='prehistoric'] {
-  --header-bg-image: url('/static/images/header/prehistoric.png');
 }
 
 /* Apothecary */
@@ -16,6 +15,4 @@ html[data-theme='apothecary'] {
 
   --color-stone: #241f19;
   --color-nav-hover: #bfa47a;
-
-  --header-bg-image: url('/static/images/headers/apothecary.png');
 }
