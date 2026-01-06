@@ -1,18 +1,36 @@
 /* ──────────────────────────────── Themes ──────────────────────────────── */
 
-/* Default: Prehistoric */
-html[data-theme='prehistoric'] {
-}
-
-/* Apothecary */
 html[data-theme='apothecary'] {
-  --color-bg: #161412;
-  --color-card: #1f1b16;
-  --color-borders: #6e5f4a;
+  /* Page + surfaces */
+  --color-bg: #f5efe4;
+  --color-panel: #efe6d6;
+  --color-card: #fffaf2;
+  --color-card-shadow-base: #d6cbb8;
+  --color-borders: #7f9a72;
 
-  --color-heading-dark: #f1e7d6;
-  --color-font-light: #c7b8a2;
+  /* Text */
+  --color-heading-dark: #3a342b;
+  --color-font-light: #6a5f50;
+  --color-input-text: #3a342b;
 
-  --color-stone: #241f19;
-  --color-nav-hover: #bfa47a;
+  /* Accents */
+  --color-tag: #8fb38a;
+
+  /* Buttons */
+  --color-button: #6f8f6b;
+  --color-button-dark: #587457;
+  --color-button-text: #fffdf6;
+
+  --color-button-secondary: #d7b16c;
+  --color-button-secondary-dark: #b89455;
+
+  /* Nav + hover */
+  --color-nav-hover: #6a7f5e;
+
+  /* Banner & toast */
+  --color-banner-bg: #4a4034;
+  --color-banner-text: #f8f2e6;
+
+  --color-toast-bg: #f8f2e6;
+  --color-toast-text: #3a342b;
 }
