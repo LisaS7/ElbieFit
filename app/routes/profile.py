@@ -103,6 +103,7 @@ async def update_account(
 ):
     user_sub = claims["sub"]
     logger.info(f"Updating account user_sub={user_sub}")
+    profile = _get_profile_or_404(repo, user_sub)
 
     form = await request.form()
     data = {
@@ -113,9 +114,6 @@ async def update_account(
     try:
         account_form = AccountUpdateForm.model_validate(data)
     except ValidationError as e:
-
-        profile = _get_profile_or_404(repo, user_sub)
-
         errors = _errors_dict(e)
 
         return render_template(
@@ -165,6 +163,7 @@ async def update_preferences(
 ):
     user_sub = claims["sub"]
     logger.info(f"Updating preferences user_sub={user_sub}")
+    profile = _get_profile_or_404(repo, user_sub)
 
     form = await request.form()
     data = {
@@ -176,9 +175,7 @@ async def update_preferences(
     try:
         validated = PreferencesUpdateForm.model_validate(data)
     except ValidationError as e:
-        profile = _get_profile_or_404(repo, user_sub)
         errors = _errors_dict(e)
-
         return render_template(
             request,
             "profile/_preferences_card.html",

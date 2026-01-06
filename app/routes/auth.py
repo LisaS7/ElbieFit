@@ -69,7 +69,9 @@ def auth_callback(request: Request, code: str):
         "redirect_uri": REDIRECT_URI,
     }
     headers = {"Content-Type": "application/x-www-form-urlencoded"}
-    response_token = requests.post(settings.token_url(), data=data, headers=headers)
+    response_token = requests.post(
+        settings.token_url(), data=data, headers=headers, timeout=5
+    )
     logger.debug(f"Token exchange status_code={response_token.status_code}")
 
     if response_token.status_code != 200:
