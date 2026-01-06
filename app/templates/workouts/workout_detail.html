@@ -14,8 +14,11 @@
                 {{ workout.date.strftime("%A %d %B %Y")  }}
             </p>
         </div>
-        <a href="{{ url_for('get_all_workouts') }}" class="icon-button elevated" title="Back to list">
-            <img src="{{ url_for('static', path='images/back.png') }}" alt="Back">
+        <a href="{{ url_for('get_all_workouts') }}"
+            class="icon-button elevated"
+            title="Back to list"
+            aria-label="Back to list">
+            ←
         </a>
     </header>
 
@@ -34,8 +37,9 @@
             ) }}"
             hx-target="#workout-meta"
             hx-swap="outerHTML"
+            title="Edit workout"
             >
-            <img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit">
+            ✎
         </a>
     </div>
 
@@ -82,7 +86,7 @@
                         ) }}?exercise_id={{ exercise_id }}"
                         hx-target="#new-set-form-container-{{ exercise_id }}"
                         hx-swap="innerHTML">
-                            <img src="{{ url_for('static', path='images/dumbbell.png') }}" alt="Add Set" title="Add Set">
+                            +
                         </button>
                     </div>
                 {% else %}
@@ -130,7 +134,7 @@
                                     hx-target="#{{ edit_container_id }}"
                                     hx-swap="innerHTML"
                                     >
-                                    <img src="{{ url_for('static', path='images/edit.png') }}" alt="Edit">
+                                    ✎
                                 </button>
                                 <button
                                     class="icon-button elevated"
@@ -144,7 +148,7 @@
                                     hx-target="#{{ set_row_id }}"
                                     hx-swap="outerHTML"
                                     >
-                                    <img src="{{ url_for('static', path='images/delete.png') }}" alt="Del">
+                                    ✕
                                 </button>
                             </span>
                         </div>
@@ -179,7 +183,7 @@
         hx-confirm="Delete workout? (This cannot be undone)"
         hx-target="body"
         hx-swap="outerHTML">
-            <img src="{{ url_for('static', path='images/delete.png') }}" alt="Delete">
+            ✕
     </button>
 </section>
 

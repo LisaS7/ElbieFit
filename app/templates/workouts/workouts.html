@@ -12,7 +12,7 @@
         hx-target="#new-workout-form-container"
         hx-swap="innerHTML"
         >
-        <img src="{{ url_for('static', path='images/add.png') }}" alt="New">
+        +
     </button>
 </header>
 <section id="new-workout-form-container"></section>
@@ -31,7 +31,7 @@
                 <a class="icon-button elevated"
                  href="{{ url_for('view_workout', workout_date=workout.date, workout_id=workout.workout_id) }}"
                 >
-                    <img src="{{ url_for('static', path='images/view.png') }}" alt="View">
+                    👁
                 </a>
 
             </div>
