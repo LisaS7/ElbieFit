@@ -18,6 +18,7 @@ html[data-theme='apothecary'] {
   --color-button: #6f8f6b;
   --color-button-dark: #587457;
   --color-button-text: #fffdf6;
+  --color-icon-button-text: var(--color-button-dark);
 
   --color-button-secondary: #d7b16c;
   --color-button-secondary-dark: #b89455;
@@ -53,6 +54,7 @@ html[data-theme='ink'] {
   --color-button: #5b628f;
   --color-button-dark: #474d73;
   --color-button-text: #f6f4ff;
+  --color-icon-button-text: var(--color-tag);
 
   --color-button-secondary: #8b7fae;
   --color-button-secondary-dark: #6f648f;

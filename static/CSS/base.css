@@ -17,6 +17,7 @@
   --color-button: #86912c;
   --color-button-dark: #5f6620;
   --color-button-text: var(--color-card);
+  --color-icon-button-text: var(--color-tag);
 
   --color-button-secondary: #d4a16a;
   --color-button-secondary-dark: #b8854f;
@@ -48,6 +49,7 @@ body {
   margin: 0;
   font-family: var(--font-plain);
   background-color: var(--color-bg);
+  color: var(--color-font-light);
 }
 
 main {

@@ -52,21 +52,17 @@ a.button.secondary {
 /* ── Tiny icon buttons── */
 
 .icon-button {
+  width: 32px;
+  height: 32px;
   background: none;
-  border: none;
-  border-radius: 999px;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 30px;
+  border: none;
+  border-radius: 50%;
   box-shadow: rgba(60, 64, 67, 0.3) 0px 1px 2px 0px, rgba(60, 64, 67, 0.15) 0px 2px 6px 2px;
-}
-
-.icon-button img {
-  width: 30px;
-  height: 30px;
-  object-fit: contain;
+  font-size: 1.4rem;
+  color: var(--color-icon-button-text);
 }
 
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */
