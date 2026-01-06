@@ -1,25 +1,35 @@
 :root {
   --color-bg: #f3f1df;
   --color-card: #fffdf4;
+  --color-card-shadow-base: #b8b2a6;
   --color-borders: #b5b37a;
   --color-tag: #ac834c;
 
   /* Text */
+  --color-heading-dark: black;
   --font-decorative: 'Caesar Dressing', system-ui;
   --font-plain: 'Passero One', sans-serif;
   --color-heading-dark: #4a3e2e;
   --color-font-light: #6e614d;
+  --color-input-text: #333;
 
   /* Buttons */
   --color-button: #86912c;
   --color-button-dark: #5f6620;
+  --color-button-text: var(--color-card);
 
   --color-button-secondary: #d4a16a;
   --color-button-secondary-dark: #b8854f;
 
   /* nav panel & cards */
-  --color-stone: #f0ebe5;
+  --color-panel: #f0ebe5;
   --color-nav-hover: #6d583f;
+
+  /* banner & toast */
+  --color-banner-bg: #3b2f2f;
+  --color-banner-text: #f5e9d3;
+  --color-toast-bg: #f5e9d3;
+  --color-toast-text: #2b241f;
 }
 
 /* ──────────────────────────────── Base Page Layout ──────────────────────────────── */
@@ -75,7 +85,7 @@ main {
 
 .nav-panel {
   z-index: 1100;
-  background: var(--color-stone);
+  background: var(--color-panel);
   border: 2px solid var(--color-borders);
   border-radius: 14px 14px 8px 8px;
 }
@@ -85,7 +95,7 @@ main {
   border: none;
   font-size: 1.5rem;
   background: none;
-  color: black;
+  color: var(--color-heading-dark);
 }
 
 #app-header nav a {
@@ -130,8 +140,8 @@ main {
 
 /* ── Demo Banner ── */
 .demo-banner {
-  background: #3b2f2f;
-  color: #f5e9d3;
+  background: var(--color-banner-bg);
+  color: var(--color-banner-text);
   text-align: center;
   padding: 0.5rem 1rem;
   letter-spacing: 0.05em;
@@ -169,8 +179,8 @@ main {
   padding: 1.5rem 2rem;
   border: 1px solid rgba(0, 0, 0, 0.25);
   border-radius: 10px;
-  background: #f5e9d3;
-  color: #2b241f;
+  background: var(--color-toast-bg);
+  color: var(--color-toast-text);
   font-size: 3rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
   z-index: 9999;
