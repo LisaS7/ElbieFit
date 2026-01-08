@@ -37,6 +37,8 @@ Resources:
           RequireNumbers: true
           RequireSymbols: true
       MfaConfiguration: 'OFF'
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: true
       AccountRecoverySetting:
         RecoveryMechanisms:
           - Name: verified_email
