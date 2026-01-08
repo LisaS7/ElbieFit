@@ -207,6 +207,79 @@ a {
   text-decoration: none;
 }
 
+/* ──────────────────────────────── Home Page ──────────────────────────────── */
+
+.home {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.home-hero {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.home-hero .subtitle {
+  margin-top: 0.5rem;
+  opacity: 0.85;
+}
+
+.home-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.home-panel {
+  margin-top: 2rem;
+  padding: 1.25rem;
+  border-radius: 16px;
+  background: var(--color-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+.home-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.home-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  background: var(--color-card-bg-elevated);
+}
+
+.home-list-title {
+  font-weight: 700;
+}
+
+.home-list-meta {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.home-mascot img {
+  margin-top: 1.25rem;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  opacity: 0.95;
+}
+
+.muted {
+  opacity: 0.8;
+}
+
 /* ──────────────────────────────── Workout List ──────────────────────────────── */
 
 .workout-card {
