@@ -65,8 +65,17 @@ jobs:
 
       - name: Ensure deploy scripts are executable
         run: |
-          chmod +x scripts/deploy_code.sh dev
-          chmod +x scripts/update_lambda_code.sh dev
+          chmod +x scripts/deploy_code.sh
+          chmod +x scripts/update_lambda_code.sh
+
+      - name: Create .env.dev for CI
+        run: |
+          cat <<EOF > .env.dev
+          ENV=dev
+          PROJECT_NAME=${PROJECT_NAME}
+          REGION=${REGION}
+          LOG_LEVEL=${LOG_LEVEL}
+          EOF
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -75,10 +84,10 @@ jobs:
           aws-region: eu-west-2
 
       - name: Build & upload code zip to S3
-        run: ./scripts/deploy_code.sh
+        run: ./scripts/deploy_code.sh dev
 
       - name: Update Lambda code from artifact
-        run: ./scripts/update_lambda_code.sh
+        run: ./scripts/update_lambda_code.sh dev
       - name: Write git metadata
         run: |
           echo "{ \"commit\": \"$(git rev-parse --short HEAD)\", \
