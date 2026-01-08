@@ -15,14 +15,19 @@ Parameters:
   AssetsBucketName:
     Type: String
 
+Conditions:
+  IsDev: !Equals [!Ref EnvName, dev]
+
 Resources:
   OIDCProvider:
+    Condition: IsDev
     Type: AWS::IAM::OIDCProvider
     Properties:
       Url: https://token.actions.githubusercontent.com
       ClientIdList: ['sts.amazonaws.com']
 
   DeployRole:
+    Condition: IsDev
     Type: AWS::IAM::Role
     Properties:
       RoleName: elbiefit-github-actions-deploy-role
@@ -102,7 +107,7 @@ Resources:
                   - lambda:GetFunction
                   - lambda:GetFunctionConfiguration
                 Resource:
-                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-${EnvName}-*'
+                  - !Sub 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ProjectName}-*-*'
 
               - Effect: Allow
                 Action:
@@ -116,7 +121,7 @@ Resources:
               # Let CloudFormation/lambda assume its execution role
               - Effect: Allow
                 Action: iam:PassRole
-                Resource: !GetAtt LambdaExecutionRole.Arn
+                Resource: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${ProjectName}-*-lambda-role'
 
       Tags:
         - Key: ProjectName

@@ -3,8 +3,15 @@
 # ====== Params =======
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-ENV_FILE="${ROOT_DIR}/.env"
 
+# ====== Env file loading =======
+ENV_ARG="${1:-}"
+if [[ "$ENV_ARG" != "dev" && "$ENV_ARG" != "prod" ]]; then
+  echo "Usage: $0 [dev|prod]"
+  exit 1
+fi
+
+ENV_FILE="${ROOT_DIR}/.env.${ENV_ARG}"
 if [ ! -f "$ENV_FILE" ]; then
   echo "Env file not found: $ENV_FILE"
   exit 1
@@ -13,6 +20,14 @@ fi
 set -a
 source "$ENV_FILE"
 set +a
+
+# Ensure ENV in the file matches the argument (prevents oopsies)
+if [[ "${ENV:-}" != "$ENV_ARG" ]]; then
+  echo "ENV mismatch: ENV='${ENV:-}' but argument='$ENV_ARG'"
+  exit 1
+fi
+
+# ====== Env-dependant Params =======
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
@@ -87,7 +102,7 @@ deploy_stack "${PROJECT_NAME}-${ENV}-iam" "infra/iam.yaml" \
 
 echo -e "\n\n--------------- DEPLOY CODE ------------------"
 echo "Summoning the code deploy script..."
-./scripts/deploy_code.sh
+./scripts/deploy_code.sh "$ENV"
 
 
 echo -e "\n\n--------------- DEPLOY APP ------------------"
@@ -101,7 +116,7 @@ API_URL=$(aws cloudformation list-exports \
 echo "API Gateway URL: ${API_URL}"
 
 # LAMBDA PUSH HERE
-./scripts/update_lambda_code.sh
+./scripts/update_lambda_code.sh "$ENV"
 
 
 echo -e "\n\n--------------- DEPLOY COGNITO ------------------"
@@ -137,6 +152,7 @@ if [[ -z "$USER_POOL_ID" || -z "$COGNITO_AUDIENCE" ]]; then
   exit 1
 fi
 
+
 # ====== Create Demo User =======
 DEMO_USER_SUB=$(./scripts/create_demo_user.sh | grep "^DEMO_USER_SUB=" | cut -d= -f2)
 
@@ -145,7 +161,6 @@ if [[ -z "$DEMO_USER_SUB" ]]; then
   exit 1
 fi
 
-
 # ====== Set Env Vars =======
 echo -e "\n\n--------------- ENV VARS ------------------"
 aws lambda update-function-configuration \
@@ -153,18 +168,19 @@ aws lambda update-function-configuration \
   --no-cli-pager \
   --function-name "${PROJECT_NAME}-${ENV}-app" \
   --environment "Variables={\
-ENV_NAME=${ENV},\
+ENV=${ENV},\
 LOG_LEVEL=DEBUG,\
 DDB_TABLE_NAME=${DDB_TABLE_NAME},\
-COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}, \
+COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI},\
 COGNITO_ISSUER_URL=${COGNITO_ISSUER_URL},\
 COGNITO_AUDIENCE=${COGNITO_AUDIENCE},\
 COGNITO_DOMAIN=${COGNITO_DOMAIN},\
 DEMO_USER_SUB=${DEMO_USER_SUB}}" > /dev/null
 
+
 echo "✅ Environment variables set for Lambda ${PROJECT_NAME}-${ENV}-app:"
 echo "------------------------------------------------------------"
-echo "ENV_NAME=${ENV}"
+echo "ENV=${ENV}"
 echo "LOG_LEVEL=DEBUG"
 echo "DDB_TABLE_NAME=${DDB_TABLE_NAME}"
 echo "COGNITO_REDIRECT_URI=${COGNITO_REDIRECT_URI}"
