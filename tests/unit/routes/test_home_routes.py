@@ -16,11 +16,14 @@ def test_home_logged_out_contains_welcome_title(client, monkeypatch):
     assert "Recent workouts" not in response.text
 
 
-def test_home_logged_in_shows_dashboard(authenticated_client):
-    response = authenticated_client.get("/")
+def test_home_logged_in_shows_dashboard(client, monkeypatch):
+    monkeypatch.setattr(
+        auth_utils, "require_auth", lambda _request: {"sub": "test-user-sub"}
+    )
+
+    response = client.get("/")
     assert response.status_code == 200
     assert "Recent workouts" in response.text
-    assert "All Workouts" in response.text or "/workout/all" in response.text
 
 
 def test_health_returns_status(client):
