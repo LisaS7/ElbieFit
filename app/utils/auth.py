@@ -97,7 +97,7 @@ def set_state(sub, request):
     )
 
 
-async def require_auth(request: Request):
+def require_auth(request: Request):
     """
     Validate ID token from cookies and return decoded claims.
     """
