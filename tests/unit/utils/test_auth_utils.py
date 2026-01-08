@@ -129,7 +129,7 @@ def test_decode_and_validate_id_token_wrong_token_use(monkeypatch):
 async def test_require_auth_success(auth_pipeline, make_request_with_cookies):
     req = make_request_with_cookies({"id_token": "fake-token"})
 
-    decoded = await auth_utils.require_auth(req)
+    decoded = auth_utils.require_auth(req)
 
     assert decoded["sub"] == USER_SUB
     assert auth_pipeline["get_id_token"] is True
@@ -160,7 +160,7 @@ async def test_require_auth_failure_cases(
         )
 
         with pytest.raises(HTTPException) as err:
-            await auth_utils.require_auth(req)
+            auth_utils.require_auth(req)
 
         assert err.value.status_code == 401
         assert expected in err.value.detail
