@@ -68,6 +68,15 @@ jobs:
           chmod +x scripts/deploy_code.sh
           chmod +x scripts/update_lambda_code.sh
 
+      - name: Create .env.dev for CI
+        run: |
+          cat <<EOF > .env.dev
+          ENV=dev
+          PROJECT_NAME=${PROJECT_NAME}
+          REGION=${REGION}
+          LOG_LEVEL=${LOG_LEVEL}
+          EOF
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
