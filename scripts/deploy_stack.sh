@@ -32,8 +32,6 @@ fi
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
 ARTIFACT_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-artifacts"
-ASSETS_BUCKET_NAME="${PROJECT_NAME}-${ENV}-${ACCOUNT_ID}-${REGION}-frontend"
-
 GIT_SHA="${GITSHA:-$(git rev-parse HEAD)}"
 
 ZIP_NAME="app-${GIT_SHA}.zip"
@@ -96,8 +94,7 @@ echo -e "\n\n--------------- DEPLOY S3/DB/IAM ------------------"
 deploy_stack "${PROJECT_NAME}-${ENV}-s3" "infra/s3.yaml"
 deploy_stack "${PROJECT_NAME}-${ENV}-data" "infra/data.yaml"
 deploy_stack "${PROJECT_NAME}-${ENV}-iam" "infra/iam.yaml" \
-  ArtifactBucketName="$ARTIFACT_BUCKET_NAME" \
-  AssetsBucketName="$ASSETS_BUCKET_NAME"
+  ArtifactBucketName="$ARTIFACT_BUCKET_NAME"
 
 
 echo -e "\n\n--------------- DEPLOY CODE ------------------"

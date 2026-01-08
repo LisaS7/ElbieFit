@@ -12,8 +12,6 @@ Parameters:
 
   ArtifactBucketName:
     Type: String
-  AssetsBucketName:
-    Type: String
 
 Conditions:
   IsDev: !Equals [!Ref EnvName, dev]
@@ -85,7 +83,6 @@ Resources:
                   - s3:ListBucket
                 Resource:
                   - !Sub 'arn:aws:s3:::${ArtifactBucketName}'
-                  - !Sub 'arn:aws:s3:::${AssetsBucketName}'
 
               - Effect: Allow
                 Action:
@@ -94,7 +91,6 @@ Resources:
                   - s3:DeleteObject
                 Resource:
                   - !Sub 'arn:aws:s3:::${ArtifactBucketName}/*'
-                  - !Sub 'arn:aws:s3:::${AssetsBucketName}/*'
 
               # Update Lambda code/config (edit ARNs)
               - Effect: Allow
