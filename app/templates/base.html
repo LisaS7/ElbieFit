@@ -19,10 +19,12 @@
   </head>
   <body>
     <header id="app-header" class="flex-row-spaced">
-      <div id="brand">
+
+      <a id="brand" href="/">
         <img src="{{ url_for('static', path='images/mascot/' ~ (theme or 'prehistoric') ~ '.png') }}">
         <p>ElbieFit</p>
-      </div>
+      </a>
+
       <button
       class="menu-toggle elevated"
       type="button"
