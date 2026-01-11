@@ -1,7 +1,11 @@
 # Run using
 # uv run python -m scripts.seed --dataset demo
 # or
-# uv run python -m scripts.seed --sub <demo sub> --dataset demo
+# uv run python -m scripts.seed \
+#  --dataset prod \
+#  --sub "<cognito sub>" \
+#  --display-name "Lisa" \
+#  --email "your@email"
 
 import argparse
 
@@ -26,6 +30,12 @@ def parse_args() -> argparse.Namespace:
         choices=["dev", "demo", "prod"],
         default="dev",
         help="Which dataset to seed",
+    )
+
+    parser.add_argument(
+        "--sub",
+        default=None,
+        help="Cognito user sub to seed data for",
     )
 
     parser.add_argument(
@@ -104,7 +114,12 @@ def main():
     args = parse_args()
     table = get_table()
 
-    pk = f"USER#{args.sub}"
+    if args.dataset == "dev":
+        user_sub = TEST_USER_SUB
+    else:
+        user_sub = args.sub
+
+    pk = f"USER#{user_sub}"
 
     if args.reset:
         if args.dataset == "demo":
@@ -117,7 +132,7 @@ def main():
     )
     seed_exercises(table, pk, args.dataset)
 
-    if args.dataset in {"test", "demo"}:
+    if args.dataset in {"dev", "demo"}:
         seed_workouts(table, pk, args.dataset)
 
 
