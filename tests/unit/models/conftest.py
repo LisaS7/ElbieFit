@@ -30,7 +30,7 @@ def exercise():
             "name": "Push-up",
             "muscles": ["chest", "triceps"],
             "equipment": "bodyweight",
-            "category": "strength",
+            "category": "push",
             "created_at": TEST_CREATED_DATETIME,
             "updated_at": TEST_UPDATED_DATETIME,
         }

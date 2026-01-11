@@ -12,7 +12,7 @@ def test_exercise_model_creates_instance_with_expected_fields(example_exercise):
     assert example_exercise.name == "Push-up"
     assert example_exercise.muscles == ["chest", "triceps"]
     assert example_exercise.equipment == "bodyweight"
-    assert example_exercise.category == "strength"
+    assert example_exercise.category == "push"
     assert isinstance(example_exercise.created_at, datetime)
     assert isinstance(example_exercise.updated_at, datetime)
 
@@ -31,6 +31,11 @@ def test_exercise_type_must_be_literal_exercise(exercise):
 def test_exercise_category_is_optional_and_defaults_to_none(exercise):
     ex = exercise(category=None)
     assert ex.category is None
+
+
+def test_invalid_category_raises_validation_error(exercise):
+    with pytest.raises(ValidationError):
+        exercise(category="strength")
 
 
 def test_to_ddb_item_converts_datetimes_using_dt_to_iso(monkeypatch, exercise):

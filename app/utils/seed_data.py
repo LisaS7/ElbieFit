@@ -41,16 +41,30 @@ def build_exercise_ids(dataset: str) -> dict[str, str]:
     """
     base = uuid.UUID("00000000-0000-0000-0000-000000000000")
     return {
-        "PUSHUP": str(uuid.uuid5(base, f"{dataset}-PUSHUP")),
-        "ROW": str(uuid.uuid5(base, f"{dataset}-ROW")),
-        "SQUAT": str(uuid.uuid5(base, f"{dataset}-SQUAT")),
-        "DEADLIFT": str(uuid.uuid5(base, f"{dataset}-DEADLIFT")),
-        "PLANK": str(uuid.uuid5(base, f"{dataset}-PLANK")),
-        "BURPEE": str(uuid.uuid5(base, f"{dataset}-BURPEE")),
-        "KETTLEBELL_SWING": str(uuid.uuid5(base, f"{dataset}-KETTLEBELL_SWING")),
-        "LUNGE": str(uuid.uuid5(base, f"{dataset}-LUNGE")),
-        "BENCH_PRESS": str(uuid.uuid5(base, f"{dataset}-BENCH_PRESS")),
-        "SHOULDER_PRESS": str(uuid.uuid5(base, f"{dataset}-SHOULDER_PRESS")),
+        # Bodyweight
+        "BW_SQUAT": str(uuid.uuid5(base, f"{dataset}-BW_SQUAT")),
+        "BW_KNEE_PUSHUP": str(uuid.uuid5(base, f"{dataset}-BW_KNEE_PUSHUP")),
+        # Barbell
+        "BB_SQUAT": str(uuid.uuid5(base, f"{dataset}-BB_SQUAT")),
+        "BB_DEADLIFT": str(uuid.uuid5(base, f"{dataset}-BB_DEADLIFT")),
+        # Kettlebell
+        "KB_SQUAT": str(uuid.uuid5(base, f"{dataset}-KB_SQUAT")),
+        "KB_LUNGE": str(uuid.uuid5(base, f"{dataset}-KB_LUNGE")),
+        "KB_SINGLE_LEG_DEADLIFT": str(
+            uuid.uuid5(base, f"{dataset}-KB_SINGLE_LEG_DEADLIFT")
+        ),
+        # Dumbbell
+        "DB_OVERHEAD_PRESS": str(uuid.uuid5(base, f"{dataset}-DB_OVERHEAD_PRESS")),
+        "DB_BENCH_PRESS": str(uuid.uuid5(base, f"{dataset}-DB_BENCH_PRESS")),
+        "DB_BICEP_CURL": str(uuid.uuid5(base, f"{dataset}-DB_BICEP_CURL")),
+        "DB_BENT_OVER_ROW": str(uuid.uuid5(base, f"{dataset}-DB_BENT_OVER_ROW")),
+        # Machine
+        "MACHINE_LAT_PULLDOWN": str(
+            uuid.uuid5(base, f"{dataset}-MACHINE_LAT_PULLDOWN")
+        ),
+        "MACHINE_TRICEP_EXTENSION": str(
+            uuid.uuid5(base, f"{dataset}-MACHINE_TRICEP_EXTENSION")
+        ),
     }
 
 
@@ -62,31 +76,33 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
     exercise_ids = build_exercise_ids(dataset)
 
     return [
+        # ──────────────── Bodyweight ────────────────
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['PUSHUP']}",
+            SK=f"EXERCISE#{exercise_ids['BW_SQUAT']}",
             type="exercise",
-            name="Push-up",
+            name="Squat",
+            muscles=["quads", "glutes", "hamstrings"],
+            equipment="bodyweight",
+            category="legs",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['BW_KNEE_PUSHUP']}",
+            type="exercise",
+            name="Knee Push-up",
             muscles=["chest", "triceps", "shoulders"],
             equipment="bodyweight",
             category="push",
             created_at=ts,
             updated_at=ts,
         ),
+        # ──────────────── Barbell ────────────────
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['ROW']}",
-            type="exercise",
-            name="Dumbbell Row",
-            muscles=["lats", "upper_back", "biceps"],
-            equipment="dumbbells",
-            category="pull",
-            created_at=ts,
-            updated_at=ts,
-        ),
-        Exercise(
-            PK=pk,
-            SK=f"EXERCISE#{exercise_ids['SQUAT']}",
+            SK=f"EXERCISE#{exercise_ids['BB_SQUAT']}",
             type="exercise",
             name="Back Squat",
             muscles=["quads", "glutes", "hamstrings"],
@@ -97,77 +113,113 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
         ),
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['DEADLIFT']}",
+            SK=f"EXERCISE#{exercise_ids['BB_DEADLIFT']}",
             type="exercise",
             name="Deadlift",
-            muscles=["hamstrings", "glutes", "back"],
+            muscles=["glutes", "hamstrings", "lower_back"],
             equipment="barbell",
-            category="hinge",
+            category="legs",
             created_at=ts,
             updated_at=ts,
         ),
+        # ──────────────── Kettlebell ────────────────
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['PLANK']}",
+            SK=f"EXERCISE#{exercise_ids['KB_SQUAT']}",
             type="exercise",
-            name="Plank",
-            muscles=["core"],
-            equipment="bodyweight",
-            category="core",
-            created_at=ts,
-            updated_at=ts,
-        ),
-        Exercise(
-            PK=pk,
-            SK=f"EXERCISE#{exercise_ids['BURPEE']}",
-            type="exercise",
-            name="Burpee",
-            muscles=["full_body"],
-            equipment="bodyweight",
-            category="conditioning",
-            created_at=ts,
-            updated_at=ts,
-        ),
-        Exercise(
-            PK=pk,
-            SK=f"EXERCISE#{exercise_ids['KETTLEBELL_SWING']}",
-            type="exercise",
-            name="Kettlebell Swing",
-            muscles=["glutes", "hamstrings", "back"],
+            name="Goblet Squat",
+            muscles=["quads", "glutes", "hamstrings", "core"],
             equipment="kettlebell",
-            category="hinge",
-            created_at=ts,
-            updated_at=ts,
-        ),
-        Exercise(
-            PK=pk,
-            SK=f"EXERCISE#{exercise_ids['LUNGE']}",
-            type="exercise",
-            name="Lunge",
-            muscles=["quads", "glutes", "hamstrings"],
-            equipment="dumbbells",
             category="legs",
             created_at=ts,
             updated_at=ts,
         ),
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['BENCH_PRESS']}",
+            SK=f"EXERCISE#{exercise_ids['KB_LUNGE']}",
             type="exercise",
-            name="Bench Press",
-            muscles=["chest", "triceps", "shoulders"],
-            equipment="barbell",
+            name="Lunge",
+            muscles=["quads", "glutes", "hamstrings"],
+            equipment="kettlebell",
+            category="legs",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['KB_SINGLE_LEG_DEADLIFT']}",
+            type="exercise",
+            name="Single-Leg Deadlift",
+            muscles=["glutes", "hamstrings", "core"],
+            equipment="kettlebell",
+            category="legs",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        # ──────────────── Dumbbell ────────────────
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['DB_OVERHEAD_PRESS']}",
+            type="exercise",
+            name="Overhead Press",
+            muscles=["shoulders", "triceps"],
+            equipment="dumbbell",
             category="push",
             created_at=ts,
             updated_at=ts,
         ),
         Exercise(
             PK=pk,
-            SK=f"EXERCISE#{exercise_ids['SHOULDER_PRESS']}",
+            SK=f"EXERCISE#{exercise_ids['DB_BENCH_PRESS']}",
             type="exercise",
-            name="Shoulder Press",
-            muscles=["shoulders", "triceps"],
-            equipment="dumbbells",
+            name="Bench Press",
+            muscles=["chest", "triceps", "shoulders"],
+            equipment="dumbbell",
+            category="push",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['DB_BICEP_CURL']}",
+            type="exercise",
+            name="Bicep Curl",
+            muscles=["biceps"],
+            equipment="dumbbell",
+            category="pull",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['DB_BENT_OVER_ROW']}",
+            type="exercise",
+            name="Bent Over Row",
+            muscles=["lats", "upper_back", "biceps"],
+            equipment="dumbbell",
+            category="pull",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        # ──────────────── Machine ────────────────
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['MACHINE_LAT_PULLDOWN']}",
+            type="exercise",
+            name="Lat Pulldown",
+            muscles=["lats", "upper_back", "biceps"],
+            equipment="machine",
+            category="pull",
+            created_at=ts,
+            updated_at=ts,
+        ),
+        Exercise(
+            PK=pk,
+            SK=f"EXERCISE#{exercise_ids['MACHINE_TRICEP_EXTENSION']}",
+            type="exercise",
+            name="Tricep Extension",
+            muscles=["triceps"],
+            equipment="machine",
             category="push",
             created_at=ts,
             updated_at=ts,
@@ -184,15 +236,15 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
     exercise_ids = build_exercise_ids(dataset)
     workouts: List[Tuple[Workout, List[WorkoutSet]]] = []
 
-    # Workout 1: Push/Pull B
+    # Workout 1: Push/Pull
     w1 = Workout(
         PK=pk,
         SK="WORKOUT#2025-11-04#W1",
         type="workout",
         date=date(2025, 11, 4),
-        name="Workout B",
-        tags=["push", "pull", "upper_body"],
-        notes="Push/pull day",
+        name="Upper Body",
+        tags=["push", "pull"],
+        notes="Pressy/pully.",
         created_at=ts,
         updated_at=ts,
     )
@@ -201,10 +253,10 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
             PK=pk,
             SK="WORKOUT#2025-11-04#W1#SET#001",
             type="set",
-            exercise_id=exercise_ids["PUSHUP"],
+            exercise_id=exercise_ids["DB_BENCH_PRESS"],
             set_number=1,
-            reps=12,
-            weight_kg=Decimal(0.0),
+            reps=8,
+            weight_kg=Decimal(12.0),
             rpe=7,
             created_at=ts,
             updated_at=ts,
@@ -213,10 +265,10 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
             PK=pk,
             SK="WORKOUT#2025-11-04#W1#SET#002",
             type="set",
-            exercise_id=exercise_ids["ROW"],
+            exercise_id=exercise_ids["MACHINE_LAT_PULLDOWN"],
             set_number=2,
             reps=10,
-            weight_kg=Decimal(20.0),
+            weight_kg=Decimal(30.0),
             rpe=8,
             created_at=ts,
             updated_at=ts,
@@ -224,15 +276,15 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
     ]
     workouts.append((w1, s1))
 
-    # Workout 2: Lower Body Strength
+    # Workout 2: Legs
     w2 = Workout(
         PK=pk,
         SK="WORKOUT#2025-11-06#W2",
         type="workout",
         date=date(2025, 11, 6),
-        name="Lower Body Strength",
-        tags=["legs", "strength"],
-        notes="Focused on legs today. Knees screamed in ancient tongues.",
+        name="Legs",
+        tags=["legs"],
+        notes="Lower body day.",
         created_at=ts,
         updated_at=ts,
     )
@@ -241,9 +293,9 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
             PK=pk,
             SK="WORKOUT#2025-11-06#W2#SET#001",
             type="set",
-            exercise_id=exercise_ids["SQUAT"],
+            exercise_id=exercise_ids["BB_SQUAT"],
             set_number=1,
-            reps=8,
+            reps=6,
             weight_kg=Decimal(40.0),
             rpe=7,
             created_at=ts,
@@ -253,7 +305,7 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
             PK=pk,
             SK="WORKOUT#2025-11-06#W2#SET#002",
             type="set",
-            exercise_id=exercise_ids["DEADLIFT"],
+            exercise_id=exercise_ids["BB_DEADLIFT"],
             set_number=2,
             reps=5,
             weight_kg=Decimal(60.0),
@@ -264,15 +316,15 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
     ]
     workouts.append((w2, s2))
 
-    # Workout 3: Cardio & Core
+    # Workout 3: Accessories
     w3 = Workout(
         PK=pk,
         SK="WORKOUT#2025-11-08#W3",
         type="workout",
         date=date(2025, 11, 8),
-        name="Cardio & Core",
-        tags=["cardio", "core"],
-        notes="Felt like my soul was escaping through my sweat glands.",
+        name="Accessories",
+        tags=["push", "pull", "legs"],
+        notes="Bits and bobs.",
         created_at=ts,
         updated_at=ts,
     )
@@ -281,49 +333,9 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
             PK=pk,
             SK="WORKOUT#2025-11-08#W3#SET#001",
             type="set",
-            exercise_id=exercise_ids["PLANK"],
+            exercise_id=exercise_ids["KB_LUNGE"],
             set_number=1,
-            reps=1,
-            weight_kg=Decimal(0.0),
-            rpe=6,
-            created_at=ts,
-            updated_at=ts,
-        ),
-        WorkoutSet(
-            PK=pk,
-            SK="WORKOUT#2025-11-08#W3#SET#002",
-            type="set",
-            exercise_id=exercise_ids["BURPEE"],
-            set_number=2,
             reps=10,
-            weight_kg=Decimal(0.0),
-            rpe=9,
-            created_at=ts,
-            updated_at=ts,
-        ),
-    ]
-    workouts.append((w3, s3))
-
-    # Workout 4: Full Body Flow
-    w4 = Workout(
-        PK=pk,
-        SK="WORKOUT#2025-11-10#W4",
-        type="workout",
-        date=date(2025, 11, 10),
-        name="Full Body Flow",
-        tags=["full_body", "conditioning"],
-        notes="Everything popped but in a friendly way.",
-        created_at=ts,
-        updated_at=ts,
-    )
-    s4 = [
-        WorkoutSet(
-            PK=pk,
-            SK="WORKOUT#2025-11-10#W4#SET#001",
-            type="set",
-            exercise_id=exercise_ids["KETTLEBELL_SWING"],
-            set_number=1,
-            reps=15,
             weight_kg=Decimal(12.0),
             rpe=7,
             created_at=ts,
@@ -331,57 +343,17 @@ def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet
         ),
         WorkoutSet(
             PK=pk,
-            SK="WORKOUT#2025-11-10#W4#SET#002",
+            SK="WORKOUT#2025-11-08#W3#SET#002",
             type="set",
-            exercise_id=exercise_ids["LUNGE"],
+            exercise_id=exercise_ids["DB_BICEP_CURL"],
             set_number=2,
             reps=12,
-            weight_kg=Decimal(10.0),
+            weight_kg=Decimal(8.0),
             rpe=8,
             created_at=ts,
             updated_at=ts,
         ),
     ]
-    workouts.append((w4, s4))
-
-    # Workout 5: Push Day A
-    w5 = Workout(
-        PK=pk,
-        SK="WORKOUT#2025-11-12#W5",
-        type="workout",
-        date=date(2025, 11, 12),
-        name="Push Day A",
-        tags=["push", "upper_body"],
-        notes="Chest and triceps howled like a drowned cult choir.",
-        created_at=ts,
-        updated_at=ts,
-    )
-    s5 = [
-        WorkoutSet(
-            PK=pk,
-            SK="WORKOUT#2025-11-12#W5#SET#001",
-            type="set",
-            exercise_id=exercise_ids["BENCH_PRESS"],
-            set_number=1,
-            reps=6,
-            weight_kg=Decimal(35.0),
-            rpe=7,
-            created_at=ts,
-            updated_at=ts,
-        ),
-        WorkoutSet(
-            PK=pk,
-            SK="WORKOUT#2025-11-12#W5#SET#002",
-            type="set",
-            exercise_id=exercise_ids["SHOULDER_PRESS"],
-            set_number=2,
-            reps=8,
-            weight_kg=Decimal(15.0),
-            rpe=8,
-            created_at=ts,
-            updated_at=ts,
-        ),
-    ]
-    workouts.append((w5, s5))
+    workouts.append((w3, s3))
 
     return workouts
