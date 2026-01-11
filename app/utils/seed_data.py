@@ -20,13 +20,13 @@ def _build_base_profile(pk: str, display_name: str, email: str) -> UserProfile:
     )
 
 
-def build_profile(pk: str) -> UserProfile:
+def build_profile(
+    pk: str, display_name: str = "Lisa Test", email: str = "lisa@example.com"
+) -> UserProfile:
     """
     Build the test user profile.
     """
-    return _build_base_profile(
-        pk=pk, display_name="Lisa Test", email="lisa@example.com"
-    )
+    return _build_base_profile(pk=pk, display_name=display_name, email=email)
 
 
 def build_demo_profile(pk: str) -> UserProfile:

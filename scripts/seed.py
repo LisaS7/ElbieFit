@@ -1,7 +1,7 @@
 # Run using
-# uv run python -m scripts.seed --dataset test
+# uv run python -m scripts.seed --dataset demo
 # or
-# uv run python -m scripts.seed --sub <test sub> --dataset demo
+# uv run python -m scripts.seed --sub <demo sub> --dataset demo
 
 import argparse
 
@@ -22,16 +22,22 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Seed DynamoDB user data")
 
     parser.add_argument(
-        "--sub",
-        default=TEST_USER_SUB,
-        help="Cognito user sub to seed data for",
+        "--dataset",
+        choices=["dev", "demo", "prod"],
+        default="dev",
+        help="Which dataset to seed",
     )
 
     parser.add_argument(
-        "--dataset",
-        choices=["test", "demo"],
-        default="test",
-        help="Which dataset to seed",
+        "--display-name",
+        default=None,
+        help="Display name for profile (prod recommended)",
+    )
+
+    parser.add_argument(
+        "--email",
+        default=None,
+        help="Email for profile (prod recommended)",
     )
 
     parser.add_argument(
@@ -61,9 +67,15 @@ def purge_user_items(table, pk: str):
     print(f"Deleted {len(items)} items for {pk}")
 
 
-def seed_profile(table, pk: str, dataset: str):
+def seed_profile(
+    table, pk: str, dataset: str, *, display_name: str | None, email: str | None
+):
     if dataset == "demo":
         profile = build_demo_profile(pk)
+    elif dataset == "prod":
+        if not display_name or not email:
+            raise ValueError("prod seeding requires --display-name and --email")
+        profile = build_profile(pk, display_name=display_name, email=email)
     else:
         profile = build_profile(pk)
 
@@ -100,9 +112,13 @@ def main():
         else:
             raise ValueError("Reset only allowed for demo profile")
 
-    seed_profile(table, pk, args.dataset)
+    seed_profile(
+        table, pk, args.dataset, display_name=args.display_name, email=args.email
+    )
     seed_exercises(table, pk, args.dataset)
-    seed_workouts(table, pk, args.dataset)
+
+    if args.dataset in {"test", "demo"}:
+        seed_workouts(table, pk, args.dataset)
 
 
 if __name__ == "__main__":
