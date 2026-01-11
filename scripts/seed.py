@@ -59,9 +59,13 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def get_table():
+def get_table(env: str):
+    if env == "demo":
+        table_name = "elbiefit-prod-table"
+    else:
+        table_name = f"elbiefit-{env}-table"
     dynamodb = boto3.resource("dynamodb", region_name=settings.REGION)
-    return dynamodb.Table(settings.DDB_TABLE_NAME)  # type: ignore
+    return dynamodb.Table(table_name)  # type: ignore
 
 
 def purge_user_items(table, pk: str):
@@ -112,7 +116,7 @@ def seed_workouts(table, pk: str, dataset: str):
 
 def main():
     args = parse_args()
-    table = get_table()
+    table = get_table(args.dataset)
 
     if args.dataset == "dev":
         user_sub = TEST_USER_SUB
