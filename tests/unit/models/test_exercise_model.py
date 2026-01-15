@@ -70,3 +70,20 @@ def test_to_ddb_item_converts_datetimes_using_dt_to_iso(monkeypatch, exercise):
     # Sanity check: no datetime objects sneak through
     assert not isinstance(item["created_at"], datetime)
     assert not isinstance(item["updated_at"], datetime)
+
+
+def test_invalid_equipment_raises_validation_error(exercise):
+    with pytest.raises(ValidationError) as exc:
+        exercise(equipment="definitely-not-real-equipment")
+
+    # Optional: check it’s the specific field that failed
+    errors = exc.value.errors()
+    assert any(e["loc"] == ("equipment",) for e in errors)
+
+
+def test_invalid_muscle_raises_validation_error(exercise):
+    with pytest.raises(ValidationError) as exc:
+        exercise(muscles=["chest", "mystery-muscle"])
+
+    errors = exc.value.errors()
+    assert any(e["loc"] == ("muscles",) for e in errors)
