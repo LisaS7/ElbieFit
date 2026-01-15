@@ -4,6 +4,7 @@ from fastapi.responses import RedirectResponse
 
 from app.settings import settings
 from app.utils.log import logger
+from app.utils.theme import get_theme_cookie_from_profile
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -87,6 +88,12 @@ def auth_callback(request: Request, code: str):
     logger.debug("Authentication successful; redirecting home and setting cookies")
     response = RedirectResponse("/", status_code=302)
     set_cookies(response, token_data)
+
+    # don't let theme give us a 500!
+    try:
+        get_theme_cookie_from_profile(response, id_token=token_data["id_token"])
+    except Exception:
+        logger.warning("Skipping theme bootstrap (unable to decode id_token)")
 
     return response
 
