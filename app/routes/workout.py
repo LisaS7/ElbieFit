@@ -107,8 +107,20 @@ def get_all_workouts(
 
 
 @router.get("/new-form")
-def get_new_form(request: Request):
-    return render_template(request, "workouts/_new_form.html")
+def get_new_form(
+    request: Request,
+    claims=Depends(auth.require_auth),
+    profile_repo: ProfileRepository = Depends(get_profile_repo),
+):
+    user_sub = claims["sub"]
+    profile = profile_repo.get_for_user(user_sub)
+    tz = profile.timezone if profile else None
+
+    return render_template(
+        request,
+        "workouts/_new_form.html",
+        context={"default_date": dates.today_in_tz(tz)},
+    )
 
 
 @router.get("/{workout_date}/{workout_id}/set/form")

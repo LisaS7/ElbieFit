@@ -1,4 +1,7 @@
 from datetime import date, datetime, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+# ----------- ISO -----------
 
 
 def dt_to_iso(dt: datetime) -> str:
@@ -25,6 +28,39 @@ def iso_to_dt(d: str) -> datetime:
 
 def now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+# ----------- Timezone -----------
+
+
+def _safe_zoneinfo(tz_name: str | None) -> ZoneInfo:
+    """
+    Return a ZoneInfo for tz_name, falling back to UTC if tz_name is missing/invalid.
+    """
+    if not tz_name:
+        return ZoneInfo("UTC")
+    try:
+        return ZoneInfo(tz_name)
+    except ZoneInfoNotFoundError:
+        return ZoneInfo("UTC")
+
+
+def now_in_tz(tz_name: str | None) -> datetime:
+    """
+    Current moment in the user's timezone (falls back to UTC).
+    """
+    tz = _safe_zoneinfo(tz_name)
+    return now().astimezone(tz)
+
+
+def today_in_tz(tz_name: str | None) -> date:
+    """
+    User-local 'today' as a date (falls back to UTC).
+    """
+    return now_in_tz(tz_name).date()
+
+
+# ----------- Formatting -----------
 
 
 def format_duration(seconds: int) -> str:
