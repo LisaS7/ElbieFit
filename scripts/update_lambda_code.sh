@@ -37,6 +37,9 @@ GIT_SHA="${GITSHA:-$(git rev-parse HEAD)}"
 ZIP_NAME="app-${GIT_SHA}.zip"
 
 
+echo "ARTIFACT_BUCKET_NAME=$ARTIFACT_BUCKET_NAME"
+echo "ZIP_NAME=$ZIP_NAME"
+
 # --- Update lambda ---
 
 echo "Forcing update of lambda code whether it wants to or not..."
@@ -48,3 +51,14 @@ aws lambda update-function-code \
   --region "${REGION}" >/dev/null
 aws lambda wait function-updated --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
 aws lambda wait function-active  --function-name "${PROJECT_NAME}-${ENV}-app" --region "$REGION"
+
+
+# ---- Confirmation -----
+
+echo ""
+echo "✅ Lambda update complete"
+
+aws lambda get-function \
+  --function-name "${PROJECT_NAME}-${ENV}-app" \
+  --query "{Function:Configuration.FunctionName,LastModified:Configuration.LastModified,CodeSha256:Configuration.CodeSha256}" \
+  --output table

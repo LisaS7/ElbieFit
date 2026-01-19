@@ -123,3 +123,5 @@ aws s3 ls "s3://${ARTIFACT_BUCKET_NAME}/${ZIP_NAME}" --region "$REGION"
 
 create_zip
 load_zip
+
+"${SCRIPT_DIR}/update_lambda_code.sh" "$ENV_ARG"
