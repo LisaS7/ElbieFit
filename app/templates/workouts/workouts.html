@@ -4,41 +4,42 @@
 
 {% block content %}
 <header id="page-header" class="flex-row-spaced">
-    <h1>Workout Log</h1>
-    <button
-        class="icon-button elevated"
-        type="button"
-        hx-get="/workout/new-form"
-        hx-target="#new-workout-form-container"
-        hx-swap="innerHTML"
-        >
-        +
-    </button>
+  <h1>Workout Log</h1>
+  <button
+    class="icon-button"
+    type="button"
+    hx-get="/workout/new-form"
+    hx-target="#new-workout-form-container"
+    hx-swap="innerHTML"
+  >
+    +
+  </button>
 </header>
+
 <section id="new-workout-form-container"></section>
+
 <section id="page-container">
-    {% if workouts and workouts|length %}
-        {% for workout in workouts %}
-            <div class="card workout-card">
-                <div class="workout-date">{{ workout.date }}</div>
-                <div class="workout-name">{{ workout.name }}</div>
-                <div class="tags-group ">
-                    {% for tag in workout.tags or [] %}
-                        <span class="tag">{{ tag }}</span>
-                    {% endfor %}
-                </div>
+  {% if workouts and workouts|length %}
+    {% for workout in workouts %}
+      <div class="card workout-card">
+        <div class="workout-date">{{ workout.date }}</div>
+        <div class="workout-name">{{ workout.name }}</div>
 
-                <a class="icon-button elevated"
-                 href="{{ url_for('view_workout', workout_date=workout.date, workout_id=workout.workout_id) }}"
-                >
-                    👁
-                </a>
+        <div class="tags-group">
+          {% for tag in workout.tags or [] %}
+            <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
 
-            </div>
-        {% endfor %}
-    {% else %}
-        <p>No workouts logged yet. The barbell is waiting!</p>
-    {% endif %}
+        <a class="icon-button"
+           href="{{ url_for('view_workout', workout_date=workout.date, workout_id=workout.workout_id) }}">
+          👁
+        </a>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No workouts logged yet. The barbell is waiting!</p>
+  {% endif %}
 </section>
 {% endblock %}
 

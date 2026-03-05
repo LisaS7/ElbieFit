@@ -1,71 +1,67 @@
-html[data-theme='apothecary'] {
-  /* Page + surfaces */
-  --color-bg: #f5efe4;
-  --color-panel: #efe6d6;
-  --color-card: #fffaf2;
-  --color-card-shadow-base: #d6cbb8;
-  --color-borders: #7f9a72;
+/* Default theme is whatever :root defines */
 
-  /* Text */
-  --color-heading-dark: #3a342b;
-  --color-font-light: #6a5f50;
-  --color-input-text: #3a342b;
+/* ──────────────── Ink (default-ish) ──────────────── */
+html[data-theme='ink'] {
+  --color-bg: #11121a;
+  --color-panel: #171827;
+  --color-card: #1d1f31;
+  --color-borders: #30324a;
 
-  /* Accents */
-  --color-tag: #8fb38a;
+  --color-heading: #f1ecff;
+  --color-text: #c6c2e2;
+  --color-muted: #9a96b8;
 
-  /* Buttons */
-  --color-button: #6f8f6b;
-  --color-button-dark: #587457;
-  --color-button-text: #fffdf6;
-  --color-icon-button-text: var(--color-button-dark);
+  --color-accent: #7aa2ff;
+  --color-tag: #9b90ff;
 
-  --color-button-secondary: #d7b16c;
-  --color-button-secondary-dark: #b89455;
+  --color-button: #7aa2ff;
+  --color-button-text: #0d1020;
+  --color-button-secondary: #a6accd;
 
-  /* Nav + hover */
-  --color-nav-hover: #6a7f5e;
-
-  /* Banner & toast */
-  --color-banner-bg: #4a4034;
-  --color-banner-text: #f8f2e6;
-
-  --color-toast-bg: #f8f2e6;
-  --color-toast-text: #3a342b;
+  --color-toast-bg: #f1ecff;
+  --color-toast-text: #11121a;
 }
 
-html[data-theme='ink'] {
-  /* Page + surfaces */
-  --color-bg: #1b1a24;
-  --color-panel: #242336;
-  --color-card: #2b2a3d;
-  --color-card-shadow-base: #12111a;
-  --color-borders: #4c4a6a;
+/* ──────────────── Apothecary Night (green-gold pastel) ──────────────── */
+html[data-theme='apothecary'] {
+  --color-bg: #0f1413;
+  --color-panel: #141b19;
+  --color-card: #1b2421;
+  --color-borders: #2b3a35;
 
-  /* Text */
-  --color-heading-dark: #f1ecff;
-  --color-font-light: #c6c2e2;
-  --color-input-text: #f1ecff;
+  --color-heading: #eaf6f1;
+  --color-text: #bcd6cb;
+  --color-muted: #88a79a;
 
-  /* Accents */
-  --color-tag: #7a74a6;
+  --color-accent: #7fe0b3;
+  --color-tag: #9fe7c5;
 
-  /* Buttons */
-  --color-button: #5b628f;
-  --color-button-dark: #474d73;
-  --color-button-text: #f6f4ff;
-  --color-icon-button-text: var(--color-tag);
+  --color-button: #7fe0b3;
+  --color-button-text: #07110d;
+  --color-button-secondary: #d6c08b;
 
-  --color-button-secondary: #8b7fae;
-  --color-button-secondary-dark: #6f648f;
+  --color-toast-bg: #eaf6f1;
+  --color-toast-text: #0f1413;
+}
 
-  /* Nav + hover */
-  --color-nav-hover: #3f456b;
+/* ──────────────── Prehistoric Night (warm pastel ember) ──────────────── */
+html[data-theme='prehistoric'] {
+  --color-bg: #1a120e;
+  --color-panel: #221814;
+  --color-card: #2b1f19;
+  --color-borders: #44332b;
 
-  /* Banner & toast */
-  --color-banner-bg: #12101d;
-  --color-banner-text: #e6e2ff;
+  --color-heading: #fff4e6;
+  --color-text: #f2d7c2;
+  --color-muted: #c4a391;
 
-  --color-toast-bg: #e6e2ff;
-  --color-toast-text: #1b1a24;
+  --color-accent: #ffb38a;
+  --color-tag: #ffd59e;
+
+  --color-button: #ffb38a;
+  --color-button-text: #2a1207;
+  --color-button-secondary: #ffe07a;
+
+  --color-toast-bg: #fff4e6;
+  --color-toast-text: #1a120e;
 }

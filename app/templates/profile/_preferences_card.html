@@ -1,65 +1,68 @@
 <section id="preferences-card" class="card">
-  <header class="card-header">
+
+  <div class="flex-row-spaced">
     <h3>Preferences</h3>
     {% if prefs_success %}
-      <p class="form-success">Saved ✅</p>
+      <p class="muted">Saved ✅</p>
     {% endif %}
-  </header>
-
-  <div class="card-body">
-    <form
-      class="form"
-      hx-post="/profile/preferences"
-      hx-target="#preferences-card"
-      hx-swap="outerHTML"
-      hx-disabled-elt="find button[type=submit]"
-    >
-      <div class="form-row">
-        <label class="checkbox">
-          <input
-            type="checkbox"
-            name="show_tips"
-            value="true"
-            {% set show_tips_value = (prefs_form.show_tips if prefs_form is not none else profile.preferences.show_tips) %}
-            {% if show_tips_value %}checked{% endif %}
-          />
-          Show tips
-        </label>
-        {% if prefs_errors and prefs_errors.show_tips %}
-          <p class="form-error">{{ prefs_errors.show_tips }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-row">
-        <label for="theme">Theme</label>
-        {% set theme_value = (prefs_form.theme if prefs_form else profile.preferences.theme) %}
-        <select id="theme" name="theme">
-          {% for t in themes %}
-            <option value="{{ t }}" {% if theme_value == t %}selected{% endif %}>
-              {{ t|replace("_", " ")|title }}
-            </option>
-          {% endfor %}
-        </select>
-        {% if prefs_errors and prefs_errors.theme %}
-          <p class="form-error">{{ prefs_errors.theme }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-row">
-        <label for="units">Units</label>
-        {% set units_value = (prefs_form.units if prefs_form else profile.preferences.units) %}
-        <select id="units" name="units">
-          <option value="metric" {% if units_value == "metric" %}selected{% endif %}>Metric (kg)</option>
-          <option value="imperial" {% if units_value == "imperial" %}selected{% endif %}>Imperial (lb)</option>
-        </select>
-        {% if prefs_errors and prefs_errors.units %}
-          <p class="form-error">{{ prefs_errors.units }}</p>
-        {% endif %}
-      </div>
-
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Save preferences</button>
-      </div>
-    </form>
   </div>
+
+  <form
+    hx-post="/profile/preferences"
+    hx-target="#preferences-card"
+    hx-swap="outerHTML"
+    hx-disabled-elt="find button[type=submit]"
+  >
+
+    <div class="form-field">
+      <label>
+        <input
+          type="checkbox"
+          name="show_tips"
+          value="true"
+          {% set show_tips_value = (prefs_form.show_tips if prefs_form is not none else profile.preferences.show_tips) %}
+          {% if show_tips_value %}checked{% endif %}
+        />
+        Show tips
+      </label>
+
+      {% if prefs_errors and prefs_errors.show_tips %}
+        <p class="muted">{{ prefs_errors.show_tips }}</p>
+      {% endif %}
+    </div>
+
+    <div class="form-field">
+      <label for="theme">Theme</label>
+      {% set theme_value = (prefs_form.theme if prefs_form else profile.preferences.theme) %}
+      <select id="theme" name="theme">
+        {% for t in themes %}
+          <option value="{{ t }}" {% if theme_value == t %}selected{% endif %}>
+            {{ t|replace("_", " ")|title }}
+          </option>
+        {% endfor %}
+      </select>
+
+      {% if prefs_errors and prefs_errors.theme %}
+        <p class="muted">{{ prefs_errors.theme }}</p>
+      {% endif %}
+    </div>
+
+    <div class="form-field">
+      <label for="units">Units</label>
+      {% set units_value = (prefs_form.units if prefs_form else profile.preferences.units) %}
+      <select id="units" name="units">
+        <option value="metric" {% if units_value == "metric" %}selected{% endif %}>Metric (kg)</option>
+        <option value="imperial" {% if units_value == "imperial" %}selected{% endif %}>Imperial (lb)</option>
+      </select>
+
+      {% if prefs_errors and prefs_errors.units %}
+        <p class="muted">{{ prefs_errors.units }}</p>
+      {% endif %}
+    </div>
+
+    <div class="form-row">
+      <button type="submit" class="button">Save preferences</button>
+    </div>
+
+  </form>
 </section>

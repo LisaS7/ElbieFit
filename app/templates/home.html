@@ -1,53 +1,57 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="home">
-
   {% if not is_authed %}
-    <section class="home-hero">
+    <section class="card">
       <h1>Welcome to ElbieFit</h1>
-      <p class="subtitle">Logs your lifts. Guards your gains.</p>
+      <p class="muted">Logs your lifts. Guards your gains.</p>
 
-      <div class="home-actions">
-        <a class="btn" href="/auth/login">Log in</a>
-        <a class="btn btn-secondary" href="/workout/all">View Workouts</a>
+      <div class="form-row">
+        <a class="button" href="/auth/login">Log in</a>
+        <a class="button secondary" href="/workout/all">View Workouts</a>
       </div>
 
-      <div class="home-mascot">
-        <img src="{{ url_for('static', path='images/mascot/' ~ (theme or 'prehistoric') ~ '.png') }}">
+      <div style="margin-top: 1rem;">
+        <img
+          alt="ElbieFit mascot"
+          style="width: 96px; height: auto;"
+          src="{{ url_for('static', path='images/mascot/' ~ (theme or 'prehistoric') ~ '.png') }}"
+        >
       </div>
     </section>
 
   {% else %}
-    <section class="home-hero">
+    <section class="card">
       <h1>ElbieFit</h1>
-      <p class="subtitle">Ready when you are.</p>
+      <p class="muted">Ready when you are.</p>
     </section>
 
-    <section class="home-panel">
+    <section class="card" style="margin-top: 1rem;">
       <h2>Recent workouts</h2>
 
       {% if recent_workouts %}
-        <ul class="home-list">
+        <div style="display: grid; gap: 0.6rem; margin-top: 0.75rem;">
           {% for w in recent_workouts %}
-            <li class="home-list-item">
-              <div class="home-list-main">
-                <div class="home-list-title">{{ w.name or "Workout" }}</div>
-                <div class="home-list-meta">{{ w.date.isoformat() }}</div>
-              </div>
+            <div class="card" style="padding: 0.75rem;">
+              <div class="flex-row-spaced">
+                <div>
+                  <div style="font-weight: 700; color: var(--color-heading);">
+                    {{ w.name or "Workout" }}
+                  </div>
+                  <div class="muted">{{ w.date.isoformat() }}</div>
+                </div>
 
-              <a class="icon-button elevated"
-                 href="{{ url_for('view_workout', workout_date=w.date, workout_id=w.workout_id) }}">
-                👁
-              </a>
-            </li>
+                <a class="icon-button"
+                   href="{{ url_for('view_workout', workout_date=w.date, workout_id=w.workout_id) }}">
+                  👁
+                </a>
+              </div>
+            </div>
           {% endfor %}
-        </ul>
+        </div>
       {% else %}
         <p class="muted">No workouts yet. Go forge one. 🪨</p>
       {% endif %}
     </section>
   {% endif %}
-
-</div>
 {% endblock %}

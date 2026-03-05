@@ -3,36 +3,57 @@
 {% block title %}All Exercises{% endblock %}
 
 {% block content %}
+
 <header id="page-header" class="flex-row-spaced">
     <h1>Exercises</h1>
 </header>
+
 <section id="new-exercise-form-container"></section>
+
 <section id="page-container">
+
     {% if exercises and exercises|length %}
         {% for exercise in exercises %}
+
             <div class="card exercise-card">
-                <div class="exercise-name">{{ exercise.name }}</div>
-                {# TODO: finsih styling for equipment and category #}
-                <div class="exercise-equipment">{{ exercise.equipment }}</div>
-                <div class="exercise-category">{{ exercise.category }}</div>
-                <div class="tags-group">
+
+                <div class="card-header">
+                    <div class="exercise-name">{{ exercise.name }}</div>
+                </div>
+
+                <div class="card-meta">
+                    <span class="exercise-equipment">
+                        {{ exercise.equipment or "Bodyweight" }}
+                    </span>
+
+                    <span class="exercise-category">
+                        {{ exercise.category or "General" }}
+                    </span>
+                </div>
+
+                <div class="tag-list">
                     {% for muscle in exercise.muscles or [] %}
                         <span class="tag">{{ muscle }}</span>
                     {% endfor %}
                 </div>
-                {# TODO: make edit button work #}
-                <button class="icon-button elevated"
+
+                <div class="card-actions">
+                    <button
+                        class="icon-button elevated"
                         type="button"
-                        aria-label="Edit">
-                ✎
-                </button>
+                        aria-label="Edit exercise">
+                        ✎
+                    </button>
+                </div>
+
             </div>
+
         {% endfor %}
+
     {% else %}
         <p>No exercises found!</p>
     {% endif %}
+
 </section>
+
 {% endblock %}
-
-
-
