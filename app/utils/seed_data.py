@@ -29,45 +29,39 @@ def build_profile(
     return _build_base_profile(pk=pk, display_name=display_name, email=email)
 
 
-def build_exercise_ids(dataset: str) -> dict[str, str]:
+def build_exercise_ids() -> dict[str, str]:
     """
-    Deterministic exercise IDs per dataset (demo/test).
+    Deterministic exercise IDs
     """
     base = uuid.UUID("00000000-0000-0000-0000-000000000000")
     return {
         # Bodyweight
-        "BW_SQUAT": str(uuid.uuid5(base, f"{dataset}-BW_SQUAT")),
-        "BW_KNEE_PUSHUP": str(uuid.uuid5(base, f"{dataset}-BW_KNEE_PUSHUP")),
+        "BW_SQUAT": str(uuid.uuid5(base, "BW_SQUAT")),
+        "BW_KNEE_PUSHUP": str(uuid.uuid5(base, "BW_KNEE_PUSHUP")),
         # Barbell
-        "BB_SQUAT": str(uuid.uuid5(base, f"{dataset}-BB_SQUAT")),
-        "BB_DEADLIFT": str(uuid.uuid5(base, f"{dataset}-BB_DEADLIFT")),
+        "BB_SQUAT": str(uuid.uuid5(base, "BB_SQUAT")),
+        "BB_DEADLIFT": str(uuid.uuid5(base, "BB_DEADLIFT")),
         # Kettlebell
-        "KB_SQUAT": str(uuid.uuid5(base, f"{dataset}-KB_SQUAT")),
-        "KB_LUNGE": str(uuid.uuid5(base, f"{dataset}-KB_LUNGE")),
-        "KB_SINGLE_LEG_DEADLIFT": str(
-            uuid.uuid5(base, f"{dataset}-KB_SINGLE_LEG_DEADLIFT")
-        ),
+        "KB_SQUAT": str(uuid.uuid5(base, "KB_SQUAT")),
+        "KB_LUNGE": str(uuid.uuid5(base, "KB_LUNGE")),
+        "KB_SINGLE_LEG_DEADLIFT": str(uuid.uuid5(base, "KB_SINGLE_LEG_DEADLIFT")),
         # Dumbbell
-        "DB_OVERHEAD_PRESS": str(uuid.uuid5(base, f"{dataset}-DB_OVERHEAD_PRESS")),
-        "DB_BENCH_PRESS": str(uuid.uuid5(base, f"{dataset}-DB_BENCH_PRESS")),
-        "DB_BICEP_CURL": str(uuid.uuid5(base, f"{dataset}-DB_BICEP_CURL")),
-        "DB_BENT_OVER_ROW": str(uuid.uuid5(base, f"{dataset}-DB_BENT_OVER_ROW")),
+        "DB_OVERHEAD_PRESS": str(uuid.uuid5(base, "DB_OVERHEAD_PRESS")),
+        "DB_BENCH_PRESS": str(uuid.uuid5(base, "DB_BENCH_PRESS")),
+        "DB_BICEP_CURL": str(uuid.uuid5(base, "DB_BICEP_CURL")),
+        "DB_BENT_OVER_ROW": str(uuid.uuid5(base, "DB_BENT_OVER_ROW")),
         # Machine
-        "MACHINE_LAT_PULLDOWN": str(
-            uuid.uuid5(base, f"{dataset}-MACHINE_LAT_PULLDOWN")
-        ),
-        "MACHINE_TRICEP_EXTENSION": str(
-            uuid.uuid5(base, f"{dataset}-MACHINE_TRICEP_EXTENSION")
-        ),
+        "MACHINE_LAT_PULLDOWN": str(uuid.uuid5(base, "MACHINE_LAT_PULLDOWN")),
+        "MACHINE_TRICEP_EXTENSION": str(uuid.uuid5(base, "MACHINE_TRICEP_EXTENSION")),
     }
 
 
-def build_exercises(pk: str, dataset: str) -> List[Exercise]:
+def build_exercises(pk: str) -> List[Exercise]:
     """
     Build all exercises used by the seed workouts.
     """
     ts = now()
-    exercise_ids = build_exercise_ids(dataset)
+    exercise_ids = build_exercise_ids()
 
     return [
         # ──────────────── Bodyweight ────────────────
@@ -157,7 +151,7 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
             type="exercise",
             name="Overhead Press",
             muscles=["shoulders", "triceps"],
-            equipment="dumbbell",
+            equipment="dumbbells",
             category="push",
             created_at=ts,
             updated_at=ts,
@@ -168,7 +162,7 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
             type="exercise",
             name="Bench Press",
             muscles=["chest", "triceps", "shoulders"],
-            equipment="dumbbell",
+            equipment="dumbbells",
             category="push",
             created_at=ts,
             updated_at=ts,
@@ -179,7 +173,7 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
             type="exercise",
             name="Bicep Curl",
             muscles=["biceps"],
-            equipment="dumbbell",
+            equipment="dumbbells",
             category="pull",
             created_at=ts,
             updated_at=ts,
@@ -190,7 +184,7 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
             type="exercise",
             name="Bent Over Row",
             muscles=["lats", "upper_back", "biceps"],
-            equipment="dumbbell",
+            equipment="dumbbells",
             category="pull",
             created_at=ts,
             updated_at=ts,
@@ -221,13 +215,13 @@ def build_exercises(pk: str, dataset: str) -> List[Exercise]:
     ]
 
 
-def build_workouts(pk: str, dataset: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
+def build_workouts(pk: str) -> List[Tuple[Workout, List[WorkoutSet]]]:
     """
     Build all workouts and their sets.
     Returns a list of (Workout, [WorkoutSet, ...]) tuples.
     """
     ts = now()
-    exercise_ids = build_exercise_ids(dataset)
+    exercise_ids = build_exercise_ids()
     workouts: List[Tuple[Workout, List[WorkoutSet]]] = []
 
     # Workout 1: Push/Pull

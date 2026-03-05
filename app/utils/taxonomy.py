@@ -10,7 +10,7 @@ EXERCISE_CATEGORIES: tuple[str, ...] = (
 
 EQUIPMENT_TYPES: tuple[str, ...] = (
     "barbell",
-    "dumbbell",
+    "dumbbells",
     "kettlebell",
     "bodyweight",
     "machine",

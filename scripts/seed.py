@@ -1,12 +1,14 @@
 # Run using
 # uv run python -m scripts.seed \
-#  --dataset prod \
 #  --sub "<cognito sub>" \
 #  --display-name "Lisa" \
 #  --email "your@email"
 
 import argparse
 
+from boto3.dynamodb.conditions import Key
+
+from app.utils.db import get_table
 from app.utils.seed_data import (
     build_exercises,
     build_profile,
@@ -18,13 +20,6 @@ TEST_USER_SUB = "e6b2d244-8091-70df-730d-3a2a1b855f0f"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Seed DynamoDB user data")
-
-    parser.add_argument(
-        "--dataset",
-        choices=["dev", "demo", "prod"],
-        default="dev",
-        help="Which dataset to seed",
-    )
 
     parser.add_argument(
         "--sub",
@@ -54,9 +49,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def purge_user_items(table, pk: str):
-    resp = table.query(
-        KeyConditionExpression="PK = :pk", ExpressionAttributeValues={":pk": pk}
-    )
+    resp = table.query(KeyConditionExpression=Key("PK").eq(pk))
     items = resp.get("Items", [])
 
     with table.batch_writer() as batch:
@@ -66,29 +59,24 @@ def purge_user_items(table, pk: str):
     print(f"Deleted {len(items)} items for {pk}")
 
 
-def seed_profile(
-    table, pk: str, dataset: str, *, display_name: str | None, email: str | None
-):
-    if dataset == "prod":
-        if not display_name or not email:
-            raise ValueError("prod seeding requires --display-name and --email")
-        profile = build_profile(pk, display_name=display_name, email=email)
-    else:
-        profile = build_profile(pk)
+def seed_profile(table, pk: str, *, display_name: str | None, email: str | None):
+    if not display_name or not email:
+        raise ValueError("prod seeding requires --display-name and --email")
+    profile = build_profile(pk, display_name=display_name, email=email)
 
     table.put_item(Item=profile.to_ddb_item())
     print("Seeded profile for", profile.display_name)
 
 
-def seed_exercises(table, pk: str, dataset: str):
-    exercises = build_exercises(pk, dataset)
+def seed_exercises(table, pk: str):
+    exercises = build_exercises(pk)
     for ex in exercises:
         table.put_item(Item=ex.to_ddb_item())
     print(f"Seeded {len(exercises)} exercises")
 
 
-def seed_workouts(table, pk: str, dataset: str):
-    workouts = build_workouts(pk, dataset)
+def seed_workouts(table, pk: str):
+    workouts = build_workouts(pk)
     for workout, sets in workouts:
         table.put_item(Item=workout.to_ddb_item())
 
@@ -99,22 +87,21 @@ def seed_workouts(table, pk: str, dataset: str):
 
 def main():
     args = parse_args()
-    table = get_table(args.dataset)
+    table = get_table()
 
-    if args.dataset == "dev":
-        user_sub = TEST_USER_SUB
-    else:
+    if args.sub:
         user_sub = args.sub
+    else:
+        user_sub = TEST_USER_SUB
 
     pk = f"USER#{user_sub}"
 
-    seed_profile(
-        table, pk, args.dataset, display_name=args.display_name, email=args.email
-    )
-    seed_exercises(table, pk, args.dataset)
+    if args.reset:
+        purge_user_items(table, pk)
 
-    if args.dataset in {"dev", "demo"}:
-        seed_workouts(table, pk, args.dataset)
+    seed_profile(table, pk, display_name=args.display_name, email=args.email)
+    seed_exercises(table, pk)
+    seed_workouts(table, pk)
 
 
 if __name__ == "__main__":
