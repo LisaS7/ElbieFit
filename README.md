@@ -71,14 +71,3 @@ flowchart TD
 
 
 ```
-
-# 🧪 Live Demo (TODO)
-
-App URL: TBC
-
-Demo user (shared):
-
-- Email: demo+elbiefit@example.com
-- Password: TBC
-
-Note: This is a shared demo account – data may be reset periodically.

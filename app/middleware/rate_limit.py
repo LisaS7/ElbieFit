@@ -32,7 +32,6 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     Global rate limiting middleware.
 
     - Applies baseline limits to all users.
-    - Applies stricter limits when a demo session cookie is present.
     - Uses DynamoDB fixed-window counters via rate_limit_hit().
     """
 

@@ -16,12 +16,10 @@ def render_template(
     status_code: int = 200,
     headers: dict | None = None,
 ):
-    is_demo_user = getattr(request.state, "is_demo_user", False)
     theme = getattr(request.state, "theme", settings.DEFAULT_THEME)
 
     base_context = {
         "current_year": dates.now().year,
-        "is_demo_user": is_demo_user,
         "theme": theme,
     }
 

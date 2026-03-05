@@ -140,22 +140,13 @@ main {
   }
 }
 
-/* ── Demo Banner ── */
-.demo-banner {
-  background: var(--color-banner-bg);
-  color: var(--color-banner-text);
-  text-align: center;
-  padding: 0.5rem 1rem;
-  letter-spacing: 0.05em;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-}
-
 /* ── Page Layout ── */
 
 #page-container {
   border-radius: 10px;
-  box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px, rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
+  box-shadow:
+    rgba(0, 0, 0, 0.4) 0px 2px 4px,
+    rgba(0, 0, 0, 0.3) 0px 7px 13px -3px,
     rgba(0, 0, 0, 0.2) 0px -3px 0px inset;
 }
 

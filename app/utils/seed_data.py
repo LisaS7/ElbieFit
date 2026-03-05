@@ -29,12 +29,6 @@ def build_profile(
     return _build_base_profile(pk=pk, display_name=display_name, email=email)
 
 
-def build_demo_profile(pk: str) -> UserProfile:
-    return _build_base_profile(
-        pk=pk, display_name="Demo User", email="demo@elbiefit.co.uk"
-    )
-
-
 def build_exercise_ids(dataset: str) -> dict[str, str]:
     """
     Deterministic exercise IDs per dataset (demo/test).

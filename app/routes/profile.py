@@ -66,8 +66,6 @@ def profile(
             )
         raise
 
-    is_demo_user = bool(settings.DEMO_USER_SUB and user_sub == settings.DEMO_USER_SUB)
-
     logger.debug(f"Profile retrieved for user_sub={user_sub}")
 
     return render_template(
@@ -79,7 +77,6 @@ def profile(
             "profile": profile,
             "user_sub": user_sub,
             "tz_options": _tz_options(),
-            "is_demo_user": is_demo_user,
             # placeholders for card swaps / validation later
             "account_form": None,
             "account_errors": None,

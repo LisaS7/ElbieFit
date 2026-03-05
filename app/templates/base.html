@@ -39,12 +39,8 @@
         <a href="/exercise/all">Exercises</a>
       </nav>
     </header>
-    <main>
-      {% if is_demo_user %}
-        <div class="demo-banner">
-          Demo mode — data may reset
-        </div>
-      {% endif %}
+
+    <main id="page-content">
       {% block content %}{% endblock %}
     </main>
 
