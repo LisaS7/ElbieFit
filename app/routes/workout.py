@@ -16,9 +16,9 @@ from app.repositories.errors import (
     WorkoutNotFoundError,
     WorkoutRepoError,
 )
-from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
-from app.repositories.profile import DynamoProfileRepository, ProfileRepository
-from app.repositories.workout import DynamoWorkoutRepository, WorkoutRepository
+from app.repositories.exercise import DynamoExerciseRepository
+from app.repositories.profile import DynamoProfileRepository
+from app.repositories.workout import DynamoWorkoutRepository
 from app.templates.templates import render_template
 from app.utils import auth, dates
 from app.utils.log import logger
@@ -27,24 +27,24 @@ from app.utils.units import kg_to_lb, lb_to_kg
 router = APIRouter(prefix="/workout", tags=["workout"])
 
 
-def get_workout_repo() -> WorkoutRepository:  # pragma: no cover
+def get_workout_repo() -> DynamoWorkoutRepository:  # pragma: no cover
     """Fetch the workout repo"""
     return DynamoWorkoutRepository()
 
 
-def get_exercise_repo() -> ExerciseRepository:  # pragma: no cover
+def get_exercise_repo() -> DynamoExerciseRepository:  # pragma: no cover
     """Fetch the exercise repo"""
     return DynamoExerciseRepository()
 
 
-def get_profile_repo() -> ProfileRepository:  # pragma: no cover
+def get_profile_repo() -> DynamoProfileRepository:  # pragma: no cover
     """Fetch the profile repo"""
     return DynamoProfileRepository()
 
 
 def get_weight_unit_for_user(
     user_sub: str,
-    profile_repo: ProfileRepository,
+    profile_repo: DynamoProfileRepository,
 ) -> Literal["kg", "lb"]:
     try:
         profile = profile_repo.get_for_user(user_sub)
@@ -83,7 +83,7 @@ def get_sorted_sets_and_defaults(
 def get_all_workouts(
     request: Request,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     """Get all workouts for the current authenticated user"""
     user_sub = claims["sub"]
@@ -110,7 +110,7 @@ def get_all_workouts(
 def get_new_form(
     request: Request,
     claims=Depends(auth.require_auth),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
     profile = profile_repo.get_for_user(user_sub)
@@ -130,7 +130,7 @@ def get_new_set_form(
     workout_id: str,
     exercise_id: str,
     claims=Depends(auth.require_auth),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     logger.debug(
         f"Getting new set form for workout {workout_id} on {workout_date} for exercise {exercise_id}"
@@ -169,7 +169,7 @@ def create_workout(
     request: Request,
     form: Annotated[WorkoutCreate, Depends(WorkoutCreate.as_form)],
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
 
@@ -191,8 +191,8 @@ def add_set(
     exercise_id: str,
     form: Annotated[WorkoutSetCreate, Depends(WorkoutSetCreate.as_form)],
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
     unit = get_weight_unit_for_user(user_sub, profile_repo)
@@ -218,9 +218,9 @@ def view_workout(
     workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
-    workout_repo: WorkoutRepository = Depends(get_workout_repo),
-    exercise_repo: ExerciseRepository = Depends(get_exercise_repo),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    workout_repo: DynamoWorkoutRepository = Depends(get_workout_repo),
+    exercise_repo: DynamoExerciseRepository = Depends(get_exercise_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
@@ -297,7 +297,7 @@ def edit_workout_meta(
     workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
 
@@ -329,7 +329,7 @@ def update_workout_meta(
     workout_id: str,
     form: WorkoutUpdate = Depends(WorkoutUpdate.as_form),
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
 
@@ -414,8 +414,8 @@ def get_edit_set_form(
     workout_id: str,
     set_number: int,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
@@ -465,8 +465,8 @@ def edit_set(
     set_number: int,
     form: Annotated[WorkoutSetUpdate, Depends(WorkoutSetUpdate.as_form)],
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
-    profile_repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
@@ -496,7 +496,7 @@ def delete_workout(
     workout_date: DateType,
     workout_id: str,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     user_sub = claims["sub"]
 
@@ -519,7 +519,7 @@ def delete_set(
     workout_id: str,
     set_number: int,
     claims=Depends(auth.require_auth),
-    repo: WorkoutRepository = Depends(get_workout_repo),
+    repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
 
     user_sub = claims["sub"]

@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     REGION: str = "eu-west-2"
     ENV: str = "dev"
     DDB_TABLE_NAME: str = "elbiefit-dev-table"
+    DDB_ENDPOINT_URL: str | None = None
     model_config = SettingsConfigDict(env_file=None)
 
     # ──────────────────── Auth ─────────────────────

@@ -12,7 +12,10 @@ TABLE_NAME = settings.DDB_TABLE_NAME
 
 
 def get_dynamo_resource():
-    return boto3.resource("dynamodb", region_name=REGION_NAME)
+    kwargs = {"region_name": REGION_NAME}
+    if settings.DDB_ENDPOINT_URL:
+        kwargs["endpoint_url"] = settings.DDB_ENDPOINT_URL
+    return boto3.resource("dynamodb", **kwargs)
 
 
 def get_table():

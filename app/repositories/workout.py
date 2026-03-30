@@ -1,6 +1,6 @@
 import uuid
 from datetime import date as DateType
-from typing import List, Protocol
+from typing import List
 
 from boto3.dynamodb.conditions import Key
 
@@ -17,54 +17,9 @@ from app.utils import dates, db
 from app.utils.log import logger
 
 
-class WorkoutRepository(Protocol):
-    def get_all_for_user(self, user_sub: str) -> List[Workout]: ...
-    def create_workout(self, user_sub, data: WorkoutCreate) -> Workout: ...
-    def get_workout_with_sets(
-        self, user_sub: str, workout_date: DateType, workout_id: str
-    ) -> tuple[Workout, List[WorkoutSet]]: ...
-    def get_set(
-        self,
-        user_sub: str,
-        workout_date: DateType,
-        workout_id: str,
-        set_number: int,
-    ) -> WorkoutSet: ...
-    def edit_workout(self, workout: Workout) -> Workout: ...
-    def edit_set(
-        self,
-        user_sub: str,
-        workout_date: DateType,
-        workout_id: str,
-        set_number: int,
-        data: WorkoutSetUpdate,
-    ): ...
-    def move_workout_date(
-        self,
-        user_sub: str,
-        workout: Workout,
-        new_date: DateType,
-        sets: list[WorkoutSet],
-    ) -> Workout: ...
-    def delete_workout_and_sets(
-        self, user_sub: str, workout_date: DateType, workout_id: str
-    ) -> None: ...
-    def add_set(
-        self,
-        user_sub: str,
-        workout_date: DateType,
-        workout_id: str,
-        exercise_id: str,
-        data: WorkoutSetCreate,
-    ) -> WorkoutSet: ...
-    def delete_set(
-        self, user_sub: str, workout_date: DateType, workout_id: str, set_number: int
-    ) -> None: ...
-
-
 class DynamoWorkoutRepository(DynamoRepository[Workout]):
     """
-    Implementation of WorkoutRepository
+    DynamoDB implementation for workout data access.
     """
 
     def _to_model(self, item: dict):

@@ -12,9 +12,10 @@ from tests.test_data import USER_SUB
 def test_get_dynamo_resource(monkeypatch):
     store = {}
 
-    def fake_resource(service, region_name=None):
+    def fake_resource(service, region_name=None, endpoint_url=None):
         store["service"] = service
         store["region_name"] = region_name
+        store["endpoint_url"] = endpoint_url
         return "FAKE-RES"
 
     monkeypatch.setattr(boto3, "resource", fake_resource)

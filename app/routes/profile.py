@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from app.models.profile import AccountUpdateForm, PreferencesUpdateForm, UserProfile
 from app.repositories.errors import ProfileRepoError
-from app.repositories.profile import DynamoProfileRepository, ProfileRepository
+from app.repositories.profile import DynamoProfileRepository
 from app.settings import settings
 from app.templates.templates import render_template
 from app.utils import auth
@@ -24,11 +24,11 @@ def _errors_dict(e: ValidationError) -> dict[str, str]:
     return {str(err["loc"][0]): err["msg"] for err in e.errors() if err["loc"]}
 
 
-def get_profile_repo() -> ProfileRepository:  # pragma: no cover
+def get_profile_repo() -> DynamoProfileRepository:  # pragma: no cover
     return DynamoProfileRepository()
 
 
-def _get_profile_or_404(repo: ProfileRepository, user_sub: str) -> UserProfile:
+def _get_profile_or_404(repo: DynamoProfileRepository, user_sub: str) -> UserProfile:
     try:
         profile = repo.get_for_user(user_sub)
     except ProfileRepoError as e:
@@ -48,7 +48,7 @@ def _get_profile_or_404(repo: ProfileRepository, user_sub: str) -> UserProfile:
 def profile(
     request: Request,
     claims=Depends(auth.require_auth),
-    repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     """Get the profile of the current authenticated user."""
     user_sub = claims["sub"]
@@ -96,7 +96,7 @@ def profile(
 async def update_account(
     request: Request,
     claims=Depends(auth.require_auth),
-    repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
     logger.info(f"Updating account user_sub={user_sub}")
@@ -156,7 +156,7 @@ async def update_account(
 async def update_preferences(
     request: Request,
     claims=Depends(auth.require_auth),
-    repo: ProfileRepository = Depends(get_profile_repo),
+    repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
     logger.info(f"Updating preferences user_sub={user_sub}")

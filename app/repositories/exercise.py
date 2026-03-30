@@ -1,4 +1,4 @@
-from typing import List, Protocol
+from typing import List
 
 from boto3.dynamodb.conditions import Key
 
@@ -6,19 +6,6 @@ from app.models.exercise import Exercise
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import ExerciseRepoError, RepoError
 from app.utils import db
-
-
-class ExerciseRepository(Protocol):
-    def get_all_for_user(self, user_sub: str) -> List[Exercise]: ...
-    def get_exercise_by_id(
-        self, user_sub: str, exercise_id: str
-    ) -> Exercise | None: ...
-
-    # TODO:
-    # create exercise
-    # update exercise
-    # delete exercise
-    # get exercise by id
 
 
 class DynamoExerciseRepository(DynamoRepository[Exercise]):

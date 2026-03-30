@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.repositories.errors import ExerciseRepoError
-from app.repositories.exercise import DynamoExerciseRepository, ExerciseRepository
+from app.repositories.exercise import DynamoExerciseRepository
 from app.templates.templates import render_template
 from app.utils import auth
 from app.utils.log import logger
@@ -9,7 +9,7 @@ from app.utils.log import logger
 router = APIRouter(prefix="/exercise", tags=["exercise"])
 
 
-def get_exercise_repo() -> ExerciseRepository:  # pragma: no cover
+def get_exercise_repo() -> DynamoExerciseRepository:  # pragma: no cover
     """Fetch the exercise repo"""
     return DynamoExerciseRepository()
 
@@ -18,7 +18,7 @@ def get_exercise_repo() -> ExerciseRepository:  # pragma: no cover
 def get_all_exercises(
     request: Request,
     claims=Depends(auth.require_auth),
-    repo: ExerciseRepository = Depends(get_exercise_repo),
+    repo: DynamoExerciseRepository = Depends(get_exercise_repo),
 ):
     """Get all exercises for the current authenticated user"""
     user_sub = claims["sub"]

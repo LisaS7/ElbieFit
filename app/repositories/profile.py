@@ -1,26 +1,9 @@
-from typing import Protocol
-
 from app.models.profile import UserProfile
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import ProfileRepoError, RepoError
 from app.utils import db
 from app.utils.dates import dt_to_iso, now
 from app.utils.log import logger
-
-
-class ProfileRepository(Protocol):
-    def get_for_user(self, user_sub: str) -> UserProfile | None: ...
-    def update_account(
-        self, user_sub: str, *, display_name: str, timezone: str
-    ) -> UserProfile: ...
-    def update_preferences(
-        self,
-        user_sub: str,
-        *,
-        show_tips: bool,
-        theme: str,
-        units: str,
-    ) -> UserProfile: ...
 
 
 class DynamoProfileRepository(DynamoRepository[UserProfile]):
