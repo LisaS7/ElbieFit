@@ -2,10 +2,10 @@
 
 /* ──────────────── Ink (default-ish) ──────────────── */
 html[data-theme='ink'] {
-  --color-bg: #11121a;
-  --color-panel: #171827;
-  --color-card: #1d1f31;
-  --color-borders: #30324a;
+  --color-bg: #0f1019;
+  --color-panel: #181a2d;
+  --color-card: #22243c;
+  --color-borders: #323552;
 
   --color-heading: #f1ecff;
   --color-text: #c6c2e2;
@@ -16,40 +16,40 @@ html[data-theme='ink'] {
 
   --color-button: #7aa2ff;
   --color-button-text: #0d1020;
-  --color-button-secondary: #a6accd;
+  --color-button-secondary: #a09ae0;
 
   --color-toast-bg: #f1ecff;
-  --color-toast-text: #11121a;
+  --color-toast-text: #0f1019;
 }
 
 /* ──────────────── Apothecary Night (green-gold pastel) ──────────────── */
 html[data-theme='apothecary'] {
-  --color-bg: #0f1413;
-  --color-panel: #141b19;
-  --color-card: #1b2421;
-  --color-borders: #2b3a35;
+  --color-bg: #0c1210;
+  --color-panel: #131d1a;
+  --color-card: #1c2a25;
+  --color-borders: #2d3f38;
 
   --color-heading: #eaf6f1;
   --color-text: #bcd6cb;
   --color-muted: #88a79a;
 
   --color-accent: #7fe0b3;
-  --color-tag: #9fe7c5;
+  --color-tag: #d6c08b;
 
   --color-button: #7fe0b3;
   --color-button-text: #07110d;
   --color-button-secondary: #d6c08b;
 
   --color-toast-bg: #eaf6f1;
-  --color-toast-text: #0f1413;
+  --color-toast-text: #0c1210;
 }
 
 /* ──────────────── Prehistoric Night (warm pastel ember) ──────────────── */
 html[data-theme='prehistoric'] {
-  --color-bg: #1a120e;
-  --color-panel: #221814;
-  --color-card: #2b1f19;
-  --color-borders: #44332b;
+  --color-bg: #170f0b;
+  --color-panel: #231712;
+  --color-card: #2f2019;
+  --color-borders: #473327;
 
   --color-heading: #fff4e6;
   --color-text: #f2d7c2;
@@ -60,8 +60,8 @@ html[data-theme='prehistoric'] {
 
   --color-button: #ffb38a;
   --color-button-text: #2a1207;
-  --color-button-secondary: #ffe07a;
+  --color-button-secondary: #ffd59e;
 
   --color-toast-bg: #fff4e6;
-  --color-toast-text: #1a120e;
+  --color-toast-text: #170f0b;
 }

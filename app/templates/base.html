@@ -51,5 +51,13 @@
     </footer>
     <script src="/static/js/main.js"></script>
     <script src="{{ url_for('static', path='js/number-spinner.js') }}"></script>
+    <script>
+      document.querySelectorAll('#main-nav a').forEach(link => {
+        const href = link.getAttribute('href');
+        if (href !== '/' && location.pathname.startsWith(href)) {
+          link.classList.add('nav-active');
+        }
+      });
+    </script>
   </body>
 </html>

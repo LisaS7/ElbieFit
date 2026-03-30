@@ -3,13 +3,13 @@
   --font-plain:
     system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial,
     sans-serif;
-  --font-decorative: var(--font-plain);
+  --font-decorative: 'Caesar Dressing', var(--font-plain);
 
   /* Theme variables (defaults; overridden per theme) */
-  --color-bg: #11121a;
-  --color-panel: #171827;
-  --color-card: #1d1f31;
-  --color-borders: #30324a;
+  --color-bg: #0f1019;
+  --color-panel: #181a2d;
+  --color-card: #22243c;
+  --color-borders: #323552;
 
   --color-heading: #f1ecff;
   --color-text: #c6c2e2;
@@ -63,11 +63,19 @@ main {
   margin-bottom: 1rem;
 }
 
+#app-header #brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
 #app-header #brand p {
   margin: 0;
-  font-weight: 700;
+  font-family: var(--font-decorative);
+  font-size: 1.3rem;
   color: var(--color-heading);
-  letter-spacing: 0.2px;
+  letter-spacing: 0.5px;
 }
 
 #app-header #brand img {
@@ -106,6 +114,14 @@ main {
 #app-header nav a:hover {
   background: var(--color-panel);
   color: var(--color-heading);
+}
+
+#app-header nav a.nav-active {
+  color: var(--color-heading);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--color-accent);
+  text-decoration-thickness: 2px;
 }
 
 @media (max-width: 768px) {
@@ -152,6 +168,11 @@ h2,
 h3 {
   color: var(--color-heading);
   margin: 0.5rem 0;
+}
+
+h1 {
+  font-family: var(--font-decorative);
+  letter-spacing: 0.5px;
 }
 
 p {
@@ -207,11 +228,13 @@ a:hover {
 .workout-card {
   text-decoration: none;
   display: block;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .workout-card:hover {
   border-color: var(--color-accent);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
 }
 
 /* ──────────────────────────────── Workout Detail Page  ──────────────────────────────── */

@@ -6,13 +6,13 @@
 <header id="page-header" class="flex-row-spaced">
   <h1>Workout Log</h1>
   <button
-    class="icon-button"
+    class="button"
     type="button"
     hx-get="/workout/new-form"
     hx-target="#new-workout-form-container"
     hx-swap="innerHTML"
   >
-    +
+    + Log Workout
   </button>
 </header>
 
@@ -41,13 +41,16 @@
       </a>
     {% endfor %}
   {% else %}
-    <p class="muted">
-    No workouts logged yet.
-    </p>
-
-    <p>
-    Press <strong>+</strong> to start your first training log.
-    </p>
+    <p class="muted">No workouts logged yet.</p>
+    <button
+      class="button"
+      type="button"
+      hx-get="/workout/new-form"
+      hx-target="#new-workout-form-container"
+      hx-swap="innerHTML"
+    >
+      Log your first workout
+    </button>
   {% endif %}
 </section>
 {% endblock %}
