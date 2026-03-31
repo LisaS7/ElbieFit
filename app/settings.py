@@ -48,6 +48,17 @@ class Settings(BaseSettings):
         "/health",
         "/meta",
     )
+    # ──────────────────── CSRF ─────────────────────
+    CSRF_ENABLED: bool = True
+    CSRF_EXCLUDED_PREFIXES: Tuple[str, ...] = (
+        "/static",
+        "/favicon.ico",
+        "/robots.txt",
+        "/healthz",
+        "/meta",
+        "/auth",
+    )
+
     # ──────────────────── Theme ─────────────────────
     DEFAULT_THEME: str = "prehistoric"
     THEMES: Tuple[str, ...] = ("apothecary", "ink", "prehistoric")

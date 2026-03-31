@@ -6,6 +6,16 @@
     <title>{% block title %}ElbieFit{% endblock %}</title>
     {# HTMX #}
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+      document.addEventListener('htmx:configRequest', function(event) {
+        const match = document.cookie.split('; ').find(function(row) {
+          return row.startsWith('csrf_token=');
+        });
+        if (match) {
+          event.detail.headers['X-CSRFToken'] = match.split('=')[1];
+        }
+      });
+    </script>
     {# Font #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

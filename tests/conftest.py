@@ -23,6 +23,13 @@ def disable_rate_limiting_for_tests():
     settings.RATE_LIMIT_ENABLED = True
 
 
+@pytest.fixture(autouse=True)
+def disable_csrf_for_tests():
+    settings.CSRF_ENABLED = False
+    yield
+    settings.CSRF_ENABLED = True
+
+
 @pytest.fixture
 def fixed_now(monkeypatch) -> datetime:
     now = datetime(2025, 1, 2, 3, 4, 5, tzinfo=timezone.utc)
