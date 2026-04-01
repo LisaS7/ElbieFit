@@ -50,7 +50,7 @@ def get_theme_cookie_from_profile(response: Response, id_token: str) -> None:
     if not theme:
         return
 
-    if hasattr(settings, "THEMES") and theme not in settings.THEMES:
+    if theme not in settings.THEMES:
         return
 
     set_theme_cookie(response, theme)
