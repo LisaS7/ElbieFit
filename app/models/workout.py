@@ -67,8 +67,7 @@ class WorkoutUpdate(BaseModel):
         date: Annotated[DateType, Form()],
         notes: Annotated[str | None, Form()] = None,
         tags: Annotated[str | None, Form()] = None,
-    ):
-
+    ) -> "WorkoutUpdate":
         tag_list: list[str] | None = None
         if tags:
             tag_list = [t.strip() for t in tags.split(",") if t.strip()]
@@ -102,11 +101,13 @@ class WorkoutSet(BaseModel):
         return parts[2]
 
 
-class WorkoutSetCreate(BaseModel):
+class WorkoutSetBase(BaseModel):
     reps: int = Field(ge=1)
     weight_kg: Decimal | None = Field(default=None, ge=0)
     rpe: int | None = Field(default=None, ge=1, le=10)
 
+
+class WorkoutSetCreate(WorkoutSetBase):
     @classmethod
     def as_form(
         cls,
@@ -114,12 +115,15 @@ class WorkoutSetCreate(BaseModel):
         weight_kg: Annotated[Decimal | None, Form()] = None,
         rpe: Annotated[int | None, Form()] = None,
     ) -> "WorkoutSetCreate":
-        return cls(
-            reps=reps,
-            weight_kg=weight_kg,
-            rpe=rpe,
-        )
+        return cls(reps=reps, weight_kg=weight_kg, rpe=rpe)
 
 
-class WorkoutSetUpdate(WorkoutSetCreate):
-    pass
+class WorkoutSetUpdate(WorkoutSetBase):
+    @classmethod
+    def as_form(
+        cls,
+        reps: Annotated[int, Form()],
+        weight_kg: Annotated[Decimal | None, Form()] = None,
+        rpe: Annotated[int | None, Form()] = None,
+    ) -> "WorkoutSetUpdate":
+        return cls(reps=reps, weight_kg=weight_kg, rpe=rpe)
