@@ -44,7 +44,6 @@ def get_id_token(request: Request) -> str:
         logger.warning("ID token missing from cookies")
         raise HTTPException(status_code=401, detail="ID token is missing. Login again.")
 
-    logger.debug("ID token found in cookies")
     return id_token
 
 
@@ -99,10 +98,6 @@ def require_auth(request: Request):
     Validate ID token from cookies and return decoded claims.
     """
 
-    logger.debug(
-        f"Auth config snapshot\nDisable auth: {settings.DISABLE_AUTH_FOR_LOCAL_DEV}\nIssuer URL: {settings.COGNITO_ISSUER_URL}\nAudience: {settings.COGNITO_AUDIENCE}",
-    )
-
     if settings.DISABLE_AUTH_FOR_LOCAL_DEV:  # pragma: no cover
         logger.warning("Auth bypass enabled: returning fake LOCAL-DEV-USER claims")
         fake_claims = {
@@ -116,8 +111,6 @@ def require_auth(request: Request):
 
     issuer_url = (ISSUER_URL or "").rstrip("/")
     jwks_url = get_jwks_url(issuer_url)
-
-    logger.debug(f"Derived urls: issuer={issuer_url}. JWKS={jwks_url}")
 
     try:
         decoded_token = decode_and_validate_id_token(

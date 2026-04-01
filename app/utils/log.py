@@ -20,8 +20,6 @@ handler = logging.StreamHandler(sys.stdout)
 handler.setFormatter(logging.Formatter(FORMAT))
 root.addHandler(handler)
 
-logging.basicConfig(level=LOG_LEVEL, format=FORMAT, stream=sys.stdout, force=True)
-
 logger = logging.getLogger("elbiefit")
 logger.setLevel(LOG_LEVEL)
 logger.propagate = True

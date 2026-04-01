@@ -108,6 +108,8 @@ uv run python -m scripts.seed --display-name "Your Name" --email "you@example.co
 
 ```bash
 uv run uvicorn app.main:app --reload
+# or, to capture logs:
+uvicorn app.main:app 2>&1 | tee app.log
 ```
 
 Open [http://localhost:8000](http://localhost:8000).

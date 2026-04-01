@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 
 from app.settings import settings
+from app.utils.log import logger
 
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _COOKIE_NAME = "csrf_token"
@@ -44,6 +45,9 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             cookie_token = request.cookies.get(_COOKIE_NAME, "")
             header_token = request.headers.get(_HEADER_NAME, "")
             if not cookie_token or not secrets.compare_digest(cookie_token, header_token):
+                logger.warning(
+                    f"CSRF validation failed method={request.method} path={path}"
+                )
                 return PlainTextResponse(
                     "CSRF token missing or invalid", status_code=403
                 )

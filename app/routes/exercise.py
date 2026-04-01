@@ -27,7 +27,7 @@ def get_all_exercises(
     try:
         exercises = repo.get_all_for_user(user_sub)
     except ExerciseRepoError:
-        logger.exception(f"Error fetching workouts for user {user_sub}")
+        logger.exception(f"Error fetching exercises for user {user_sub}")
         raise HTTPException(status_code=500, detail="Error fetching exercises")
     return render_template(
         request,

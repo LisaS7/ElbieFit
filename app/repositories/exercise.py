@@ -6,6 +6,7 @@ from app.models.exercise import Exercise
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import ExerciseRepoError, RepoError
 from app.utils import db
+from app.utils.log import logger
 
 
 class DynamoExerciseRepository(DynamoRepository[Exercise]):
@@ -17,7 +18,11 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
         """
         Map a DynamoDB item (from the resource API) into an Exercise model.
         """
-        return Exercise(**item)
+        try:
+            return Exercise(**item)
+        except Exception as e:
+            logger.error(f"_to_model failed for exercise: {e}")
+            raise ExerciseRepoError("Failed to create exercise model from item") from e
 
     def get_all_for_user(self, user_sub: str) -> List[Exercise]:
         """

@@ -176,7 +176,7 @@ def create_workout(
     try:
         workout = repo.create_workout(user_sub, data=form)
     except WorkoutRepoError:
-        logger.exception("Error creating workout")
+        logger.exception(f"Error creating workout user_sub={user_sub}")
         raise HTTPException(status_code=500, detail="Error creating workout")
 
     return RedirectResponse(
@@ -203,7 +203,7 @@ def add_set(
     try:
         repo.add_set(user_sub, workout_date, workout_id, exercise_id, form)
     except WorkoutRepoError:
-        logger.exception("Error creating workout set")
+        logger.exception(f"Error creating workout set user_sub={user_sub} workout_id={workout_id}")
         raise HTTPException(status_code=500, detail="Error creating workout set")
 
     return Response(status_code=204, headers={"HX-Trigger": "workoutSetChanged"})
@@ -334,7 +334,7 @@ def update_workout_meta(
     user_sub = claims["sub"]
 
     logger.info(
-        f"Updating workout meta\nUser: {user_sub}\nDate: {workout_date.isoformat()}\nID: {workout_id}",
+        f"Updating workout meta user_sub={user_sub} date={workout_date.isoformat()} workout_id={workout_id}",
     )
 
     try:
@@ -478,6 +478,7 @@ def edit_set(
     try:
         repo.edit_set(user_sub, workout_date, workout_id, set_number, form)
     except WorkoutNotFoundError:
+        logger.warning(f"Set {set_number} not found workout_id={workout_id} user_sub={user_sub}")
         raise HTTPException(status_code=404, detail="Set not found")
     except WorkoutRepoError:
         logger.exception(
@@ -501,7 +502,7 @@ def delete_workout(
     user_sub = claims["sub"]
 
     try:
-        logger.debug(f"Deleting workout {workout_id}")
+        logger.info(f"Deleting workout workout_id={workout_id} user_sub={user_sub}")
         repo.delete_workout_and_sets(user_sub, workout_date, workout_id)
     except WorkoutRepoError:
         logger.exception(
@@ -525,7 +526,7 @@ def delete_set(
     user_sub = claims["sub"]
 
     try:
-        logger.debug(f"Deleting set {set_number} for workout {workout_id}")
+        logger.info(f"Deleting set set_number={set_number} workout_id={workout_id} user_sub={user_sub}")
         repo.delete_set(user_sub, workout_date, workout_id, set_number)
     except WorkoutRepoError:
         logger.exception(

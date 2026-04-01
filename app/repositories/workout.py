@@ -77,7 +77,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 new_workout.date, new_workout.workout_id, s.set_number
             )
             now = dates.now()
-            logger.debug(f"Moving set {s.set_number} → SK={new_sk}")
             new_set = s.model_copy(update={"PK": pk, "SK": new_sk, "updated_at": now})
             new_sets.append(new_set)
         return new_sets
@@ -88,8 +87,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Determine the next set number for a given workout by fetching existing sets.
         """
-        logger.debug(f"Calculating next set number for workout {workout_id}")
-
         pk = db.build_user_pk(user_sub)
         sk_prefix = db.build_set_prefix(workout_date, workout_id)
 
@@ -98,8 +95,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 KeyConditionExpression=Key("PK").eq(pk)
                 & Key("SK").begins_with(sk_prefix)
             )
-            logger.debug(f"Found {len(items)} existing sets")
-
             if not items:
                 return 1
 
@@ -118,8 +113,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 return 1
 
             next_number = max(set_numbers) + 1
-            logger.debug(f"Next set number is {next_number}")
-
             return next_number
         except RepoError as e:
             logger.error(f"Error determining next set number: {e}")
@@ -131,8 +124,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Return only workout items, sorted by date desc, Sets are filtered out.
         """
-        logger.debug(f"Fetching all workouts for user {user_sub}")
-
         pk = db.build_user_pk(user_sub)
 
         try:
@@ -140,7 +131,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 KeyConditionExpression=Key("PK").eq(pk)
                 & Key("SK").begins_with("WORKOUT#")
             )
-            logger.debug(f"{len(items)} items returned from DynamoDB")
 
         except RepoError as e:
             logger.error(f"Repo error fetching workouts: {e}")
@@ -149,8 +139,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         try:
             models = [self._to_model(item) for item in items]
             workouts = [m for m in models if isinstance(m, Workout)]
-            logger.debug(f"{len(workouts)} workouts parsed")
-
             workouts.sort(key=lambda w: w.date, reverse=True)
             return workouts
 
@@ -168,8 +156,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Fetch a single workout and its sets for the given user/date/id
         """
-        logger.debug(f"Fetching workout {workout_id} with sets for {workout_date}")
-
         pk = db.build_user_pk(user_sub)
         sk = db.build_workout_sk(workout_date, workout_id)
 
@@ -177,7 +163,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             items = self._safe_query(
                 KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
             )
-            logger.debug(f"Query returned {len(items)} items")
 
         except RepoError as e:
             logger.error(f"Repo error querying workout+sets: {e}")
@@ -198,8 +183,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         workout = [m for m in models if isinstance(m, Workout)]
         sets = [s for s in models if isinstance(s, WorkoutSet)]
 
-        logger.debug(f"Parsed workout={len(workout)}, sets={len(sets)}")
-
         if not workout:
             logger.warning(f"Workout not found: {workout_id} on {workout_date}")
             raise WorkoutNotFoundError(
@@ -218,10 +201,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Fetch a single workout set for the given user/workout/set_number.
         """
-        logger.debug(
-            f"Fetching set {set_number} for workout {workout_id} on {workout_date}"
-        )
-
         pk = db.build_user_pk(user_sub)
         sk = db.build_set_sk(workout_date, workout_id, set_number)
 
@@ -253,8 +232,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Persist a new workout item to DynamoDB.
         """
-        logger.debug(f"Creating workout for {user_sub} with name '{data.name}'")
-
         new_id = str(uuid.uuid4())
         now = dates.now()
 
@@ -267,8 +244,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             created_at=now,
             updated_at=now,
         )
-
-        logger.debug(f"New workout ID={new_id}, SK={workout.SK}")
 
         try:
             self._safe_put(workout.to_ddb_item())
@@ -288,8 +263,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Add a new set to the existing workout.
         """
-        logger.debug(f"Adding set to workout {workout_id} on {workout_date}")
-
         new_set_number = self._get_next_set_number(user_sub, workout_date, workout_id)
 
         now = dates.now()
@@ -307,8 +280,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             updated_at=now,
         )
 
-        logger.debug(f"New set SK={new_set.SK}")
-
         try:
             self._safe_put(new_set.to_ddb_item())
         except RepoError as e:
@@ -323,8 +294,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Persist changes to an existing workout.
         """
-
-        logger.debug(f"Updating workout {workout.workout_id}")
 
         try:
             self._safe_put(workout.to_ddb_item())
@@ -357,7 +326,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             self._safe_put(new_workout.to_ddb_item())
 
             for item in new_sets:
-                logger.debug(f"Writing moved set: {item.SK}")
                 self._safe_put(item.to_ddb_item())
         except RepoError as e:
             logger.error(f"Failed writing moved workout or sets: {e}")
@@ -382,7 +350,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         set_number: int,
         data: WorkoutSetUpdate,
     ):
-        logger.debug(f"Updating set {set_number} for workout {workout_id}")
         existing = self.get_set(user_sub, workout_date, workout_id, set_number)
 
         updated_set = existing.model_copy(
@@ -410,8 +377,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Delete an existing workout and all its sets.
         """
-        logger.debug(f"Deleting workout {workout_id} and its sets")
-
         pk = db.build_user_pk(user_sub)
         sk = db.build_workout_sk(workout_date, workout_id)
 
@@ -421,7 +386,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             items = self._safe_query(
                 KeyConditionExpression=Key("PK").eq(pk) & Key("SK").begins_with(sk)
             )
-            logger.debug(f"Found {len(items)} items to delete")
         except RepoError as e:
             logger.error(f"Failed loading items for deletion: {e}")
             raise WorkoutRepoError(
@@ -429,7 +393,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
             ) from e
 
         if not items:
-            logger.debug("No items found — nothing to delete")
             return
 
         # use batch_writer here to make bulk delete easier
@@ -437,7 +400,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         try:
             with self._table.batch_writer() as batch:
                 for item in items:
-                    logger.debug(f"Deleting PK={item['PK']} SK={item['SK']}")
                     batch.delete_item(Key={"PK": item["PK"], "SK": item["SK"]})
         except Exception as e:
             logger.error(f"Batch delete failed: {e}")
@@ -451,10 +413,6 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
         """
         Delete a specific workout set.
         """
-
-        logger.debug(
-            f"Deleting set #{set_number} from workout {workout_id} on {workout_date}"
-        )
 
         pk = db.build_user_pk(user_sub)
         sk = db.build_set_sk(workout_date, workout_id, set_number)

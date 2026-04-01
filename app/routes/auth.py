@@ -105,6 +105,5 @@ async def logout(response: Response):
     response = RedirectResponse(url="/", status_code=303)
 
     for cookie in ["id_token", "access_token", "refresh_token"]:
-        logger.debug(f"Deleting cookie: {cookie}")
         response.delete_cookie(cookie)
     return response
