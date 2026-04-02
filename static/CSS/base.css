@@ -239,6 +239,11 @@ a:hover {
 
 /* ──────────────────────────────── Workout Detail Page  ──────────────────────────────── */
 
+.sets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 .sets-table-header,
 .set-row {
   display: grid;
@@ -255,12 +260,12 @@ a:hover {
   margin-bottom: 0.25rem;
 }
 
-.set-row-container {
+.set-row {
   border-bottom: 1px solid var(--color-borders);
   padding: 0.5rem 0;
 }
 
-.set-row span:last-child {
+.set-row td:last-child {
   display: flex;
   gap: 0.4rem;
   justify-content: flex-end;

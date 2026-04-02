@@ -42,7 +42,8 @@
                 </div>
 
                 <a class="icon-button"
-                   href="{{ url_for('view_workout', workout_date=w.date, workout_id=w.workout_id) }}">
+                   href="{{ url_for('view_workout', workout_date=w.date, workout_id=w.workout_id) }}"
+                   aria-label="View {{ w.name or 'Workout' }}">
                   👁
                 </a>
               </div>
