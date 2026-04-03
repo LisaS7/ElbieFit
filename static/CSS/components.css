@@ -1,6 +1,11 @@
 /* ──────────────────────────────── Buttons ──────────────────────────────── */
 
-button,
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.button,
 a.button {
   cursor: pointer;
   border: 1px solid var(--color-borders);
@@ -9,34 +14,34 @@ a.button {
   background: var(--color-button);
   color: var(--color-button-text);
   font-family: var(--font-plain);
-  font-weight: 650;
+  font-weight: 600;
 }
 
-button:hover,
+.button:hover,
 a.button:hover {
   filter: brightness(1.05);
 }
 
-button.secondary,
+.button.secondary,
 a.button.secondary {
   background: var(--color-button-secondary);
   color: var(--color-button-text);
 }
 
-button.small,
+.button.small,
 a.button.small {
   padding: 0.35rem 0.6rem;
   font-size: 0.95rem;
 }
 
-button.danger,
+.button.danger,
 a.button.danger {
   background: rgba(248, 113, 113, 0.1);
   color: #f87171;
   border: 1px solid rgba(248, 113, 113, 0.35);
 }
 
-button.danger:hover,
+.button.danger:hover,
 a.button.danger:hover {
   background: rgba(248, 113, 113, 0.2);
   filter: none;
@@ -52,7 +57,7 @@ a.button.danger:hover {
   width: 40px;
   height: 40px;
   font-size: 2rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   border: 1px solid var(--color-borders);
   background: var(--color-panel);
   color: var(--color-heading);
@@ -79,6 +84,35 @@ a.button.danger:hover {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
+.card--compact {
+  padding: 0.75rem;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.exercise-name {
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
 .tags-group {
   display: flex;
   flex-wrap: wrap;
@@ -86,7 +120,7 @@ a.button.danger:hover {
 }
 
 .tag {
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 0.2rem 0.55rem;
   font-size: 0.85rem;
   background: rgba(255, 255, 255, 0.06);
@@ -142,7 +176,21 @@ textarea:focus {
   outline-offset: 2px;
 }
 
-/* Keep your stepper layout, but no fancy spinner hacks */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+/* ──────────────────────────────── Number Stepper ──────────────────────────────── */
+
 .number-stepper {
   display: flex;
   align-items: center;
@@ -152,5 +200,126 @@ textarea:focus {
 .stepper-button {
   margin: 0;
   padding: 0.25rem 0.55rem;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-borders);
+  background: var(--color-button);
+  color: var(--color-button-text);
+}
+
+/* ──────────────────────────────── Workout List ──────────────────────────────── */
+
+.workout-card {
+  text-decoration: none;
+  display: block;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.workout-card:hover {
+  border-color: var(--color-accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.workout-name {
+  font-weight: 700;
+  color: var(--color-heading);
+}
+
+/* ──────────────────────────────── Workout Detail ──────────────────────────────── */
+
+.sets-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sets-table-header,
+.set-row {
+  display: grid;
+  grid-template-columns: 52px 76px 1fr 80px 96px;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.sets-table th:nth-child(3),
+.set-row td:nth-child(3) {
+  text-align: center;
+}
+
+.sets-table-header {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-borders);
+  margin-bottom: 0.25rem;
+}
+
+.set-row {
+  border-bottom: 1px solid var(--color-borders);
+  padding: 0.5rem 0;
+}
+
+.set-row td:last-child {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+#sets-list {
+  padding-top: 1.25rem;
+}
+
+.exercise-group + .exercise-group {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-borders);
+}
+
+#workout-notes h3 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-muted);
+  margin: 0.5rem 0 0.1rem;
+}
+
+.rpe-badge {
+  display: inline-block;
+  min-width: 2rem;
+  text-align: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.rpe-easy     { background: rgba(74, 222, 128, 0.12); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.25); }
+.rpe-moderate { background: rgba(250, 204, 21, 0.12);  color: #facc15; border: 1px solid rgba(250, 204, 21, 0.25); }
+.rpe-hard     { background: rgba(251, 146, 60, 0.12);  color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.25); }
+.rpe-max      { background: rgba(248, 113, 113, 0.12); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.25); }
+
+/* ──────────────────────────────── Profile ──────────────────────────────── */
+
+.profile-layout {
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ──────────────────────────────── Home ──────────────────────────────── */
+
+.home-mascot {
+  margin-top: 1rem;
+}
+
+.home-mascot img {
+  width: 96px;
+  height: auto;
+}
+
+.recent-workouts-list {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
 }

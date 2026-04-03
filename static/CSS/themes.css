@@ -1,26 +1,5 @@
-/* Default theme is whatever :root defines */
-
-/* ──────────────── Ink (default-ish) ──────────────── */
-html[data-theme='ink'] {
-  --color-bg: #0f1019;
-  --color-panel: #181a2d;
-  --color-card: #22243c;
-  --color-borders: #323552;
-
-  --color-heading: #f1ecff;
-  --color-text: #c6c2e2;
-  --color-muted: #9a96b8;
-
-  --color-accent: #7aa2ff;
-  --color-tag: #9b90ff;
-
-  --color-button: #7aa2ff;
-  --color-button-text: #0d1020;
-  --color-button-secondary: #a09ae0;
-
-  --color-toast-bg: #f1ecff;
-  --color-toast-text: #0f1019;
-}
+/* The Ink theme is the default appearance — its values are baked into :root in base.css.
+   Selecting "ink" explicitly requires no overrides. */
 
 /* ──────────────── Apothecary Night (green-gold pastel) ──────────────── */
 html[data-theme='apothecary'] {

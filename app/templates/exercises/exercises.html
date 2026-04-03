@@ -17,7 +17,7 @@
 
 <section id="new-exercise-form-container"></section>
 
-<section id="page-container">
+<section class="page-grid">
 
     {% if exercises %}
         {% for exercise in exercises %}
@@ -38,7 +38,7 @@
                     </span>
                 </div>
 
-                <div class="tag-list">
+                <div class="tags-group">
                     {% for muscle in exercise.muscles or [] %}
                         <span class="tag">{{ muscle }}</span>
                     {% endfor %}

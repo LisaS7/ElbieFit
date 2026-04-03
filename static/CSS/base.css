@@ -5,7 +5,7 @@
     sans-serif;
   --font-decorative: 'Caesar Dressing', var(--font-plain);
 
-  /* Theme variables (defaults; overridden per theme) */
+  /* Theme variables (defaults match the Ink theme; overridden per theme) */
   --color-bg: #0f1019;
   --color-panel: #181a2d;
   --color-card: #22243c;
@@ -20,13 +20,14 @@
 
   --color-button: #7aa2ff;
   --color-button-text: #0d1020;
-  --color-button-secondary: #a6accd;
+  --color-button-secondary: #a09ae0;
 
   --color-toast-bg: #f1ecff;
-  --color-toast-text: #11121a;
+  --color-toast-text: #0f1019;
 
   --radius: 12px;
   --radius-sm: 10px;
+  --radius-pill: 999px;
   --max-width: 980px;
 }
 
@@ -69,14 +70,14 @@ main {
   padding: 1rem 0;
 }
 
-#app-header #brand {
+#brand {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   text-decoration: none;
 }
 
-#app-header #brand p {
+#brand p {
   margin: 0;
   font-family: var(--font-decorative);
   font-size: 1.3rem;
@@ -84,7 +85,7 @@ main {
   letter-spacing: 0.5px;
 }
 
-#app-header #brand img {
+#brand img {
   width: 44px;
   height: auto;
 }
@@ -149,7 +150,7 @@ main {
   }
 }
 
-#page-container {
+.page-grid {
   max-width: 700px;
   margin: 0 auto;
   display: grid;
@@ -165,15 +166,6 @@ main {
   width: min(92%, var(--max-width));
   margin: 1rem auto 2rem auto;
   color: var(--color-muted);
-}
-
-/* ──────────────────────────────── Profile Page ──────────────────────────────── */
-
-.profile-layout {
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 /* ──────────────────────────────── Text ──────────────────────────────── */
@@ -222,6 +214,10 @@ a:hover {
   gap: 1rem;
 }
 
+.mt-1 {
+  margin-top: 1rem;
+}
+
 /* ──────────────────────────────── Toast ──────────────────────────────── */
 
 .toast {
@@ -237,96 +233,3 @@ a:hover {
   font-size: 1rem;
   z-index: 9999;
 }
-
-/* ──────────────────────────────── Workout List Page  ──────────────────────────────── */
-
-.workout-card {
-  text-decoration: none;
-  display: block;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.workout-card:hover {
-  border-color: var(--color-accent);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-}
-
-/* ──────────────────────────────── Workout Detail Page  ──────────────────────────────── */
-
-.sets-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.sets-table-header,
-.set-row {
-  display: grid;
-  grid-template-columns: 52px 76px 1fr 80px 96px;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.sets-table th:nth-child(3),
-.set-row td:nth-child(3) {
-  text-align: center;
-}
-
-.sets-table-header {
-  color: var(--color-muted);
-  font-size: 0.9rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-borders);
-  margin-bottom: 0.25rem;
-}
-
-.set-row {
-  border-bottom: 1px solid var(--color-borders);
-  padding: 0.5rem 0;
-}
-
-.set-row td:last-child {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
-#sets-list {
-  padding-top: 1.25rem;
-}
-
-/* ── Exercise groups ── */
-
-.exercise-group + .exercise-group {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-borders);
-}
-
-/* ── Notes label in workout meta ── */
-
-#workout-notes h3 {
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--color-muted);
-  margin: 0.5rem 0 0.1rem;
-}
-
-/* ── RPE badges ── */
-
-.rpe-badge {
-  display: inline-block;
-  min-width: 2rem;
-  text-align: center;
-  padding: 0.15rem 0.45rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.rpe-easy     { background: rgba(74, 222, 128, 0.12); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.25); }
-.rpe-moderate { background: rgba(250, 204, 21, 0.12);  color: #facc15; border: 1px solid rgba(250, 204, 21, 0.25); }
-.rpe-hard     { background: rgba(251, 146, 60, 0.12);  color: #fb923c; border: 1px solid rgba(251, 146, 60, 0.25); }
-.rpe-max      { background: rgba(248, 113, 113, 0.12); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.25); }
