@@ -5,9 +5,11 @@ from typing import Any
 
 import pytest
 
+from app.models.exercise import Exercise
 from app.models.profile import UserProfile
 from app.models.workout import Workout
 from app.repositories.errors import ProfileRepoError
+from app.routes import exercise as exercise_routes
 from app.routes import profile as profile_routes
 from app.routes import workout as workout_routes
 from app.utils import db
@@ -102,29 +104,91 @@ def fake_workout_repo(app_instance):
 
 class FakeExerciseRepo:
     """
-    Tiny fake to stand in for DynamoExerciseRepository in route tests.
+    Fake DynamoExerciseRepository for route tests.
     """
 
     def __init__(self):
-        self.calls = []
+        self.exercises: dict[str, Exercise] = {}
+        self.created: list[Exercise] = []
+        self.updated: list[Exercise] = []
+        self.deleted: list[tuple[str, str]] = []
 
-    def get_exercise_by_id(self, user_sub: str, exercise_id: str):
-        # record calls so tests *could* assert on them later
-        self.calls.append((user_sub, exercise_id))
+        # Override to make get_exercise_by_id raise
+        self.raise_on_get: bool = False
+        self.raise_on_create: bool = False
+        self.raise_on_update: bool = False
+        self.raise_on_delete: bool = False
 
-        # Return a super simple fake object that behaves enough like an exercise
-        class FakeExercise:
-            def __init__(self, exercise_id: str):
-                self.exercise_id = exercise_id
-                self.name = f"Exercise {exercise_id}"
+    def _make_exercise(self, exercise_id: str) -> Exercise:
+        now = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        return Exercise(
+            PK=db.build_user_pk("test-user-sub"),
+            SK=db.build_exercise_sk(exercise_id),
+            type="exercise",
+            name=f"Exercise {exercise_id}",
+            equipment="barbell",
+            category="legs",
+            muscles=["quads"],
+            created_at=now,
+            updated_at=now,
+        )
 
-        return FakeExercise(exercise_id)
+    def seed(self, exercise: Exercise) -> None:
+        self.exercises[exercise.exercise_id] = exercise
+
+    def get_all_for_user(self, user_sub: str) -> list[Exercise]:
+        return list(self.exercises.values())
+
+    def get_exercise_by_id(self, user_sub: str, exercise_id: str) -> Exercise | None:
+        from app.repositories.errors import ExerciseRepoError
+
+        if self.raise_on_get:
+            raise ExerciseRepoError("boom")
+        return self.exercises.get(exercise_id)
+
+    def create_exercise(self, user_sub: str, data) -> Exercise:
+        from app.repositories.errors import ExerciseRepoError
+
+        if self.raise_on_create:
+            raise ExerciseRepoError("boom")
+        now = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        new_id = str(uuid.uuid4())
+        exercise = Exercise(
+            PK=db.build_user_pk(user_sub),
+            SK=db.build_exercise_sk(new_id),
+            type="exercise",
+            name=data.name,
+            equipment=data.equipment,
+            category=data.category,
+            muscles=data.muscles,
+            created_at=now,
+            updated_at=now,
+        )
+        self.created.append(exercise)
+        self.exercises[exercise.exercise_id] = exercise
+        return exercise
+
+    def update_exercise(self, exercise: Exercise) -> None:
+        from app.repositories.errors import ExerciseRepoError
+
+        if self.raise_on_update:
+            raise ExerciseRepoError("boom")
+        self.updated.append(exercise)
+        self.exercises[exercise.exercise_id] = exercise
+
+    def delete_exercise(self, user_sub: str, exercise_id: str) -> None:
+        from app.repositories.errors import ExerciseRepoError
+
+        if self.raise_on_delete:
+            raise ExerciseRepoError("boom")
+        self.deleted.append((user_sub, exercise_id))
+        self.exercises.pop(exercise_id, None)
 
 
 @pytest.fixture(autouse=True)
 def fake_exercise_repo(app_instance):
     """
-    Override get_exercise_repo() for all tests that use the FastAPI app.
+    Override workout_routes.get_exercise_repo() for all tests (autouse).
     """
     repo = FakeExerciseRepo()
     app_instance.dependency_overrides[workout_routes.get_exercise_repo] = lambda: repo
@@ -132,6 +196,19 @@ def fake_exercise_repo(app_instance):
         yield repo
     finally:
         app_instance.dependency_overrides.pop(workout_routes.get_exercise_repo, None)
+
+
+@pytest.fixture
+def fake_exercise_route_repo(app_instance):
+    """
+    Override exercise_routes.get_exercise_repo() for exercise route tests.
+    """
+    repo = FakeExerciseRepo()
+    app_instance.dependency_overrides[exercise_routes.get_exercise_repo] = lambda: repo
+    try:
+        yield repo
+    finally:
+        app_instance.dependency_overrides.pop(exercise_routes.get_exercise_repo, None)
 
 
 @pytest.fixture

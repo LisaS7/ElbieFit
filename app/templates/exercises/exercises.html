@@ -6,6 +6,13 @@
 
 <header id="page-header" class="flex-row-spaced">
     <h1>Exercises</h1>
+    <button
+        class="button small"
+        type="button"
+        hx-get="{{ url_for('get_new_exercise_form') }}"
+        hx-target="#new-exercise-form-container"
+        hx-swap="innerHTML"
+    >+ New Exercise</button>
 </header>
 
 <section id="new-exercise-form-container"></section>
@@ -15,7 +22,7 @@
     {% if exercises %}
         {% for exercise in exercises %}
 
-            <div class="card exercise-card">
+            <div class="card exercise-card" id="exercise-card-{{ exercise.exercise_id }}">
 
                 <div class="card-header">
                     <div class="exercise-name">{{ exercise.name }}</div>
@@ -41,10 +48,23 @@
                     <button
                         class="icon-button"
                         type="button"
-                        aria-label="Edit exercise">
-                        ✎
-                    </button>
+                        aria-label="Edit exercise"
+                        hx-get="{{ url_for('get_edit_exercise_form', exercise_id=exercise.exercise_id) }}"
+                        hx-target="#edit-exercise-form-container-{{ exercise.exercise_id }}"
+                        hx-swap="innerHTML"
+                    >✎</button>
+                    <button
+                        class="icon-button"
+                        type="button"
+                        aria-label="Delete exercise"
+                        hx-delete="{{ url_for('delete_exercise', exercise_id=exercise.exercise_id) }}"
+                        hx-target="#exercise-card-{{ exercise.exercise_id }}"
+                        hx-swap="outerHTML"
+                        hx-confirm="Delete {{ exercise.name }}?"
+                    >✕</button>
                 </div>
+
+                <div id="edit-exercise-form-container-{{ exercise.exercise_id }}"></div>
 
             </div>
 

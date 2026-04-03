@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Literal, Optional
 
+from fastapi import Form
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from app.utils.dates import dt_to_iso
@@ -94,3 +95,66 @@ class Exercise(BaseModel):
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
         return data
+
+
+class ExerciseFormBase(BaseModel):
+    name: NameStr
+    equipment: EquipmentStr
+    category: Optional[CategoryStr] = None
+    muscles: list[MuscleStr] = Field(min_length=1)
+
+    @field_validator("equipment")
+    @classmethod
+    def validate_equipment(cls, v: str) -> str:
+        v = _normalise_key(v)
+        if v not in EQUIPMENT_TYPES:
+            allowed = ", ".join(EQUIPMENT_TYPES)
+            raise ValueError(f"Invalid equipment '{v}'. Allowed: {allowed}")
+        return v
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        v = _normalise_key(v)
+        if v not in EXERCISE_CATEGORIES:
+            allowed = ", ".join(EXERCISE_CATEGORIES)
+            raise ValueError(f"Invalid category '{v}'. Allowed: {allowed}")
+        return v
+
+    @field_validator("muscles")
+    @classmethod
+    def validate_muscles(cls, v: list[str]) -> list[str]:
+        normalized: list[str] = []
+        for m in v:
+            mm = _normalise_key(m)
+            if mm not in MUSCLE_GROUPS:
+                allowed = ", ".join(MUSCLE_GROUPS)
+                raise ValueError(f"Invalid muscle '{mm}'. Allowed: {allowed}")
+            normalized.append(mm)
+        return list(dict.fromkeys(normalized))
+
+
+class ExerciseCreate(ExerciseFormBase):
+    @classmethod
+    def as_form(
+        cls,
+        name: Annotated[str, Form()],
+        equipment: Annotated[str, Form()],
+        category: Annotated[Optional[str], Form()] = None,
+        muscles: Annotated[list[str], Form()] = [],
+    ) -> "ExerciseCreate":
+        return cls(name=name, equipment=equipment, category=category or None, muscles=muscles)
+
+
+class ExerciseUpdate(ExerciseFormBase):
+    @classmethod
+    def as_form(
+        cls,
+        name: Annotated[str, Form()],
+        equipment: Annotated[str, Form()],
+        category: Annotated[Optional[str], Form()] = None,
+        muscles: Annotated[list[str], Form()] = [],
+    ) -> "ExerciseUpdate":
+        return cls(name=name, equipment=equipment, category=category or None, muscles=muscles)

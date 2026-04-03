@@ -1,11 +1,12 @@
+import uuid
 from typing import List
 
 from boto3.dynamodb.conditions import Key
 
-from app.models.exercise import Exercise
+from app.models.exercise import Exercise, ExerciseCreate, ExerciseUpdate
 from app.repositories.base import DynamoRepository
 from app.repositories.errors import ExerciseRepoError, RepoError
-from app.utils import db
+from app.utils import dates, db
 from app.utils.log import logger
 
 
@@ -58,3 +59,43 @@ class DynamoExerciseRepository(DynamoRepository[Exercise]):
             return None
 
         return self._to_model(item)
+
+    # ----------------------- Write -----------------------------
+
+    def create_exercise(self, user_sub: str, data: ExerciseCreate) -> Exercise:
+        new_id = str(uuid.uuid4())
+        now = dates.now()
+
+        exercise = Exercise(
+            PK=db.build_user_pk(user_sub),
+            SK=db.build_exercise_sk(new_id),
+            type="exercise",
+            name=data.name,
+            equipment=data.equipment,
+            category=data.category,
+            muscles=data.muscles,
+            created_at=now,
+            updated_at=now,
+        )
+
+        try:
+            self._safe_put(exercise.to_ddb_item())
+        except RepoError as e:
+            raise ExerciseRepoError("Failed to create exercise") from e
+
+        return exercise
+
+    def update_exercise(self, exercise: Exercise) -> None:
+        try:
+            self._safe_put(exercise.to_ddb_item())
+        except RepoError as e:
+            raise ExerciseRepoError("Failed to update exercise") from e
+
+    def delete_exercise(self, user_sub: str, exercise_id: str) -> None:
+        pk = db.build_user_pk(user_sub)
+        sk = db.build_exercise_sk(exercise_id)
+
+        try:
+            self._safe_delete(Key={"PK": pk, "SK": sk})
+        except RepoError as e:
+            raise ExerciseRepoError("Failed to delete exercise") from e

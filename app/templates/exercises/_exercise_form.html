@@ -1,0 +1,65 @@
+<form hx-post="{{ action_url }}" hx-swap="none">
+
+    <div class="form-field">
+        <label for="ex-name">Name</label>
+        <input
+            type="text"
+            id="ex-name"
+            name="name"
+            value="{{ exercise.name if exercise else '' }}"
+            required
+        >
+    </div>
+
+    <div class="form-field">
+        <label for="ex-equipment">Equipment</label>
+        <select id="ex-equipment" name="equipment" required>
+            {% for eq in equipment_types %}
+                <option
+                    value="{{ eq }}"
+                    {% if exercise and exercise.equipment == eq %}selected{% endif %}
+                >{{ eq | replace('_', ' ') | title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-field">
+        <label for="ex-category">Category</label>
+        <select id="ex-category" name="category">
+            <option value="">— None —</option>
+            {% for cat in exercise_categories %}
+                <option
+                    value="{{ cat }}"
+                    {% if exercise and exercise.category == cat %}selected{% endif %}
+                >{{ cat | title }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-field">
+        <label>Muscles</label>
+        <div class="checkbox-group">
+            {% for muscle in muscle_groups %}
+                <label class="checkbox-label">
+                    <input
+                        type="checkbox"
+                        name="muscles"
+                        value="{{ muscle }}"
+                        {% if exercise and muscle in exercise.muscles %}checked{% endif %}
+                    >
+                    {{ muscle | replace('_', ' ') | title }}
+                </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="form-row">
+        <button type="submit" class="button small">{{ submit_label }}</button>
+        <button
+            type="button"
+            class="button small secondary"
+            data-cancel-target="{{ cancel_target }}"
+        >Cancel</button>
+    </div>
+
+</form>
