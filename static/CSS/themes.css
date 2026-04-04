@@ -1,60 +1,47 @@
-/* The Ink theme is the default appearance — its values are baked into :root in base.css.
-   Selecting "ink" explicitly requires no overrides. */
+/*
+ * Night Gains theme system.
+ * All themes share the same dark backgrounds and typography.
+ * Only the accent color (and its derived tint/hover values) changes.
+ *
+ * volt       → Electric green  #39d353  (default, defined in :root in base.css)
+ * arctic     → iOS blue        #0a84ff
+ * ultraviolet → iOS purple     #bf5af2
+ */
 
-/* ──────────────── Apothecary Night (green-gold pastel) ──────────────── */
-html[data-theme='apothecary'] {
-  --color-bg: #0c1210;
-  --color-panel: #131d1a;
-  --color-card: #1c2a25;
-  --color-borders: #2d3f38;
+/* ──────────────── Arctic (Cool Blue accent) ──────────────── */
+html[data-theme='arctic'] {
+  --color-accent:       #0a84ff;
+  --color-accent-rgb:   10, 132, 255;
+  --color-accent-tint:  rgba(10, 132, 255, 0.12);
+  --color-accent-hover: rgba(10, 132, 255, 0.4);
+  --color-link:         #0a84ff;
+  --color-tag:          #0a84ff;
 
-  --color-heading: #eaf6f1;
-  --color-text: #bcd6cb;
-  --color-muted: #88a79a;
+  --color-button:       #0a84ff;
+  --color-button-text:  #ffffff;
 
-  --color-accent: #7fe0b3;
-  --color-link: #60c49a;
-  --color-tag: #d6c08b;
+  --color-success:      #39d353;
+  --chart-bar-color:    #0a84ff;
 
-  --color-button: #7fe0b3;
-  --color-button-text: #07110d;
-  --color-button-secondary: #d6c08b;
-
-  --color-danger: #f87171;
-  --color-warning: #facc15;
-  --color-success: #4ade80;
-
-  --chart-bar-color: #34d399; /* emerald-400 — vivid teal-green suits apothecary */
-
-  /* Donut chart palette — Apothecary: greens, warm metallics, pastel pink/purple */
-  --chart-dist-palette: #34d399,#86efac,#d6c08b,#f9a8d4,#6ee7b7,#fbbf24,#d8b4fe,#4ade80,#c4b5fd,#e2c97e,#fbcfe8,#a7f3d0,#ddd6fe;
+  /* Donut chart palette — Arctic: blues, cyans, cool purples */
+  --chart-dist-palette: #0a84ff,#38bdf8,#818cf8,#5ac8fa,#a78bfa,#60a5fa,#c084fc,#7dd3fc,#2dd4bf,#93c5fd,#e879f9,#c4b5fd,#bae6fd;
 }
 
-/* ──────────────── Prehistoric Night (warm pastel ember) ──────────────── */
-html[data-theme='prehistoric'] {
-  --color-bg: #170f0b;
-  --color-panel: #231712;
-  --color-card: #2f2019;
-  --color-borders: #473327;
+/* ──────────────── Ultraviolet (Vivid Purple accent) ──────────────── */
+html[data-theme='ultraviolet'] {
+  --color-accent:       #bf5af2;
+  --color-accent-rgb:   191, 90, 242;
+  --color-accent-tint:  rgba(191, 90, 242, 0.12);
+  --color-accent-hover: rgba(191, 90, 242, 0.4);
+  --color-link:         #bf5af2;
+  --color-tag:          #bf5af2;
 
-  --color-heading: #fff4e6;
-  --color-text: #f2d7c2;
-  --color-muted: #c4a391;
+  --color-button:       #bf5af2;
+  --color-button-text:  #ffffff;
 
-  --color-accent: #ffb38a;
-  --color-link: #e89c75;
-  --color-tag: #ffd59e;
+  --color-success:      #39d353;
+  --chart-bar-color:    #bf5af2;
 
-  --color-button: #ffb38a;
-  --color-button-text: #2a1207;
-  --color-button-secondary: #ffd59e;
-
-  --color-danger: #f87171;
-  --color-warning: #facc15;
-  --color-success: #4ade80;
-
-  --chart-bar-color: #fb923c; /* orange-400 — warm amber suits prehistoric ember theme */
-
-  /* Donut chart palette — Prehistoric: reds, oranges, warm browns, a couple of warm greens */
-  --chart-dist-palette: #f87171,#fb923c,#fbbf24,#fca5a5,#fdba74,#a3e635,#d97706,#ef4444,#84cc16,#f59e0b,#bef264,#c2763a,#facc15;
+  /* Donut chart palette — Ultraviolet: purples, pinks, magentas */
+  --chart-dist-palette: #bf5af2,#e879f9,#da8fff,#a855f7,#f472b6,#c084fc,#ec4899,#d946ef,#f9a8d4,#9333ea,#f0abfc,#7c3aed,#fda4af;
 }

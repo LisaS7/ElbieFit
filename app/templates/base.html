@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ theme or 'prehistoric' }}">
+<html lang="en" data-theme="{{ theme or 'volt' }}">
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -21,7 +21,7 @@
     {# Font #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caesar+Dressing&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700;800&family=Quantico:wght@400;700&display=swap" rel="stylesheet">
     {# Style #}
     <link rel="stylesheet" href="{{ url_for('static', path='CSS/base.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', path='CSS/themes.css') }}" />
@@ -33,7 +33,6 @@
     <header id="app-header" class="flex-row-spaced">
 
       <a id="brand" href="/">
-        <img src="{{ url_for('static', path='images/mascot/' ~ (theme or 'prehistoric') ~ '.png') }}">
         <p>ElbieFit</p>
       </a>
 

@@ -1,41 +1,41 @@
 :root {
   /* Typography */
-  --font-plain:
-    system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-decorative: 'Caesar Dressing', var(--font-plain);
+  --font-plain: 'DM Sans', system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Quantico', 'DM Sans', system-ui, sans-serif;
 
-  /* Theme variables (defaults match the Ink theme; overridden per theme) */
-  --color-bg: #0f1019;
-  --color-panel: #181a2d;
-  --color-card: #22243c;
-  --color-borders: #323552;
+  /* Night Gains — default (Electric Green accent) */
+  --color-bg:    #0a0a0a;
+  --color-panel: #141414;
+  --color-card:  #1c1c1e;
+  --color-borders: #2c2c2e;
 
-  --color-heading: #f1ecff;
-  --color-text: #c6c2e2;
-  --color-muted: #9a96b8;
+  --color-heading: #ffffff;
+  --color-text:    rgba(235, 235, 245, 0.8);
+  --color-muted:   #8e8e93;
 
-  --color-accent: #7aa2ff; /* links, focus, key accents */
-  --color-link: #6b8fd9;   /* slightly muted accent for inline text links */
-  --color-tag: #9b90ff;
+  --color-accent:           #39d353;
+  --color-accent-rgb:       57, 211, 83;
+  --color-accent-tint:      rgba(57, 211, 83, 0.12);
+  --color-accent-hover:     rgba(57, 211, 83, 0.4);
+  --color-link:             #39d353;
+  --color-tag:              #39d353;
 
-  --color-button: #7aa2ff;
-  --color-button-text: #0d1020;
-  --color-button-secondary: #a09ae0;
+  --color-button:           #39d353;
+  --color-button-text:      #0a0a0a;
 
-  --color-danger: #f87171;
-  --color-warning: #facc15;
-  --color-success: #4ade80;
+  --color-danger:  #ff453a;
+  --color-warning: #ffd60a;
+  --color-success: #39d353;
 
-  --chart-bar-color: #34d399; /* emerald-400 — vivid green for bar charts */
+  --chart-bar-color: #39d353;
 
-  /* Donut chart palette — Ink: blues and purples with a touch of green */
-  --chart-dist-palette: #60a5fa,#a78bfa,#818cf8,#93c5fd,#c084fc,#22d3ee,#e879f9,#3b82f6,#34d399,#6366f1,#2dd4bf,#4ade80,#7dd3fc;
+  /* Donut chart palette — Volt: greens, teals, limes, warm accents */
+  --chart-dist-palette: #39d353,#2dd4bf,#a3e635,#ffd60a,#30d158,#22d3ee,#86efac,#84cc16,#f59e0b,#06b6d4,#bef264,#34d399,#67e8f9;
 
-  --radius: 12px;
-  --radius-sm: 10px;
+  --radius:      16px;
+  --radius-sm:   12px;
   --radius-pill: 999px;
-  --max-width: 980px;
+  --max-width:   980px;
 }
 
 /* ──────────────────────────────── Reset ──────────────────────────────── */
@@ -86,10 +86,11 @@ main {
 
 #brand p {
   margin: 0;
-  font-family: var(--font-decorative);
-  font-size: 1.3rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
   color: var(--color-heading);
-  letter-spacing: 0.5px;
 }
 
 #brand img {
@@ -99,7 +100,7 @@ main {
 
 #app-header nav {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.25rem;
   justify-content: flex-end;
   flex-wrap: wrap;
 }
@@ -120,22 +121,45 @@ main {
 }
 
 #app-header nav a {
+  position: relative;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-sm);
-  color: var(--color-text);
+  color: var(--color-muted);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.15s ease;
+}
+
+#app-header nav a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 #app-header nav a:hover {
-  background: var(--color-panel);
   color: var(--color-heading);
+  background: transparent;
 }
 
 #app-header nav a.nav-active {
   color: var(--color-heading);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-color: var(--color-accent);
-  text-decoration-thickness: 2px;
+  text-decoration: none;
+}
+
+#app-header nav a.nav-active::after {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {
@@ -155,6 +179,10 @@ main {
   #app-header nav.is-open {
     display: flex;
   }
+
+  #app-header nav a::after {
+    display: none;
+  }
 }
 
 .page-grid {
@@ -163,8 +191,8 @@ main {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 1rem;
-  border: 1px solid var(--color-borders);
-  border-radius: var(--radius);
+  border: 2px solid var(--color-borders);
+  border-radius: 0;
   background: var(--color-panel);
   padding: 1rem;
 }
@@ -182,16 +210,27 @@ h2,
 h3 {
   color: var(--color-heading);
   margin: 0.5rem 0;
+  font-family: var(--font-display);
 }
 
 h1 {
-  font-family: var(--font-decorative);
+  font-weight: 700;
   font-size: 1.75rem;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 h2 {
   font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Section-label variant: small caps, muted */
+h2.section-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 h3 {
@@ -234,4 +273,3 @@ a:hover {
 .mt-1 {
   margin-top: 1rem;
 }
-

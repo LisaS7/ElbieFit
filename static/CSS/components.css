@@ -5,33 +5,51 @@ button {
   font-family: inherit;
 }
 
+/* Primary button */
 .button,
 a.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   cursor: pointer;
-  border: 1px solid var(--color-borders);
+  border: none;
   border-radius: var(--radius-sm);
   padding: 0.55rem 0.85rem;
   background: var(--color-button);
   color: var(--color-button-text);
   font-family: var(--font-plain);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
 }
 
 .button:hover,
 a.button:hover {
-  filter: brightness(1.05);
+  filter: brightness(1.1);
+  box-shadow: 0 0 14px rgba(var(--color-accent-rgb), 0.45);
+  text-decoration: none;
 }
 
+/* Secondary / ghost button */
 .button.secondary,
 a.button.secondary {
-  background: var(--color-button-secondary);
-  color: var(--color-button-text);
+  background: transparent;
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
+}
+
+.button.secondary:hover,
+a.button.secondary:hover {
+  background: var(--color-accent-tint);
+  filter: none;
 }
 
 .button.small,
 a.button.small {
   padding: 0.35rem 0.6rem;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
 .button.danger,
@@ -44,6 +62,7 @@ a.button.danger {
 .button.danger:hover,
 a.button.danger:hover {
   background: color-mix(in srgb, var(--color-danger) 22%, transparent);
+  box-shadow: 0 0 12px rgba(255, 69, 58, 0.4);
   filter: none;
 }
 
@@ -60,29 +79,39 @@ a.button.danger:hover {
   margin-top: 0.5rem;
 }
 
+/* Icon buttons — pencil/delete circles */
 .icon-button {
-  width: 40px;
-  height: 40px;
-  font-size: 2rem;
-  border-radius: var(--radius-pill);
+  width: 36px;
+  height: 36px;
+  font-size: 1rem;
+  border-radius: 0;
   border: 1px solid var(--color-borders);
-  background: var(--color-panel);
-  color: var(--color-heading);
+  background: transparent;
+  color: var(--color-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
+  text-decoration: none;
+  transition: color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
 }
 
 .icon-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 2px var(--color-accent);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: transparent;
+  transform: none;
+  box-shadow: 0 0 6px rgba(var(--color-accent-rgb), 0.3);
+  text-decoration: none;
 }
 
 .delete-btn--confirm {
-  border-color: var(--color-danger, #c0392b);
-  color: var(--color-danger, #c0392b);
-  box-shadow: 0 0 0 2px var(--color-danger, #c0392b);
+  color: var(--color-danger);
+}
+
+.delete-btn--confirm:hover {
+  color: var(--color-danger);
 }
 
 /* ──────────────────────────────── Toggle Group ──────────────────────────────── */
@@ -90,7 +119,7 @@ a.button.danger:hover {
 .toggle-group {
   display: inline-flex;
   border: 1px solid var(--color-borders);
-  border-radius: var(--radius-sm);
+  border-radius: 2px;
   overflow: hidden;
 }
 
@@ -114,7 +143,7 @@ a.button.danger:hover {
 }
 
 .toggle-btn.active {
-  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  background: var(--color-accent-tint);
   color: var(--color-accent);
 }
 
@@ -124,10 +153,10 @@ a.button.danger:hover {
   display: grid;
   gap: 0.5rem 1rem;
   padding: 1rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--color-borders);
+  border-radius: 0;
+  border: 2px solid var(--color-borders);
+  border-left: 3px solid var(--color-accent);
   background: var(--color-card);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .card--compact {
@@ -166,12 +195,13 @@ a.button.danger:hover {
 }
 
 .tag {
-  border-radius: var(--radius-pill);
+  border-radius: 2px;
   padding: 0.2rem 0.55rem;
   font-size: 0.85rem;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--color-borders);
+  background: transparent;
+  border: 1px solid var(--color-accent);
   color: var(--color-tag);
+  box-shadow: 0 0 4px rgba(var(--color-accent-rgb), 0.2);
   max-width: 20ch;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -179,6 +209,14 @@ a.button.danger:hover {
 }
 
 /* ──────────────────────────────── Forms ──────────────────────────────── */
+
+label {
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
 
 form {
   display: flex;
@@ -224,6 +262,8 @@ select:focus,
 textarea:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3), inset 0 0 6px rgba(var(--color-accent-rgb), 0.08);
+  background: color-mix(in srgb, var(--color-accent-tint) 50%, var(--color-panel));
 }
 
 .checkbox-group {
@@ -251,10 +291,11 @@ textarea:focus {
   margin: 0;
   padding: 0.35rem 0.6rem;
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-borders);
+  border: none;
   background: var(--color-button);
   color: var(--color-button-text);
   font-size: 0.95rem;
+  font-weight: 600;
 }
 
 /* ──────────────────────────────── Workout List ──────────────────────────────── */
@@ -262,13 +303,11 @@ textarea:focus {
 .workout-card {
   text-decoration: none;
   display: block;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
 }
 
 .workout-card:hover {
-  border-color: var(--color-accent);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  border-color: var(--color-accent-hover);
 }
 
 .workout-name {
@@ -286,21 +325,24 @@ textarea:focus {
 .sets-table-header,
 .set-row {
   display: grid;
-  grid-template-columns: 52px 76px 1fr 80px 96px;
+  grid-template-columns: 1fr 1fr 1fr 1fr 96px;
   gap: 0.5rem;
   align-items: center;
 }
 
-.sets-table th:nth-child(3),
-.set-row td:nth-child(3) {
-  text-align: center;
+
+.sets-table-header th {
+  text-align: left;
 }
 
 .sets-table-header {
   color: var(--color-muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-borders);
+  border-bottom: 2px solid var(--color-accent);
   margin-bottom: 0.25rem;
 }
 
@@ -309,9 +351,28 @@ textarea:focus {
   padding: 0.5rem 0;
 }
 
+/* Set number — muted */
+.set-row td:first-child {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Weight — bold white */
+.set-row td:nth-child(3) {
+  font-weight: 700;
+  color: var(--color-heading);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Reps — slightly smaller */
+.set-row td:nth-child(2) {
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .set-row td:last-child {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   justify-content: flex-end;
 }
 
@@ -329,7 +390,7 @@ textarea:focus {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
   color: var(--color-muted);
   margin: 0.5rem 0 0.1rem;
 }
@@ -342,6 +403,7 @@ textarea:focus {
   border-radius: var(--radius-pill);
   font-size: 0.85rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .rpe-easy {
@@ -357,9 +419,9 @@ textarea:focus {
 }
 
 .rpe-hard {
-  background: color-mix(in srgb, #fb923c 12%, transparent);
-  color: #fb923c;
-  border: 1px solid color-mix(in srgb, #fb923c 25%, transparent);
+  background: color-mix(in srgb, #ff9f0a 12%, transparent);
+  color: #ff9f0a;
+  border: 1px solid color-mix(in srgb, #ff9f0a 25%, transparent);
 }
 
 .rpe-max {
@@ -401,7 +463,6 @@ textarea:focus {
   max-height: 300px;
 }
 
-/* Taller variant for charts that have more horizontal room to fill */
 .chart-container--tall {
   max-height: 350px;
 }
@@ -438,15 +499,9 @@ textarea:focus {
   .progress-dashboard__exercise     { grid-area: exercise; }
   .progress-dashboard__one-rm       {
     grid-area: one-rm;
-    /* Constrain the 1RM card so it doesn't stretch wall-to-wall on its own row */
     max-width: 50%;
   }
 
-  /*
-   * Distribution sits in a 1/3-width column.
-   * A square-ish chart reads better there — cap it at the default 300px
-   * and give it a min-height so the toggle controls don't collapse it.
-   */
   .progress-dashboard__distribution .chart-container {
     min-height: 220px;
   }
@@ -482,7 +537,7 @@ textarea:focus {
   font-size: 0.95rem;
   font-weight: 500;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
   opacity: 1;
   transition: opacity 0.4s ease;
 }
@@ -491,14 +546,26 @@ textarea:focus {
   background: color-mix(in srgb, var(--color-success) 15%, var(--color-panel));
   color: var(--color-success);
   border: 1px solid color-mix(in srgb, var(--color-success) 35%, transparent);
+  box-shadow: 0 4px 20px rgba(57, 211, 83, 0.25), inset 0 0 8px rgba(57, 211, 83, 0.08);
 }
 
 .toast.error {
   background: color-mix(in srgb, var(--color-danger) 15%, var(--color-panel));
   color: var(--color-danger);
   border: 1px solid color-mix(in srgb, var(--color-danger) 35%, transparent);
+  box-shadow: 0 4px 20px rgba(255, 69, 58, 0.25), inset 0 0 8px rgba(255, 69, 58, 0.08);
 }
 
 .toast.fade-out {
   opacity: 0;
+}
+
+/* ──────────────────────────────── Exercise cards (hover) ──────────────────────────────── */
+
+.card.exercise-card {
+  transition: border-color 0.15s ease;
+}
+
+.card.exercise-card:hover {
+  border-color: var(--color-accent-hover);
 }
