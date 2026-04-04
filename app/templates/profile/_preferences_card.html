@@ -15,23 +15,6 @@
   >
 
     <div class="form-field">
-      <label>
-        <input
-          type="checkbox"
-          name="show_tips"
-          value="true"
-          {% set show_tips_value = (prefs_form.show_tips if prefs_form is not none else profile.preferences.show_tips) %}
-          {% if show_tips_value %}checked{% endif %}
-        />
-        Show tips
-      </label>
-
-      {% if prefs_errors and prefs_errors.show_tips %}
-        <p class="muted">{{ prefs_errors.show_tips }}</p>
-      {% endif %}
-    </div>
-
-    <div class="form-field">
       <label for="theme">Theme</label>
       {% set theme_value = (prefs_form.theme if prefs_form else profile.preferences.theme) %}
       <select id="theme" name="theme">

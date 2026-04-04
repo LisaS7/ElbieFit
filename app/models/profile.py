@@ -36,7 +36,6 @@ def _check_timezone(v: str) -> str:
 
 
 class Preferences(BaseModel):
-    show_tips: bool = True
     theme: str = settings.DEFAULT_THEME
     units: Units = "metric"
     # allows arbitrary extra keys
@@ -88,7 +87,6 @@ class AccountUpdateForm(BaseModel):
 
 
 class PreferencesUpdateForm(BaseModel):
-    show_tips: bool = False
     theme: str
     units: Units
 

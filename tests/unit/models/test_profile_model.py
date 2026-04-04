@@ -13,7 +13,6 @@ from app.models.profile import AccountUpdateForm, Preferences
 def test_preferences_defaults():
     prefs = Preferences()
 
-    assert prefs.show_tips is True
     assert prefs.theme == "prehistoric"
     assert prefs.units == "metric"
 
@@ -39,7 +38,6 @@ def test_user_profile_valid_instance_and_default_preferences(example_profile):
     # preferences should be a Preferences instance with defaults
     assert isinstance(example_profile.preferences, Preferences)
     assert example_profile.preferences.units == "metric"
-    assert example_profile.preferences.show_tips is True
 
 
 def test_user_profile_requires_sk_profile_literal(profile):

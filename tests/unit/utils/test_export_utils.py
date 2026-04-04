@@ -19,7 +19,7 @@ _MINIMAL_PAYLOAD = {
         "display_name": "Test User",
         "email": "test@example.com",
         "timezone": "Europe/London",
-        "preferences": {"units": "metric", "theme": "light", "show_tips": True},
+        "preferences": {"units": "metric", "theme": "light"},
     },
     "exercises": [],
     "workouts": [],

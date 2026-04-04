@@ -61,13 +61,12 @@ class FakeProfileRepo:
         return self._updated_profile  # type: ignore[return-value]
 
     def update_preferences(
-        self, user_sub: str, *, show_tips: bool, theme: str, units: str
+        self, user_sub: str, *, theme: str, units: str
     ) -> UserProfile:
         if self._raise_on_update:
             raise ProfileRepoError("boom update")
         self.last_update_prefs = {
             "user_sub": user_sub,
-            "show_tips": show_tips,
             "theme": theme,
             "units": units,
         }

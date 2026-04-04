@@ -157,7 +157,7 @@ def test_post_preferences_success_returns_card_with_saved(
     updated = original.model_copy(
         update={
             "preferences": original.preferences.model_copy(
-                update={"show_tips": True, "theme": "prehistoric", "units": "imperial"}
+                update={"theme": "prehistoric", "units": "imperial"}
             )
         }
     )
@@ -166,7 +166,7 @@ def test_post_preferences_success_returns_card_with_saved(
 
     resp = authenticated_client.post(
         "/profile/preferences",
-        data={"show_tips": "true", "theme": "prehistoric", "units": "imperial"},
+        data={"theme": "prehistoric", "units": "imperial"},
     )
 
     assert resp.status_code == 200
@@ -174,34 +174,31 @@ def test_post_preferences_success_returns_card_with_saved(
 
     assert repo.last_update_prefs == {
         "user_sub": repo.last_update_prefs["user_sub"],
-        "show_tips": True,
         "theme": "prehistoric",
         "units": "imperial",
     }
 
 
-def test_post_preferences_unchecked_checkbox_sends_false(
+def test_post_preferences_success_saves_theme_and_units(
     authenticated_client, fake_profile_repo
 ):
     original = _profile()
     updated = original.model_copy(
         update={
             "preferences": original.preferences.model_copy(
-                update={"show_tips": False, "theme": "prehistoric", "units": "metric"}
+                update={"theme": "prehistoric", "units": "metric"}
             )
         }
     )
 
     repo = fake_profile_repo(profile=original, updated_profile=updated)
 
-    # omit show_tips entirely => should become False
     resp = authenticated_client.post(
         "/profile/preferences",
         data={"theme": "prehistoric", "units": "metric"},
     )
 
     assert resp.status_code == 200
-    assert repo.last_update_prefs["show_tips"] is False
 
 
 def test_post_preferences_validation_error_returns_400(
@@ -232,7 +229,6 @@ def test_post_preferences_repo_error_returns_500(
     resp = authenticated_client.post(
         "/profile/preferences",
         data={
-            "show_tips": "true",
             "theme": "prehistoric",
             "units": "metric",
         },

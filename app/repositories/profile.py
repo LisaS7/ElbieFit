@@ -69,7 +69,6 @@ class DynamoProfileRepository(DynamoRepository[UserProfile]):
         self,
         user_sub: str,
         *,
-        show_tips: bool,
         theme: str,
         units: str,
     ) -> UserProfile:
@@ -80,13 +79,11 @@ class DynamoProfileRepository(DynamoRepository[UserProfile]):
             resp = self._safe_update(
                 Key=key,
                 UpdateExpression=(
-                    "SET preferences.show_tips = :st, "
-                    "preferences.theme = :th, "
+                    "SET preferences.theme = :th, "
                     "preferences.units = :un, "
                     "updated_at = :ua"
                 ),
                 ExpressionAttributeValues={
-                    ":st": show_tips,
                     ":th": theme,
                     ":un": units,
                     ":ua": dt_to_iso(now()),

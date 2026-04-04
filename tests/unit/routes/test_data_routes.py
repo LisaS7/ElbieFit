@@ -138,7 +138,7 @@ _MINIMAL_EXPORT = {
         "display_name": "Test",
         "email": "t@t.com",
         "timezone": "UTC",
-        "preferences": {"units": "metric", "theme": "light", "show_tips": True},
+        "preferences": {"units": "metric", "theme": "light"},
     },
     "exercises": [],
     "workouts": [],

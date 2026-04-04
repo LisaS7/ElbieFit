@@ -184,7 +184,6 @@ async def update_preferences(
 
     form = await request.form()
     data = {
-        "show_tips": form.get("show_tips") == "true",
         "theme": form.get("theme") or "",
         "units": form.get("units") or "",
     }
@@ -210,7 +209,6 @@ async def update_preferences(
     try:
         profile = repo.update_preferences(
             user_sub,
-            show_tips=validated.show_tips,
             theme=validated.theme,
             units=validated.units,
         )
