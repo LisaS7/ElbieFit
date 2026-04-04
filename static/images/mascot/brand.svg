@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="visorGrad" x1="130" y1="232" x2="382" y2="232" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C9FFE0"/>
+      <stop offset="1" stop-color="#60F394"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Outer frame -->
+  <rect x="32" y="32" width="448" height="448" rx="28" fill="#05070B"/>
+  <rect x="32.75" y="32.75" width="446.5" height="446.5" rx="27.25" stroke="#263042" stroke-width="1.5"/>
+
+  <!-- Corner rails -->
+  <path d="M88 140V88H140" stroke="#2DDA63" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M372 88H424V140" stroke="#2DDA63" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M140 424H88V372" stroke="#2DDA63" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M424 372V424H372" stroke="#2DDA63" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Visor -->
+  <g filter="url(#softGlow)">
+    <path d="M130 232 C148 192 204 158 256 158 C308 158 364 192 382 232 C364 272 308 306 256 306 C204 306 148 272 130 232 Z"
+          fill="#0A0F16" stroke="#3EE875" stroke-width="3.5"/>
+    <path d="M144 232 C162 196 214 168 256 168 C298 168 350 196 368 232 C350 268 298 296 256 296 C214 296 162 268 144 232 Z"
+          fill="url(#visorGrad)" opacity="0.9"/>
+  </g>
+
+  <!-- Eyes (angled, determined look) -->
+  <g filter="url(#glow)">
+    <g transform="rotate(10, 198, 231)">
+      <rect x="158" y="220" width="80" height="22" rx="11" fill="#07100B"/>
+      <rect x="165" y="224" width="66" height="14" rx="7" fill="#2DDA63"/>
+      <rect x="167" y="225" width="20" height="10" rx="5" fill="#C9FFE0" opacity="0.75"/>
+    </g>
+    <g transform="rotate(-10, 314, 231)">
+      <rect x="274" y="220" width="80" height="22" rx="11" fill="#07100B"/>
+      <rect x="281" y="224" width="66" height="14" rx="7" fill="#2DDA63"/>
+      <rect x="283" y="225" width="20" height="10" rx="5" fill="#C9FFE0" opacity="0.75"/>
+    </g>
+  </g>
+
+  <!-- Barbell -->
+  <g opacity="0.85" filter="url(#glow)">
+    <rect x="208" y="370" width="96" height="12" rx="6" fill="#2DDA63"/>
+    <rect x="188" y="358" width="20" height="36" rx="4" fill="#2DDA63" opacity="0.9"/>
+    <rect x="172" y="362" width="17" height="28" rx="3" fill="#2DDA63" opacity="0.65"/>
+    <rect x="304" y="358" width="20" height="36" rx="4" fill="#2DDA63" opacity="0.9"/>
+    <rect x="324" y="362" width="17" height="28" rx="3" fill="#2DDA63" opacity="0.65"/>
+    <line x1="248" y1="372" x2="248" y2="380" stroke="#0B0F17" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="256" y1="372" x2="256" y2="380" stroke="#0B0F17" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="264" y1="372" x2="264" y2="380" stroke="#0B0F17" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+</svg>
