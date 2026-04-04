@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Progress – ElbieFit{% endblock %}
+
+{% block extra_js %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"
+          integrity="sha384-b0GXujLkk9eYYSmcSfoyZbfyElGAQnDyY0skCHSG6w3JgTMFnz11ggrTAr7seu9f"
+          crossorigin="anonymous"></script>
+  <script>
+    initFrequencyChart();
+    document.addEventListener('htmx:afterSwap', () => setTimeout(initExerciseChart, 0));
+  </script>
+{% endblock %}
+
+{% block content %}
+  <div class="page-header">
+    <h1>Progress</h1>
+  </div>
+
+  <section class="card">
+    <h2>Workout Frequency</h2>
+    <div class="chart-container">
+      <canvas id="freq-chart" data-chart='{{ freq_data }}'></canvas>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Exercise Progress</h2>
+    {% if exercises %}
+      <div class="form-group">
+        <label for="exercise-select">Exercise</label>
+        <select id="exercise-select"
+                name="exercise_id"
+                hx-get="/progress/exercise"
+                hx-target="#exercise-chart-container"
+                hx-trigger="change"
+                hx-include="this">
+          <option value="" disabled selected>Select an exercise…</option>
+          {% for ex in exercises %}
+            <option value="{{ ex.exercise_id }}">{{ ex.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="exercise-chart-container"></div>
+    {% else %}
+      <p class="empty-state">No exercises yet. <a href="/exercise/all">Add some exercises</a> to track your progress.</p>
+    {% endif %}
+  </section>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% if chart_data.labels %}
+  <div class="chart-container">
+    <canvas id="exercise-chart"
+            data-chart='{{ chart_data | tojson }}'
+            data-unit="{{ chart_data.unit }}"></canvas>
+  </div>
+{% else %}
+  <p class="empty-state">No sets logged yet for this exercise.</p>
+{% endif %}

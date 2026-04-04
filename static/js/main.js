@@ -65,3 +65,99 @@ document.addEventListener('click', function (e) {
   btn.textContent = btn.dataset.confirmLabel || 'Sure?';
 });
 
+// ─────────────────────────────────────────────────────────────
+// Chart helpers
+// ─────────────────────────────────────────────────────────────
+
+function buildChartColors() {
+  const s = getComputedStyle(document.documentElement);
+  return {
+    accent:  s.getPropertyValue('--color-accent').trim(),
+    muted:   s.getPropertyValue('--color-muted').trim(),
+    borders: s.getPropertyValue('--color-borders').trim(),
+    text:    s.getPropertyValue('--color-text').trim(),
+  };
+}
+
+function initFrequencyChart() {
+  const canvas = document.getElementById('freq-chart');
+  if (!canvas) return;
+  const data = JSON.parse(canvas.dataset.chart);
+  const c = buildChartColors();
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Workouts',
+        data: data.values,
+        backgroundColor: c.accent + '99',
+        borderColor: c.accent,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        x: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: c.muted, stepSize: 1 },
+          grid: { color: c.borders },
+        }
+      }
+    }
+  });
+}
+
+function initExerciseChart() {
+  const canvas = document.getElementById('exercise-chart');
+  if (!canvas) return;
+  // Destroy previous instance if one exists (HTMX re-injects the fragment on each select)
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  const data = JSON.parse(canvas.dataset.chart);
+  const unit = canvas.dataset.unit;
+  const c = buildChartColors();
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: `Weight (${unit})`,
+        data: data.values,
+        borderColor: c.accent,
+        backgroundColor: c.accent + '22',
+        pointBackgroundColor: c.accent,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        x: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+        },
+        y: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+          title: { display: true, text: unit, color: c.muted },
+        }
+      }
+    }
+  });
+}
+
+

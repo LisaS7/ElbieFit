@@ -331,6 +331,14 @@ textarea:focus {
   gap: 1rem;
 }
 
+/* ──────────────────────────────── Charts ──────────────────────────────── */
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  max-height: 300px;
+}
+
 /* ──────────────────────────────── Home ──────────────────────────────── */
 
 .home-mascot {

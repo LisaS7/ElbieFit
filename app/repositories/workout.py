@@ -150,6 +150,39 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
                 "Failed to parse workouts from database response"
             ) from e
 
+    def get_all_workout_data_for_user(
+        self, user_sub: str
+    ) -> tuple[List[Workout], List[WorkoutSet]]:
+        """
+        Return all workout items and set items for a user in a single DynamoDB query.
+        Workouts are sorted by date desc; sets are unsorted.
+        """
+        pk = db.build_user_pk(user_sub)
+
+        try:
+            items = self._safe_query(
+                KeyConditionExpression=Key("PK").eq(pk)
+                & Key("SK").begins_with("WORKOUT#")
+            )
+        except RepoError as e:
+            logger.error(f"Repo error fetching all workout data: {e}")
+            raise WorkoutRepoError("Failed to fetch workout data from database") from e
+
+        try:
+            models = [self._to_model(item) for item in items]
+            workouts = [m for m in models if isinstance(m, Workout)]
+            sets = [m for m in models if isinstance(m, WorkoutSet)]
+            workouts.sort(key=lambda w: w.date, reverse=True)
+            return workouts, sets
+
+        except WorkoutRepoError:
+            raise
+        except Exception as e:
+            logger.error(f"Unexpected error parsing all workout data: {e}")
+            raise WorkoutRepoError(
+                "Failed to parse workout data from database response"
+            ) from e
+
     def get_workout_with_sets(
         self, user_sub: str, workout_date: DateType, workout_id: str
     ) -> tuple[Workout, List[WorkoutSet]]:
