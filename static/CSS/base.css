@@ -137,11 +137,11 @@ main {
 #app-header nav a::after {
   content: '';
   position: absolute;
-  bottom: 2px;
+  bottom: -4px;
   left: 50%;
   transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
+  width: 9px;
+  height: 9px;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
   box-shadow: 0 0 8px var(--color-accent);
@@ -159,8 +159,21 @@ main {
   text-decoration: none;
 }
 
+/* #2 — Nav active dot pulse */
+@keyframes nav-dot-bloom {
+  0%, 100% {
+    box-shadow: 0 0 5px 1px rgba(var(--color-accent-rgb), 0.6);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 10px 3px rgba(var(--color-accent-rgb), 0.9);
+    opacity: 1;
+  }
+}
+
 #app-header nav a.nav-active::after {
   opacity: 1;
+  animation: nav-dot-bloom 2s ease-in-out infinite;
 }
 
 @media (max-width: 768px) {

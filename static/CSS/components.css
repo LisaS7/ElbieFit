@@ -23,6 +23,9 @@ a.button {
   letter-spacing: 0.06em;
   text-decoration: none;
   transition: filter 0.15s ease, box-shadow 0.15s ease;
+  /* #3 — needed for scan-line pseudo-element */
+  position: relative;
+  overflow: hidden;
 }
 
 .button:hover,
@@ -30,6 +33,29 @@ a.button:hover {
   filter: brightness(1.1);
   box-shadow: 0 0 14px rgba(var(--color-accent-rgb), 0.45);
   text-decoration: none;
+}
+
+/* #3 — Button scan-line on press */
+@keyframes btn-scanline {
+  from { left: -100%; }
+  to   { left: 100%; }
+}
+
+.button::after,
+a.button::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  pointer-events: none;
+}
+
+.button:hover::after,
+a.button:hover::after {
+  animation: btn-scanline 0.4s ease-out forwards;
 }
 
 /* Secondary / ghost button */
@@ -156,7 +182,50 @@ a.button.danger:hover {
   border-radius: 0;
   border: 2px solid var(--color-borders);
   border-left: 3px solid var(--color-accent);
-  background: var(--color-card);
+  /* #7 — Scanline card texture */
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent,
+      transparent 3px,
+      rgba(var(--color-accent-rgb), 0.08) 3px,
+      rgba(var(--color-accent-rgb), 0.08) 4px
+    ),
+    var(--color-card);
+  position: relative;
+}
+
+/* #4 — Card corner brackets on hover */
+.card::before,
+.card::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.card::before {
+  top: -2px;
+  left: -2px;
+  border-top: 2px solid var(--color-accent);
+  border-left: 2px solid var(--color-accent);
+  box-shadow: -2px -2px 6px rgba(var(--color-accent-rgb), 0.5);
+}
+
+.card::after {
+  bottom: -2px;
+  right: -2px;
+  border-bottom: 2px solid var(--color-accent);
+  border-right: 2px solid var(--color-accent);
+  box-shadow: 2px 2px 6px rgba(var(--color-accent-rgb), 0.5);
+}
+
+.card:hover::before,
+.card:hover::after {
+  opacity: 1;
 }
 
 .card--compact {
@@ -194,6 +263,35 @@ a.button.danger:hover {
   gap: 0.35rem;
 }
 
+/* #5 — Tag neon flicker */
+@keyframes tag-flicker {
+  0%, 60%, 100% {
+    box-shadow: 0 0 4px rgba(var(--color-accent-rgb), 0.2);
+    border-color: var(--color-accent);
+    opacity: 1;
+  }
+  63% {
+    box-shadow: 0 0 12px rgba(var(--color-accent-rgb), 0.8);
+    border-color: rgba(var(--color-accent-rgb), 0.5);
+    opacity: 0.5;
+  }
+  66% {
+    box-shadow: 0 0 4px rgba(var(--color-accent-rgb), 0.2);
+    border-color: var(--color-accent);
+    opacity: 1;
+  }
+  69% {
+    box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.65);
+    border-color: rgba(var(--color-accent-rgb), 0.6);
+    opacity: 0.65;
+  }
+  72% {
+    box-shadow: 0 0 4px rgba(var(--color-accent-rgb), 0.2);
+    border-color: var(--color-accent);
+    opacity: 1;
+  }
+}
+
 .tag {
   border-radius: 2px;
   padding: 0.2rem 0.55rem;
@@ -206,6 +304,7 @@ a.button.danger:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  animation: tag-flicker 4s linear infinite;
 }
 
 /* ──────────────────────────────── Forms ──────────────────────────────── */
@@ -335,6 +434,12 @@ textarea:focus {
   text-align: left;
 }
 
+/* #6 — Sets table header scan-in */
+@keyframes header-scan-in {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
 .sets-table-header {
   color: var(--color-muted);
   font-size: 0.8rem;
@@ -342,8 +447,22 @@ textarea:focus {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   padding: 0.5rem 0;
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: none;
   margin-bottom: 0.25rem;
+  position: relative;
+}
+
+.sets-table-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 6px rgba(var(--color-accent-rgb), 0.6);
+  transform-origin: left center;
+  animation: header-scan-in 0.45s ease-out forwards;
 }
 
 .set-row {
@@ -518,6 +637,17 @@ textarea:focus {
   height: auto;
 }
 
+/* #1 — Mascot glow pulse */
+@keyframes mascot-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(var(--color-accent-rgb), 0.4)); }
+  50%       { filter: drop-shadow(0 0 14px rgba(var(--color-accent-rgb), 0.85)); }
+}
+
+.home-mascot svg,
+.home-mascot img {
+  animation: mascot-glow-pulse 3s ease-in-out infinite;
+}
+
 .recent-workouts-list {
   display: grid;
   gap: 0.6rem;
@@ -568,4 +698,173 @@ textarea:focus {
 
 .card.exercise-card:hover {
   border-color: var(--color-accent-hover);
+}
+
+/* ──────────────────────────────── Custom Select ──────────────────────────────── */
+
+.cs-wrapper {
+  position: relative;
+  display: block;
+}
+
+/* Trigger button — matches existing input/select visual style */
+.cs-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  background: var(--color-panel);
+  border: 1px solid var(--color-borders);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  font-family: var(--font-plain);
+  font-size: 1rem;
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  transition: outline 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+}
+
+.cs-trigger:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3), inset 0 0 6px rgba(var(--color-accent-rgb), 0.08);
+  background: color-mix(in srgb, var(--color-accent-tint) 50%, var(--color-panel));
+}
+
+.cs-trigger[aria-expanded='true'] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 10px rgba(var(--color-accent-rgb), 0.3), inset 0 0 6px rgba(var(--color-accent-rgb), 0.08);
+  background: color-mix(in srgb, var(--color-accent-tint) 50%, var(--color-panel));
+}
+
+.cs-trigger-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.cs-trigger-label--placeholder {
+  color: var(--color-muted);
+}
+
+/* Chevron arrow */
+.cs-trigger-arrow {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--color-muted);
+  border-bottom: 2px solid var(--color-muted);
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  display: block;
+}
+
+.cs-trigger[aria-expanded='true'] .cs-trigger-arrow {
+  transform: rotate(-135deg) translateY(-2px);
+  border-color: var(--color-accent);
+}
+
+/* Option panel */
+.cs-panel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  z-index: 200;
+
+  background: var(--color-panel);
+  border: 1px solid var(--color-borders);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(var(--color-accent-rgb), 0.15);
+
+  /* Closed state — clipped from bottom up */
+  clip-path: inset(0 0 100% 0);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    clip-path 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity   0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Open state — scan-down reveal */
+.cs-panel--open {
+  clip-path: inset(0 0 0% 0);
+  opacity: 1;
+  pointer-events: auto;
+  transition:
+    clip-path 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity   0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Flip above trigger when not enough viewport space below */
+.cs-panel--above {
+  top: auto;
+  bottom: calc(100% + 4px);
+  /* Reverse the clip-path direction — reveal from bottom up */
+  clip-path: inset(100% 0 0% 0);
+}
+
+.cs-panel--above.cs-panel--open {
+  clip-path: inset(0% 0 0% 0);
+}
+
+/* Scrollbar styling for the panel */
+.cs-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.cs-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cs-panel::-webkit-scrollbar-thumb {
+  background: var(--color-borders);
+  border-radius: 2px;
+}
+
+/* Individual option rows */
+.cs-option {
+  padding: 0.6rem 0.75rem;
+  font-size: 1rem;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.1s ease, color 0.1s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-option + .cs-option {
+  border-top: 1px solid color-mix(in srgb, var(--color-borders) 50%, transparent);
+}
+
+.cs-option--placeholder {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.cs-option:hover,
+.cs-option--focused {
+  background: rgba(var(--color-accent-rgb), 0.12);
+  color: var(--color-accent);
+}
+
+.cs-option--selected {
+  color: var(--color-accent);
+}
+
+.cs-option--selected::after {
+  content: ' ✓';
+  font-size: 0.8em;
+  opacity: 0.7;
 }
