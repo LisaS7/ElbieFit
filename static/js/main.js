@@ -118,6 +118,140 @@ function initFrequencyChart() {
   });
 }
 
+function initVolumeChart() {
+  const canvas = document.getElementById('volume-chart');
+  if (!canvas) return;
+  const data = JSON.parse(canvas.dataset.chart);
+  const c = buildChartColors();
+  new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: `Total Volume (${data.unit})`,
+        data: data.values,
+        backgroundColor: c.accent + '99',
+        borderColor: c.accent,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        x: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+          title: { display: true, text: data.unit, color: c.muted },
+        }
+      }
+    }
+  });
+}
+
+function init1RMChart() {
+  const canvas = document.getElementById('one-rm-chart');
+  if (!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  const data = JSON.parse(canvas.dataset.chart);
+  const unit = canvas.dataset.unit;
+  const c = buildChartColors();
+  new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: `Est. 1RM (${unit})`,
+        data: data.values,
+        borderColor: c.accent,
+        backgroundColor: c.accent + '22',
+        pointBackgroundColor: c.accent,
+        tension: 0.3,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+      },
+      scales: {
+        x: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+        },
+        y: {
+          ticks: { color: c.muted },
+          grid: { color: c.borders },
+          title: { display: true, text: unit, color: c.muted },
+        }
+      }
+    }
+  });
+}
+
+// Muted, dark-theme-friendly palette — anchored on the three theme accent colours
+// (Ink blue, Prehistoric orange, Apothecary teal) with harmonious companions.
+const DIST_PALETTE = [
+  '#7aa2ff', '#ffb38a', '#7fe0b3', '#c4a0f0', '#f5c876',
+  '#f0859a', '#74c9e8', '#a8d87a', '#d4a5c9', '#9ab8d4',
+  '#e8a87a', '#a0c8a0', '#e8c87a',
+];
+
+function initDistributionChart(view = 'by_muscle') {
+  const canvas = document.getElementById('dist-chart');
+  if (!canvas) return;
+  const existing = Chart.getChart(canvas);
+  if (existing) existing.destroy();
+  const allData = JSON.parse(canvas.dataset.chart);
+  const viewData = allData[view];
+  if (!viewData || !viewData.values.length) return;
+  const c = buildChartColors();
+  const title = view === 'by_muscle' ? 'By Muscle' : 'By Exercise';
+  new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: viewData.labels,
+      datasets: [{
+        data: viewData.values,
+        backgroundColor: DIST_PALETTE.slice(0, viewData.labels.length),
+        borderColor: c.borders,
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: c.text },
+        },
+        title: {
+          display: true,
+          text: title,
+          color: c.text,
+        },
+      }
+    }
+  });
+}
+
+function updateDistributionChart(view) {
+  document.querySelectorAll('#dist-toggle .toggle-btn').forEach((btn) => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+  initDistributionChart(view);
+}
+
 function initExerciseChart() {
   const canvas = document.getElementById('exercise-chart');
   if (!canvas) return;

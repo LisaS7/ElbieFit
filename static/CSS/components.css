@@ -72,6 +72,39 @@ a.button.danger:hover {
   box-shadow: 0 0 0 2px var(--color-accent);
 }
 
+/* ──────────────────────────────── Toggle Group ──────────────────────────────── */
+
+.toggle-group {
+  display: inline-flex;
+  border: 1px solid var(--color-borders);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.toggle-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: transparent;
+  color: var(--color-muted);
+  border: none;
+  border-left: 1px solid var(--color-borders);
+}
+
+.toggle-btn:first-child {
+  border-left: none;
+}
+
+.toggle-btn:hover {
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.toggle-btn.active {
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+  color: var(--color-accent);
+}
+
 /* ──────────────────────────────── Cards & Tags ──────────────────────────────── */
 
 .card {
@@ -337,6 +370,12 @@ textarea:focus {
   position: relative;
   width: 100%;
   max-height: 300px;
+}
+
+.chart-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-muted);
 }
 
 /* ──────────────────────────────── Home ──────────────────────────────── */
