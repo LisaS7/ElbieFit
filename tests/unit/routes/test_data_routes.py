@@ -155,11 +155,11 @@ _MINIMAL_EXPORT = {
 def _post_import(client, payload: dict, *, csrf_cookie: str = CSRF_TOKEN, csrf_field: str = CSRF_TOKEN):
     """Post an import request with multipart data."""
     content = json.dumps(payload).encode()
+    client.cookies.set("csrf_token", csrf_cookie)
     return client.post(
         "/profile/data/import",
         data={"csrf_token": csrf_field},
         files={"file": ("export.json", content, "application/json")},
-        cookies={"csrf_token": csrf_cookie},
         follow_redirects=False,
     )
 
@@ -199,11 +199,11 @@ def _make_workout(workout_id: str, date_str: str = "2025-03-01") -> Workout:
 
 def test_import_csrf_mismatch_returns_403(data_client):
     client, *_ = data_client
+    client.cookies.set("csrf_token", "correct-token")
     resp = client.post(
         "/profile/data/import",
         data={"csrf_token": "wrong-token"},
         files={"file": ("f.json", b"{}", "application/json")},
-        cookies={"csrf_token": "correct-token"},
         follow_redirects=False,
     )
     assert resp.status_code == 403
@@ -228,10 +228,10 @@ def test_import_missing_csrf_cookie_returns_403(data_client):
 
 def test_import_no_file_redirects_with_error(data_client):
     client, *_ = data_client
+    client.cookies.set("csrf_token", CSRF_TOKEN)
     resp = client.post(
         "/profile/data/import",
         data={"csrf_token": CSRF_TOKEN},
-        cookies={"csrf_token": CSRF_TOKEN},
         follow_redirects=False,
     )
     assert resp.status_code == 303
@@ -240,11 +240,11 @@ def test_import_no_file_redirects_with_error(data_client):
 
 def test_import_invalid_json_redirects_with_error(data_client):
     client, *_ = data_client
+    client.cookies.set("csrf_token", CSRF_TOKEN)
     resp = client.post(
         "/profile/data/import",
         data={"csrf_token": CSRF_TOKEN},
         files={"file": ("bad.json", b"not json", "application/json")},
-        cookies={"csrf_token": CSRF_TOKEN},
         follow_redirects=False,
     )
     assert resp.status_code == 303
