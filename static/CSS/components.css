@@ -47,6 +47,13 @@ a.button.danger:hover {
   filter: none;
 }
 
+#add-exercise-section {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 #delete-workout {
   display: flex;
   justify-content: flex-end;
@@ -70,6 +77,12 @@ a.button.danger:hover {
 .icon-button:hover {
   transform: scale(1.1);
   box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+.delete-btn--confirm {
+  border-color: var(--color-danger, #c0392b);
+  color: var(--color-danger, #c0392b);
+  box-shadow: 0 0 0 2px var(--color-danger, #c0392b);
 }
 
 /* ──────────────────────────────── Toggle Group ──────────────────────────────── */

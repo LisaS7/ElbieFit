@@ -1,0 +1,56 @@
+<form
+    hx-post="{{ action_url }}"
+    hx-swap="none"
+    >
+
+    <div class="form-field">
+        <label for="add-exercise-select">Exercise</label>
+        <select id="add-exercise-select" name="exercise_id" required>
+            <option value="">— Pick an exercise —</option>
+            {% for ex in exercises %}
+                <option value="{{ ex.exercise_id }}">{{ ex.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-row">
+        <!-- Reps -->
+        <div class="form-field">
+            <label for="add-ex-reps">Reps</label>
+            <div class="number-stepper" data-step="1" data-min="1">
+                <button type="button" class="stepper-button" data-action="decrement">−</button>
+                <input type="number" id="add-ex-reps" name="reps" min="1" required value="">
+                <button type="button" class="stepper-button" data-action="increment">+</button>
+            </div>
+        </div>
+
+        <!-- Weight -->
+        <div class="form-field">
+            <label for="add-ex-weight">Weight ({{ weight_unit|default('kg') }})</label>
+            <div class="number-stepper" data-step="0.5" data-min="0">
+                <button type="button" class="stepper-button" data-action="decrement">−</button>
+                <input type="number" id="add-ex-weight" name="weight_kg" step="0.5" min="0" value="">
+                <button type="button" class="stepper-button" data-action="increment">+</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RPE -->
+    <div class="form-field">
+        <label for="add-ex-rpe">RPE</label>
+        <div class="number-stepper" data-step="1" data-min="1" data-max="10">
+            <button type="button" class="stepper-button" data-action="decrement">−</button>
+            <input type="number" id="add-ex-rpe" name="rpe" min="1" max="10" value="">
+            <button type="button" class="stepper-button" data-action="increment">+</button>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <button type="submit" class="button small">Add Set</button>
+        <button
+            type="button"
+            class="button small secondary"
+            data-cancel-target="#add-exercise-container"
+        >Cancel</button>
+    </div>
+</form>

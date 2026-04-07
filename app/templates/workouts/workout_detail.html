@@ -70,7 +70,7 @@
                     {% set set_row_id = "set-row-" ~ exercise_id ~ "-" ~ s.set_number %}
                     {% set edit_container_id = "edit-set-form-container-" ~ exercise_id ~ "-" ~ s.set_number %}
                     <tr id="{{ set_row_id }}" class="set-row">
-                        <td>{{s.set_number}}</td>
+                        <td>{{ loop.index }}</td>
                         <td>{{s.reps}}</td>
                         <td>
                             {% if s.weight_kg is not none %}
@@ -102,14 +102,14 @@
                                 ) }}"
                                 hx-target="#{{ edit_container_id }}"
                                 hx-swap="innerHTML"
-                                aria-label="Edit set {{ s.set_number }}"
+                                aria-label="Edit set {{ loop.index }}"
                                 >
                                 ✎
                             </button>
                             <button
                                 class="icon-button delete-btn"
                                 type="button"
-                                data-confirm-label="Sure?"
+                                data-confirm-label="✓"
                                 data-original-label="✕"
                                 hx-delete="{{ url_for('delete_set',
                                     workout_date=workout.date,
@@ -119,7 +119,7 @@
                                 hx-trigger="confirmedDelete"
                                 hx-target="#{{ set_row_id }}"
                                 hx-swap="outerHTML"
-                                aria-label="Delete set {{ s.set_number }}"
+                                aria-label="Delete set {{ loop.index }}"
                                 >
                                 ✕
                             </button>
@@ -145,8 +145,21 @@
 
 
 
-{# TODO: big ADD EXERCISE button - inline form? on save htmx swap whole set list #}
-{# this form also needs a cancel button #}
+<section id="add-exercise-section">
+    <button
+        class="button"
+        type="button"
+        hx-get="{{ url_for('get_add_exercise_form',
+            workout_date=workout.date,
+            workout_id=workout.workout_id
+        ) }}"
+        hx-target="#add-exercise-container"
+        hx-swap="innerHTML"
+        aria-label="Add exercise to workout">
+        + Add Exercise
+    </button>
+    <div id="add-exercise-container"></div>
+</section>
 
 <section id="delete-workout">
     <button

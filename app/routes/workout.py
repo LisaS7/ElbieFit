@@ -1,7 +1,7 @@
 from datetime import date as DateType
-from typing import Annotated, Literal, Sequence
+from typing import Annotated, Literal, Optional, Sequence
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.models.workout import (
@@ -123,6 +123,42 @@ def get_new_form(
     )
 
 
+@router.get("/{workout_date}/{workout_id}/add-exercise-form")
+def get_add_exercise_form(
+    request: Request,
+    workout_date: DateType,
+    workout_id: str,
+    claims=Depends(auth.require_auth),
+    exercise_repo: DynamoExerciseRepository = Depends(get_exercise_repo),
+    profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
+):
+    """Return a form to pick an exercise and log the first set for it."""
+    user_sub = claims["sub"]
+    unit = get_weight_unit_for_user(user_sub, profile_repo)
+
+    try:
+        exercises = exercise_repo.get_all_for_user(user_sub)
+    except ExerciseRepoError:
+        logger.exception(f"Error fetching exercises for user {user_sub}")
+        raise HTTPException(status_code=500, detail="Error fetching exercises")
+
+    exercises = sorted(exercises, key=lambda e: e.name.lower())
+
+    action_url = str(
+        request.url_for("add_set", workout_date=workout_date, workout_id=workout_id)
+    )
+
+    return render_template(
+        request,
+        "workouts/_add_exercise_form.html",
+        context={
+            "exercises": exercises,
+            "action_url": action_url,
+            "weight_unit": unit,
+        },
+    )
+
+
 @router.get("/{workout_date}/{workout_id}/set/form")
 def get_new_set_form(
     request: Request,
@@ -188,12 +224,20 @@ def create_workout(
 def add_set(
     workout_date: DateType,
     workout_id: str,
-    exercise_id: str,
     form: Annotated[WorkoutSetCreate, Depends(WorkoutSetCreate.as_form)],
     claims=Depends(auth.require_auth),
     repo: DynamoWorkoutRepository = Depends(get_workout_repo),
     profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
+    # exercise_id may arrive as a query param (existing "+ set" button) or as
+    # a form body field (new "add exercise" form).  Query param takes priority;
+    # the form field is the fallback so both flows share one endpoint.
+    exercise_id: Optional[str] = None,
+    exercise_id_body: Annotated[Optional[str], Form(alias="exercise_id")] = None,
 ):
+    resolved_exercise_id = exercise_id or exercise_id_body
+    if not resolved_exercise_id:
+        raise HTTPException(status_code=422, detail="exercise_id is required")
+
     user_sub = claims["sub"]
     unit = get_weight_unit_for_user(user_sub, profile_repo)
 
@@ -201,7 +245,7 @@ def add_set(
         form.weight_kg = lb_to_kg(form.weight_kg)
 
     try:
-        repo.add_set(user_sub, workout_date, workout_id, exercise_id, form)
+        repo.add_set(user_sub, workout_date, workout_id, resolved_exercise_id, form)
     except WorkoutRepoError:
         logger.exception(f"Error creating workout set user_sub={user_sub} workout_id={workout_id}")
         raise HTTPException(status_code=500, detail="Error creating workout set")

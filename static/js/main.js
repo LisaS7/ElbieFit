@@ -39,6 +39,7 @@ document.addEventListener('click', function (e) {
     document.querySelectorAll('.delete-btn[data-pending]').forEach(function (pending) {
       pending.textContent = pending.dataset.originalLabel;
       pending.removeAttribute('data-pending');
+      pending.classList.remove('delete-btn--confirm');
     });
     return;
   }
@@ -46,6 +47,7 @@ document.addEventListener('click', function (e) {
   if (btn.hasAttribute('data-pending')) {
     // Second click: dispatch custom event so htmx fires (hx-trigger="confirmedDelete")
     btn.removeAttribute('data-pending');
+    btn.classList.remove('delete-btn--confirm');
     btn.dispatchEvent(new Event('confirmedDelete'));
     return;
   }
@@ -59,11 +61,13 @@ document.addEventListener('click', function (e) {
     if (other !== btn) {
       other.textContent = other.dataset.originalLabel;
       other.removeAttribute('data-pending');
+      other.classList.remove('delete-btn--confirm');
     }
   });
 
   btn.setAttribute('data-pending', '');
-  btn.textContent = btn.dataset.confirmLabel || 'Sure?';
+  btn.textContent = btn.dataset.confirmLabel || '✓';
+  btn.classList.add('delete-btn--confirm');
 });
 
 // ─────────────────────────────────────────────────────────────
