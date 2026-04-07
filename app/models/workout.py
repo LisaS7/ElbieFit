@@ -91,6 +91,11 @@ class WorkoutSet(BaseModel):
         data = self.model_dump()
         data["created_at"] = dt_to_iso(self.created_at)
         data["updated_at"] = dt_to_iso(self.updated_at)
+        # Populate ExerciseIndex GSI keys so sets can be queried by exercise.
+        # SK format: WORKOUT#<date>#<workout_id>#SET#<set_num>
+        parts = self.SK.split("#")
+        data["ExercisePK"] = f"EXERCISE#{self.exercise_id}"
+        data["ExerciseSK"] = f"{parts[1]}#{parts[2]}#{self.set_number:03d}"
         return data
 
     @property

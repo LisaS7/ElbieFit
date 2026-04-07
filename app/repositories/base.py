@@ -23,10 +23,17 @@ class DynamoRepository(Generic[T]):
         raise NotImplementedError
 
     def _safe_query(self, **kwargs) -> List[dict]:
-        """Execute query and handle ClientError"""
+        """Execute query with automatic pagination to handle result sets >1 MB."""
         try:
-            response = self._table.query(**kwargs)
-            return response.get("Items", [])
+            items: List[dict] = []
+            while True:
+                response = self._table.query(**kwargs)
+                items.extend(response.get("Items", []))
+                last_key = response.get("LastEvaluatedKey")
+                if not last_key:
+                    break
+                kwargs["ExclusiveStartKey"] = last_key
+            return items
         except ClientError as e:
             logger.exception("DynamoDB query failed")
             raise RepoError("Failed to query database") from e

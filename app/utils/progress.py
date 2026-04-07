@@ -40,7 +40,6 @@ def build_frequency_chart_data(workouts: list[Workout], weeks: int = 12) -> dict
 
 
 def build_exercise_progress_data(
-    workouts: list[Workout],
     sets: list[WorkoutSet],
     exercise_id: str,
     weight_unit: str,
@@ -51,13 +50,9 @@ def build_exercise_progress_data(
     Returns {"labels": ["2025-01-04", ...], "values": [80.0, ...], "unit": "kg"}.
     Returns empty lists if no matching sets exist.
 
-    Sets are joined to workouts via workout_id extracted from the set SK
-    (format: WORKOUT#<date>#<workout_id>#SET#<n> — workout_id is parts[2]).
+    Date is parsed directly from the set SK
+    (format: WORKOUT#<date>#<workout_id>#SET#<n> — date is parts[1]).
     """
-    # Build a map from workout_id → date
-    workout_date_map: dict[str, date] = {w.workout_id: w.date for w in workouts}
-
-    # Filter sets for this exercise and group max weight_kg by workout date
     date_max_kg: dict[date, Decimal] = {}
     for s in sets:
         if s.exercise_id != exercise_id:
@@ -68,10 +63,9 @@ def build_exercise_progress_data(
         parts = s.SK.split("#")
         if len(parts) < 3:
             continue
-        workout_id = parts[2]
-
-        workout_date = workout_date_map.get(workout_id)
-        if workout_date is None:
+        try:
+            workout_date = date.fromisoformat(parts[1])
+        except ValueError:
             continue
 
         if workout_date not in date_max_kg or s.weight_kg > date_max_kg[workout_date]:
@@ -96,7 +90,6 @@ def build_exercise_progress_data(
 
 
 def build_volume_chart_data(
-    workouts: list[Workout],
     sets: list[WorkoutSet],
     weight_unit: str,
     weeks: int = 12,
@@ -106,6 +99,7 @@ def build_volume_chart_data(
     Return total volume (sets × reps × weight) bucketed by ISO week for the last N weeks.
 
     Returns {"labels": ["Mar 3", ...], "values": [1250.0, ...], "unit": "kg"|"lb"}.
+    Date is parsed directly from the set SK (parts[1]).
     """
     today = date.today()
     current_week_monday = today - timedelta(days=today.weekday())
@@ -113,9 +107,6 @@ def build_volume_chart_data(
         current_week_monday - timedelta(weeks=offset)
         for offset in range(weeks - 1, -1, -1)
     ]
-
-    # Build workout_id → date map
-    workout_date_map: dict[str, date] = {w.workout_id: w.date for w in workouts}
 
     filtered_sets = [s for s in sets if s.exercise_id == exercise_id] if exercise_id else sets
 
@@ -126,8 +117,9 @@ def build_volume_chart_data(
         parts = s.SK.split("#")
         if len(parts) < 3:
             continue
-        workout_date = workout_date_map.get(parts[2])
-        if workout_date is None:
+        try:
+            workout_date = date.fromisoformat(parts[1])
+        except ValueError:
             continue
         workout_monday = workout_date - timedelta(days=workout_date.weekday())
         if workout_monday not in volume_kg:
@@ -147,7 +139,6 @@ def build_volume_chart_data(
 
 
 def build_1rm_chart_data(
-    workouts: list[Workout],
     sets: list[WorkoutSet],
     exercise_id: str,
     weight_unit: str,
@@ -157,9 +148,8 @@ def build_1rm_chart_data(
 
     Formula: weight × (1 + reps / 30), max per workout date.
     Returns {"labels": [...], "values": [...], "unit": "kg"|"lb"}.
+    Date is parsed directly from the set SK (parts[1]).
     """
-    workout_date_map: dict[str, date] = {w.workout_id: w.date for w in workouts}
-
     date_max_1rm: dict[date, Decimal] = {}
     for s in sets:
         if s.exercise_id != exercise_id:
@@ -169,8 +159,9 @@ def build_1rm_chart_data(
         parts = s.SK.split("#")
         if len(parts) < 3:
             continue
-        workout_date = workout_date_map.get(parts[2])
-        if workout_date is None:
+        try:
+            workout_date = date.fromisoformat(parts[1])
+        except ValueError:
             continue
         estimated = s.weight_kg * (1 + Decimal(s.reps) / 30)
         if workout_date not in date_max_1rm or estimated > date_max_1rm[workout_date]:

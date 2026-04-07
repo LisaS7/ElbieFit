@@ -43,7 +43,7 @@ def progress_page(
         "progress/progress.html",
         context={
             "freq_data": progress.build_frequency_chart_data(workouts),
-            "volume_data": progress.build_volume_chart_data(workouts, sets, weight_unit),
+            "volume_data": progress.build_volume_chart_data(sets, weight_unit),
             "dist_data": progress.build_distribution_chart_data(sets, exercises),
             "exercises": exercises,
         },
@@ -61,7 +61,10 @@ def volume_chart(
     user_sub = claims["sub"]
 
     try:
-        workouts, sets = workout_repo.get_all_workout_data_for_user(user_sub)
+        if exercise_id:
+            sets = workout_repo.get_sets_for_exercise(exercise_id)
+        else:
+            _, sets = workout_repo.get_all_workout_data_for_user(user_sub)
     except WorkoutRepoError:
         logger.exception(
             f"Error fetching workout data for volume chart user_sub={user_sub}"
@@ -72,7 +75,7 @@ def volume_chart(
     weight_unit = profile.weight_unit if profile else "kg"
 
     chart_data = progress.build_volume_chart_data(
-        workouts, sets, weight_unit, exercise_id=exercise_id or None
+        sets, weight_unit, exercise_id=exercise_id or None
     )
 
     return render_template(
@@ -98,7 +101,7 @@ def exercise_chart(
         raise HTTPException(status_code=404, detail="Exercise not found")
 
     try:
-        workouts, sets = workout_repo.get_all_workout_data_for_user(user_sub)
+        sets = workout_repo.get_sets_for_exercise(exercise_id)
     except WorkoutRepoError:
         logger.exception(
             f"Error fetching workout data for exercise chart user_sub={user_sub}"
@@ -108,9 +111,7 @@ def exercise_chart(
     profile = profile_repo.get_for_user(user_sub)
     weight_unit = profile.weight_unit if profile else "kg"
 
-    chart_data = progress.build_exercise_progress_data(
-        workouts, sets, exercise_id, weight_unit
-    )
+    chart_data = progress.build_exercise_progress_data(sets, exercise_id, weight_unit)
 
     return render_template(
         request,
@@ -138,7 +139,7 @@ def one_rm_chart(
         raise HTTPException(status_code=404, detail="Exercise not found")
 
     try:
-        workouts, sets = workout_repo.get_all_workout_data_for_user(user_sub)
+        sets = workout_repo.get_sets_for_exercise(exercise_id)
     except WorkoutRepoError:
         logger.exception(
             f"Error fetching workout data for 1RM chart user_sub={user_sub}"
@@ -148,7 +149,7 @@ def one_rm_chart(
     profile = profile_repo.get_for_user(user_sub)
     weight_unit = profile.weight_unit if profile else "kg"
 
-    chart_data = progress.build_1rm_chart_data(workouts, sets, exercise_id, weight_unit)
+    chart_data = progress.build_1rm_chart_data(sets, exercise_id, weight_unit)
 
     return render_template(
         request,

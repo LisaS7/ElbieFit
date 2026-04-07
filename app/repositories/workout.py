@@ -120,6 +120,28 @@ class DynamoWorkoutRepository(DynamoRepository[Workout]):
 
     # ----------------------- Get -----------------------------
 
+    def get_sets_for_exercise(self, exercise_id: str) -> List[WorkoutSet]:
+        """
+        Fetch all sets for a specific exercise using the ExerciseIndex GSI.
+        ExercisePK is globally unique per exercise (UUID-based), so no user
+        scoping is needed — but callers must verify exercise ownership first.
+        """
+        exercise_pk = f"EXERCISE#{exercise_id}"
+        try:
+            items = self._safe_query(
+                IndexName="ExerciseIndex",
+                KeyConditionExpression=Key("ExercisePK").eq(exercise_pk),
+            )
+        except RepoError as e:
+            logger.error(f"Repo error fetching sets for exercise {exercise_id}: {e}")
+            raise WorkoutRepoError("Failed to fetch sets for exercise from database") from e
+
+        try:
+            return [WorkoutSet(**item) for item in items if item.get("type") == "set"]
+        except Exception as e:
+            logger.error(f"Unexpected error parsing sets for exercise: {e}")
+            raise WorkoutRepoError("Failed to parse sets for exercise") from e
+
     def get_all_for_user(self, user_sub: str) -> List[Workout]:
         """
         Return only workout items, sorted by date desc, Sets are filtered out.
