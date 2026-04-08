@@ -10,6 +10,7 @@ from app.settings import settings
 from app.templates.templates import render_template
 from app.utils import auth
 from app.utils.log import logger
+from app.utils.theme import set_theme_cookie
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -238,13 +239,6 @@ async def update_preferences(
     )
 
     # Set cookie so ThemeMiddleware picks it up next request
-    response.set_cookie(
-        key="theme",
-        value=validated.theme,
-        samesite="lax",
-        secure=not settings.DISABLE_AUTH_FOR_LOCAL_DEV,
-        httponly=False,
-        max_age=60 * 60 * 24,
-    )
+    set_theme_cookie(response, validated.theme)
 
     return response
