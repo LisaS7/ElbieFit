@@ -56,12 +56,16 @@ def volume_chart(
     exercise_id: str = Query(""),
     claims=Depends(auth.require_auth),
     workout_repo: DynamoWorkoutRepository = Depends(get_workout_repo),
+    exercise_repo: DynamoExerciseRepository = Depends(get_exercise_repo),
     profile_repo: DynamoProfileRepository = Depends(get_profile_repo),
 ):
     user_sub = claims["sub"]
 
     try:
         if exercise_id:
+            exercise = exercise_repo.get_exercise_by_id(user_sub, exercise_id)
+            if not exercise:
+                raise HTTPException(status_code=404, detail="Exercise not found")
             sets = workout_repo.get_sets_for_exercise(exercise_id)
         else:
             _, sets = workout_repo.get_all_workout_data_for_user(user_sub)

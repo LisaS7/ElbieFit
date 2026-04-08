@@ -82,6 +82,8 @@ def test_decode_and_validate_token_success(monkeypatch):
             "token_use": "id",
         }
 
+    # Reset the singleton so the patched PyJWKClient is used to create a fresh instance
+    monkeypatch.setattr(auth_utils, "_jwks_client", None)
     # patch PyJWKClient used in auth module
     monkeypatch.setattr(auth_utils, "PyJWKClient", FakeJwksClient)
     # patch jwt.decode in auth module
@@ -108,6 +110,7 @@ def test_decode_and_validate_id_token_wrong_token_use(monkeypatch):
             "token_use": "access",
         }
 
+    monkeypatch.setattr(auth_utils, "_jwks_client", None)
     monkeypatch.setattr(auth_utils, "PyJWKClient", FakeJwksClient)
     monkeypatch.setattr(auth_utils.jwt, "decode", fake_decode)
 

@@ -2,7 +2,7 @@ import json
 import platform
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.repositories.workout import DynamoWorkoutRepository
@@ -30,11 +30,12 @@ BUILD_TIME = now()
 @router.get("/")
 def home(
     request: Request,
+    response: Response,
     repo: DynamoWorkoutRepository = Depends(get_workout_repo),
 ):
     # If not auth, show generic page
     try:
-        claims = auth.require_auth(request)
+        claims = auth.require_auth(request, response)
     except HTTPException:
         return render_template(request, "home.html", context={"is_authed": False})
 

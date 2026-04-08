@@ -12,6 +12,18 @@ from app.utils.log import logger
 ISSUER_URL = settings.COGNITO_ISSUER_URL
 AUDIENCE = settings.COGNITO_AUDIENCE
 
+COOKIE_OPTS = {"httponly": True, "secure": True, "samesite": "lax"}
+
+_jwks_client: PyJWKClient | None = None
+
+
+def _get_jwks_client(jwks_url: str) -> PyJWKClient:
+    """Return the module-level PyJWKClient singleton, creating it if needed."""
+    global _jwks_client
+    if _jwks_client is None:
+        _jwks_client = PyJWKClient(jwks_url)
+    return _jwks_client
+
 
 def get_jwks_url(issuer_url: str) -> str:
     """
@@ -54,7 +66,7 @@ def decode_and_validate_id_token(
     """
     Decode the ID token, verify signature and claims, return decoded
     """
-    jwks_client = PyJWKClient(jwks_url)
+    jwks_client = _get_jwks_client(jwks_url)
     signing_key = jwks_client.get_signing_key_from_jwt(id_token).key
 
     decoded_token = jwt.decode(
@@ -150,14 +162,19 @@ def require_auth(request: Request, response: Response):
 
         token_data = attempt_token_refresh(refresh_token)
 
-        cookie_opts = {"httponly": True, "secure": True, "samesite": "lax"}
-        response.set_cookie(key="id_token", value=token_data["id_token"], max_age=token_data["expires_in"], **cookie_opts)
-        response.set_cookie(key="access_token", value=token_data["access_token"], max_age=token_data["expires_in"], **cookie_opts)
+        response.set_cookie(key="id_token", value=token_data["id_token"], max_age=token_data["expires_in"], **COOKIE_OPTS)
+        response.set_cookie(key="access_token", value=token_data["access_token"], max_age=token_data["expires_in"], **COOKIE_OPTS)
+        if "refresh_token" in token_data:
+            response.set_cookie(key="refresh_token", value=token_data["refresh_token"], max_age=60 * 60 * 24 * 7, **COOKIE_OPTS)
 
         new_id_token = token_data["id_token"]
-        decoded_token = decode_and_validate_id_token(
-            id_token=new_id_token, jwks_url=jwks_url, issuer=issuer_url, audience=AUDIENCE
-        )
+        try:
+            decoded_token = decode_and_validate_id_token(
+                id_token=new_id_token, jwks_url=jwks_url, issuer=issuer_url, audience=AUDIENCE
+            )
+        except Exception as e:
+            logger.error(f"Failed to validate refreshed id_token: {e}")
+            raise HTTPException(status_code=401, detail="Refreshed token is invalid. Please log in again.")
         sub = decoded_token.get("sub")
         set_state(sub, request)
         return decoded_token

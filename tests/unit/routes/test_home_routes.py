@@ -4,7 +4,7 @@ from app.utils import auth as auth_utils
 
 
 def test_home_logged_out_contains_welcome_title(client, monkeypatch):
-    def _raise(_request):
+    def _raise(_request, _response):
         raise HTTPException(status_code=401, detail="Not authenticated")
 
     monkeypatch.setattr(auth_utils, "require_auth", _raise)
@@ -18,7 +18,7 @@ def test_home_logged_out_contains_welcome_title(client, monkeypatch):
 
 def test_home_logged_in_shows_dashboard(client, fake_workout_repo, monkeypatch):
     monkeypatch.setattr(
-        auth_utils, "require_auth", lambda _request: {"sub": "test-user-sub"}
+        auth_utils, "require_auth", lambda _request, _response: {"sub": "test-user-sub"}
     )
 
     response = client.get("/")
