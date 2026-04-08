@@ -102,6 +102,19 @@ def test_workoutset_workout_id_raises_on_invalid_SK(workout_set):
     assert "Invalid SK format" in str(exc.value)
 
 
+def test_workoutset_workout_date_extracts_from_SK(workout_set):
+    ws = workout_set(SK="WORKOUT#2025-11-04#W42#SET#001")
+    assert ws.workout_date == "2025-11-04"
+
+
+def test_workoutset_workout_date_raises_on_invalid_SK(workout_set):
+    ws = workout_set(SK="WORKOUT#ONLYTWO")
+    with pytest.raises(ValueError) as exc:
+        _ = ws.workout_date
+
+    assert "Invalid SK format" in str(exc.value)
+
+
 def test_workout_set_type_must_be_literal_set(workout_set):
     with pytest.raises(ValidationError):
         workout_set(type="workout")  # not allowed per Literal
@@ -136,6 +149,11 @@ def test_workout_set_to_ddb_item_uses_dt_helper(monkeypatch, workout_set):
     # And no datetime objects in the final dict
     assert not isinstance(item["created_at"], datetime)
     assert not isinstance(item["updated_at"], datetime)
+
+    # ExerciseSK is built from workout_date and workout_id properties
+    ws2 = workout_set(SK="WORKOUT#2025-11-04#W99#SET#001", set_number=1)
+    item2 = ws2.to_ddb_item()
+    assert item2["ExerciseSK"] == "2025-11-04#W99#001"
 
 
 def test_workoutsetcreate_as_form_builds_expected_model():

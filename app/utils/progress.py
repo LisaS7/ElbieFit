@@ -51,7 +51,7 @@ def build_exercise_progress_data(
     Returns empty lists if no matching sets exist.
 
     Date is parsed directly from the set SK
-    (format: WORKOUT#<date>#<workout_id>#SET#<n> — date is parts[1]).
+    (format: WORKOUT#<date>#<workout_id>#SET#<n> — date via WorkoutSet.workout_date).
     """
     date_max_kg: dict[date, Decimal] = {}
     for s in sets:
@@ -60,11 +60,8 @@ def build_exercise_progress_data(
         if s.weight_kg is None:
             continue
 
-        parts = s.SK.split("#")
-        if len(parts) < 3:
-            continue
         try:
-            workout_date = date.fromisoformat(parts[1])
+            workout_date = date.fromisoformat(s.workout_date)
         except ValueError:
             continue
 
@@ -99,7 +96,7 @@ def build_volume_chart_data(
     Return total volume (sets × reps × weight) bucketed by ISO week for the last N weeks.
 
     Returns {"labels": ["Mar 3", ...], "values": [1250.0, ...], "unit": "kg"|"lb"}.
-    Date is parsed directly from the set SK (parts[1]).
+    Date is read from WorkoutSet.workout_date.
     """
     today = date.today()
     current_week_monday = today - timedelta(days=today.weekday())
@@ -114,11 +111,8 @@ def build_volume_chart_data(
     for s in filtered_sets:
         if s.weight_kg is None:
             continue
-        parts = s.SK.split("#")
-        if len(parts) < 3:
-            continue
         try:
-            workout_date = date.fromisoformat(parts[1])
+            workout_date = date.fromisoformat(s.workout_date)
         except ValueError:
             continue
         workout_monday = workout_date - timedelta(days=workout_date.weekday())
@@ -148,7 +142,7 @@ def build_1rm_chart_data(
 
     Formula: weight × (1 + reps / 30), max per workout date.
     Returns {"labels": [...], "values": [...], "unit": "kg"|"lb"}.
-    Date is parsed directly from the set SK (parts[1]).
+    Date is read from WorkoutSet.workout_date.
     """
     date_max_1rm: dict[date, Decimal] = {}
     for s in sets:
@@ -156,11 +150,8 @@ def build_1rm_chart_data(
             continue
         if s.weight_kg is None or s.reps == 0:
             continue
-        parts = s.SK.split("#")
-        if len(parts) < 3:
-            continue
         try:
-            workout_date = date.fromisoformat(parts[1])
+            workout_date = date.fromisoformat(s.workout_date)
         except ValueError:
             continue
         estimated = s.weight_kg * (1 + Decimal(s.reps) / 30)
