@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.routes import workout as workout_routes
-from tests.conftest import FakeProfileRepo
+from tests.fakes import FakeProfileRepo, make_test_profile
 from tests.test_data import TEST_DATE_2, TEST_WORKOUT_ID_2
 from tests.unit.routes.workout._helpers import assert_html
 
@@ -164,7 +164,7 @@ def test_view_workout_uses_lb_units_when_profile_imperial(
     authenticated_client, fake_workout_repo, workout_factory, set_factory, app_instance
 ):
     app_instance.dependency_overrides[workout_routes.get_profile_repo] = (
-        lambda: FakeProfileRepo(unit="imperial")
+        lambda: FakeProfileRepo(profile=make_test_profile(units="imperial"))
     )
 
     fake_workout_repo.workout_to_return = workout_factory(

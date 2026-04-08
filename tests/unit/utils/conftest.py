@@ -4,6 +4,7 @@ import pytest
 
 from app.utils import auth as auth_utils
 from app.utils import db
+from tests.fakes import FakeRateLimitTable
 from tests.test_data import USER_SUB
 
 
@@ -61,16 +62,6 @@ def frozen_time(monkeypatch):
     now = 125
     monkeypatch.setattr(db.time, "time", lambda: now)
     return now
-
-
-class FakeRateLimitTable:
-    def __init__(self, count: int):
-        self.count = count
-        self.last_kwargs = None
-
-    def update_item(self, **kwargs):
-        self.last_kwargs = kwargs
-        return {"Attributes": {"count": self.count}}
 
 
 @pytest.fixture

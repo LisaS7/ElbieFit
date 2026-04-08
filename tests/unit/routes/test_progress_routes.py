@@ -4,7 +4,7 @@ Tests for GET /progress and GET /progress/exercise.
 Pattern mirrors the other route test files:
   - FakeWorkoutRepo / FakeExerciseRepo are defined in conftest.py
   - We override progress_routes.get_workout_repo, get_exercise_repo, get_profile_repo
-  - FakeProfileRepo from conftest is reused for progress route tests
+  - FakeProfileRepo from tests.fakes is reused for progress route tests
 """
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -15,7 +15,7 @@ from app.models.profile import Preferences, UserProfile
 from app.models.workout import Workout, WorkoutSet
 from app.routes import progress as progress_routes
 from app.utils import auth as auth_utils, db
-from tests.unit.routes.conftest import FakeExerciseRepo, FakeProfileRepo
+from tests.fakes import FakeExerciseRepo, FakeProfileRepo
 
 USER_SUB = "test-user-sub"
 

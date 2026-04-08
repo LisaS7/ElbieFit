@@ -180,7 +180,7 @@ def test_safe_update_wraps_client_error(failing_update_table):
 
 def test_safe_query_follows_last_evaluated_key(fake_table):
     """The while-True pagination loop should accumulate items across pages."""
-    from tests.unit.repos.conftest import FakeTable
+    from tests.fakes import FakeTable
 
     page1 = {"Items": [{"PK": "USER#1"}], "LastEvaluatedKey": {"PK": "USER#1"}}
     page2 = {"Items": [{"PK": "USER#2"}, {"PK": "USER#3"}]}

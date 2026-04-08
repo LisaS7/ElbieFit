@@ -18,6 +18,7 @@ from app.main import app
 from app.models.exercise import Exercise
 from app.models.workout import Workout, WorkoutSet
 from app.repositories.errors import RepoError
+from tests.fakes import FakeProfileRepo
 from app.routes import data as data_routes
 from app.utils import auth as auth_utils, db
 
@@ -55,14 +56,6 @@ class FakeImportExerciseRepo:
         if self.raise_on_get:
             raise RepoError("boom")
         return self._exercises
-
-
-class FakeProfileRepo:
-    def __init__(self, profile=None):
-        self._profile = profile
-
-    def get_for_user(self, user_sub: str):
-        return self._profile
 
 
 class FakeBatchWriter:

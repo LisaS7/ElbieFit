@@ -1,14 +1,14 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any, Callable, Literal
+from typing import Any, Callable
 
 import pytest
 from fastapi import Request
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models.profile import Preferences, UserProfile
 from app.models.workout import Workout, WorkoutSet
+from tests.fakes import FakeProfileRepo, FakeResponse, make_test_profile
 from app.routes import workout as workout_routes
 from app.settings import settings
 from app.utils import auth as auth_utils
@@ -37,24 +37,6 @@ def fixed_now(monkeypatch) -> datetime:
     return now
 
 
-class FakeProfileRepo:
-    def __init__(self, unit: Literal["metric", "imperial"] = "metric"):
-        self.unit = unit
-
-    def get_for_user(self, user_sub: str):
-        # Return a valid profile model with units set
-        return UserProfile(
-            PK=f"USER#{user_sub}",
-            SK="PROFILE",
-            display_name="Test User",
-            email="test@example.com",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-            timezone="Europe/London",
-            preferences=Preferences(units=self.unit),
-        )
-
-
 # --------------- Request ---------------
 
 
@@ -78,16 +60,6 @@ def make_request_with_cookies():
 
 
 # --------------- Response ---------------
-
-
-class FakeResponse:
-    def __init__(self, status_code=200, json_data=None, text=""):
-        self.status_code = status_code
-        self._json = json_data or {}
-        self.text = text
-
-    def json(self):
-        return self._json
 
 
 @pytest.fixture
@@ -130,7 +102,7 @@ def authenticated_client(app_instance):
 
     app_instance.dependency_overrides[auth_utils.require_auth] = fake_require_auth
     app_instance.dependency_overrides[workout_routes.get_profile_repo] = (
-        lambda: FakeProfileRepo(unit="metric")
+        lambda: FakeProfileRepo(profile=make_test_profile(units="metric"))
     )
     client = TestClient(app_instance, raise_server_exceptions=False)
 
