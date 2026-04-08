@@ -27,6 +27,11 @@
   --color-warning: #facc15;
   --color-success: #4ade80;
 
+  --chart-bar-color: #34d399; /* emerald-400 — vivid green for bar charts */
+
+  /* Donut chart palette — Ink: blues and purples with a touch of green */
+  --chart-dist-palette: #60a5fa,#a78bfa,#818cf8,#93c5fd,#c084fc,#22d3ee,#e879f9,#3b82f6,#34d399,#6366f1,#2dd4bf,#4ade80,#7dd3fc;
+
   --radius: 12px;
   --radius-sm: 10px;
   --radius-pill: 999px;
