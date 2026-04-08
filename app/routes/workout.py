@@ -2,7 +2,6 @@ from datetime import date as DateType
 from typing import Annotated, Literal, Optional, Sequence
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
-from fastapi.responses import RedirectResponse
 
 from app.models.workout import (
     WorkoutCreate,
@@ -215,8 +214,9 @@ def create_workout(
         logger.exception(f"Error creating workout user_sub={user_sub}")
         raise HTTPException(status_code=500, detail="Error creating workout")
 
-    return RedirectResponse(
-        url=f"/workout/{workout.date.isoformat()}/{workout.workout_id}", status_code=303
+    return Response(
+        status_code=204,
+        headers={"HX-Redirect": f"/workout/{workout.date.isoformat()}/{workout.workout_id}"},
     )
 
 

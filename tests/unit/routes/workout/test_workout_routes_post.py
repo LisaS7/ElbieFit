@@ -22,10 +22,9 @@ def test_create_workout_creates_item_and_redirects(
     response = authenticated_client.post(
         "/workout/create",
         data={"date": TEST_DATE_2.isoformat(), "name": "Bench Party"},
-        follow_redirects=False,
     )
 
-    assert response.status_code == 303
+    assert response.status_code == 204
     assert len(fake_workout_repo.created_workouts) == 1
 
     created = fake_workout_repo.created_workouts[0]
@@ -34,7 +33,7 @@ def test_create_workout_creates_item_and_redirects(
     assert fake_workout_repo.user_subs == ["test-user-sub"]
 
     expected_location = f"/workout/{created.date.isoformat()}/{created.workout_id}"
-    assert response.headers["location"] == expected_location
+    assert response.headers["HX-Redirect"] == expected_location
 
 
 def test_create_workout_returns_500_when_repo_raises(
