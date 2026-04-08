@@ -1,19 +1,23 @@
 from decimal import Decimal
 
+import pytest
+from fastapi import HTTPException
+
 from app.routes import workout as workout_routes
 from tests.conftest import FakeProfileRepo
 from tests.test_data import TEST_DATE_2, TEST_WORKOUT_ID_2
 from tests.unit.routes.workout._helpers import assert_html
 
 
-def test_get_weight_unit_for_user_defaults_to_kg_when_profile_repo_raises():
+def test_get_weight_unit_for_user_raises_http_500_when_profile_repo_raises():
     class BoomProfileRepo:
         def get_for_user(self, user_sub: str):
             raise Exception("kaboom")
 
-    unit = workout_routes.get_weight_unit_for_user("test-user-sub", BoomProfileRepo())
+    with pytest.raises(HTTPException) as exc_info:
+        workout_routes.get_weight_unit_for_user("test-user-sub", BoomProfileRepo())
 
-    assert unit == "kg"
+    assert exc_info.value.status_code == 500
 
 
 # ----------------- GET /workout/all -----------------

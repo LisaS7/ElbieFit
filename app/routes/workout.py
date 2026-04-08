@@ -49,7 +49,7 @@ def get_weight_unit_for_user(
         profile = profile_repo.get_for_user(user_sub)
     except Exception:
         logger.exception(f"Error fetching profile for user_sub={user_sub}")
-        return "kg"
+        raise HTTPException(status_code=500, detail="Error fetching user profile")
     return profile.weight_unit if profile else "kg"
 
 
