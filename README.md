@@ -40,7 +40,8 @@ flowchart TD
     ROUTES --> REPOS
     REPOS --> DDB["DynamoDB Table<br/>PK/SK schema"]
 
-    MODELS <--> ROUTES
+    MODELS --> ROUTES
+    ROUTES --> MODELS
 
     subgraph CI["GitHub Actions CI/CD"]
         TESTS["Run Pytest + Coverage"]
