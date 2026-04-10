@@ -29,3 +29,16 @@ class ExerciseRepoError(RepoError):
 # ------------------------- PROFILE -------------------------
 class ProfileRepoError(RepoError):
     pass
+
+
+# ------------------------- TEMPLATE -------------------------
+class TemplateRepoError(RepoError):
+    """Generic template repository error."""
+
+    pass
+
+
+class TemplateNotFoundError(TemplateRepoError):
+    """Raised when a template cannot be found for the given key."""
+
+    pass

@@ -64,6 +64,30 @@ def build_exercise_sk(exercise_id: str) -> str:
     return f"EXERCISE#{exercise_id}"
 
 
+def build_template_sk(template_id: str) -> str:
+    """
+    Sort key for a template item.
+    Example: TEMPLATE#<uuid>
+    """
+    return f"TEMPLATE#{template_id}"
+
+
+def build_template_set_prefix(template_id: str) -> str:
+    """
+    Prefix for set items under a template.
+    Example: TEMPLATE#<uuid>#SET#
+    """
+    return f"TEMPLATE#{template_id}#SET#"
+
+
+def build_template_set_sk(template_id: str, set_number: int) -> str:
+    """
+    Sort key for a template set item.
+    Example: TEMPLATE#<uuid>#SET#003
+    """
+    return f"{build_template_set_prefix(template_id)}{set_number:03d}"
+
+
 # ─────────────────────────────────────────────────────────────
 # Rate limiting
 # ─────────────────────────────────────────────────────────────

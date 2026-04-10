@@ -1,0 +1,42 @@
+<section id="template-meta" class="card">
+    <header id="template-detail-header" class="flex-row-spaced">
+        <div class="workout-title">
+            <h2>{{ template.name }}</h2>
+        </div>
+        <a href="/template/all"
+            class="icon-button"
+            title="Back to templates"
+            aria-label="Back to templates">
+            ←
+        </a>
+    </header>
+
+    <div class="flex-row-spaced">
+        <div class="tags-group">
+            <span class="muted">Tags:</span>
+            {% for tag in template.tags or [] %}
+                <span class="tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        <button
+            type="button"
+            class="icon-button"
+            hx-get="/template/{{ template.template_id }}/edit-meta"
+            hx-target="#template-meta"
+            hx-swap="outerHTML"
+            title="Edit template"
+            aria-label="Edit template"
+            >
+            ✎
+        </button>
+    </div>
+
+    <div id="template-notes">
+        <h3>Notes</h3>
+        {% if template.notes %}
+            <p>{{ template.notes }}</p>
+        {% else %}
+            <p class="muted">No notes yet.</p>
+        {% endif %}
+    </div>
+</section>

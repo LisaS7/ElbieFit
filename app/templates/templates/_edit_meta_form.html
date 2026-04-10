@@ -1,0 +1,37 @@
+<section id="template-meta" class="card">
+  <form
+    hx-post="/template/{{ template.template_id }}/meta"
+    hx-target="#template-meta"
+    hx-swap="outerHTML"
+  >
+
+    <div class="form-field">
+      <label for="name">Template Name</label>
+      <input type="text" id="name" name="name" value="{{ template.name }}" required>
+    </div>
+
+    <div class="form-field">
+      <label for="tags">Tags</label>
+      <input type="text" id="tags" name="tags" value="{{ template.tags | join(',') if template.tags else '' }}">
+      <p class="field-help">Separate tags with commas, e.g.: push, legs, heavy</p>
+    </div>
+
+    <div class="form-field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" rows="3">{{ template.notes or "" }}</textarea>
+    </div>
+
+    <div class="form-row">
+      <button type="submit" class="button small">Save</button>
+      <button
+        type="button"
+        class="button small secondary"
+        hx-get="/template/{{ template.template_id }}/meta"
+        hx-target="#template-meta"
+        hx-swap="outerHTML"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+</section>

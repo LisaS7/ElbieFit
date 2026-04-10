@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Workout Templates{% endblock %}
+
+{% block content %}
+<header id="page-header" class="flex-row-spaced">
+  <h1>Templates</h1>
+  <button
+    class="button"
+    type="button"
+    hx-get="/template/new-form"
+    hx-target="#new-template-form-container"
+    hx-swap="innerHTML"
+  >
+    + New Template
+  </button>
+</header>
+
+<section id="new-template-form-container"></section>
+
+{% if templates %}
+  <section class="page-grid">
+    {% for template in templates %}
+      <a class="card workout-card" href="/template/{{ template.template_id }}">
+
+        <h3 class="workout-name">{{ template.name }}</h3>
+
+        <div class="tags-group">
+          {% for tag in template.tags or [] %}
+            <span class="tag">{{ tag }}</span>
+          {% endfor %}
+        </div>
+
+        {% if template.notes %}
+          <p class="muted template-notes-preview">{{ template.notes | truncate(80) }}</p>
+        {% endif %}
+
+      </a>
+    {% endfor %}
+  </section>
+{% else %}
+  <div class="empty-state">
+    <p class="muted">No templates yet. Create one to save your favourite workouts.</p>
+    <p class="muted">Templates let you preload exercises and target reps or weights — then copy them into a workout log with one tap.</p>
+    <button
+      class="button"
+      type="button"
+      hx-get="/template/new-form"
+      hx-target="#new-template-form-container"
+      hx-swap="innerHTML"
+    >
+      Create your first template
+    </button>
+  </div>
+{% endif %}
+{% endblock %}
