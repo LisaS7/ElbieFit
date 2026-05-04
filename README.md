@@ -75,6 +75,16 @@ flowchart TD
 - [uv](https://docs.astral.sh/uv/)
 - Docker + Docker Compose
 
+### Environment
+
+The app is launched with `ENV=prod`, which loads `.env.prod`. This means:
+
+- DynamoDB table: `gymbyte-prod-table`
+- DynamoDB endpoint: `http://localhost:8001` (DynamoDB Local)
+- Auth: real Cognito JWT validation (not bypassed)
+
+All scripts that interact with DynamoDB must also be run with `ENV=prod` to target the correct table.
+
 ### 1. Install dependencies
 
 ```bash
@@ -91,35 +101,39 @@ This starts DynamoDB Local on port `8001`. Data is persisted to a Docker volume 
 
 ### 3. Create the local table
 
-Only needed the first time (or after wiping the volume):
+Only needed the first time or after recreating the Docker container/volume:
 
 ```bash
-uv run python -m scripts.create_local_table
+ENV=prod uv run python -m scripts.create_local_table
 ```
 
 ### 4. Seed data
 
 ```bash
-uv run python -m scripts.seed --display-name "Your Name" --email "you@example.com"
+ENV=prod uv run python -m scripts.seed_prod
 ```
 
-To wipe and re-seed:
-
-```bash
-uv run python -m scripts.seed --display-name "Your Name" --email "you@example.com" --reset
-```
+This seeds the prod profile and exercise list into `gymbyte-prod-table`.
 
 ### 5. Run the app
 
+The `gymbyte` shell alias handles steps 2 and 5 together:
+
 ```bash
-uv run uvicorn app.main:app --reload
-# or, to capture logs:
-uvicorn app.main:app 2>&1 | tee app.log
+gymbyte
+```
+
+Or manually:
+
+```bash
+ENV=prod uv run uvicorn app.main:app --reload
 ```
 
 Open [http://localhost:8000](http://localhost:8000).
 
-Auth is disabled in local dev (`DISABLE_AUTH_FOR_LOCAL_DEV=True` in `.env.dev`), so you'll be logged in automatically as the dev user defined by `DEV_USER_SUB`.
+### After recreating the Docker container
+
+The Docker volume is wiped when the container is recreated, so the table and data are lost. Re-run steps 3 and 4 to restore them.
 
 ---
 
@@ -165,8 +179,9 @@ infra/
   s3.yaml               S3 artifact bucket stack
 
 scripts/
-  create_local_table.py Create DynamoDB table in DynamoDB Local
-  seed.py               Populate demo data
+  create_local_table.py Create DynamoDB table in DynamoDB Local (run with ENV=prod)
+  seed_prod.py          Seed prod profile and exercises (run with ENV=prod)
+  seed.py               Populate demo data (dev only)
   deploy_stack.sh       Deploy a CloudFormation stack
   deploy_code.sh        Package and upload Lambda code
   update_lambda_code.sh Update Lambda code from S3 artifact
