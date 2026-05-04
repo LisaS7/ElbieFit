@@ -1,6 +1,6 @@
-# ElbieFit
+# GymByte
 
-ElbieFit is a portfolio project — a lightweight workout-logging web application built with FastAPI, HTMX, and a production-grade AWS serverless architecture.
+GymByte is a portfolio project — a lightweight workout-logging web application built with FastAPI, HTMX, and a production-grade AWS serverless architecture.
 
 The application is designed to run on AWS (Lambda + DynamoDB + Cognito) and the full infrastructure configuration is included in `infra/` to demonstrate real-world deployment patterns. For simplicity and cost reasons, it is typically run locally using uvicorn and DynamoDB Local.
 

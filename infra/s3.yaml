@@ -4,7 +4,7 @@ Description: AWS CloudFormation Template for S3
 Parameters:
   ProjectName:
     Type: String
-    Default: elbiefit
+    Default: gymbyte
     Description: Base name of the project (used for names/exports)
   EnvName:
     Type: String
@@ -32,7 +32,7 @@ Resources:
 
       Tags:
         - Key: ProjectName
-          Value: ElbieFit
+          Value: GymByte
 
 Outputs:
   ArtifactBucketName:

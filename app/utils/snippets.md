@@ -19,7 +19,7 @@ aws cognito-idp admin-set-user-password \
 # Add user profile to test db
 
 ```bash
-aws dynamodb put-item   --table-name "elbiefit-dev-table"   --item '{
+aws dynamodb put-item   --table-name "gymbyte-dev-table"   --item '{
     "PK": {"S": "USER#e6b2d244-8091-70df-730d-3a2a1b855f0f"},
     "SK": {"S": "PROFILE"},
     "display_name": {"S": "Lisa Test"},

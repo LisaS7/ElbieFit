@@ -11,7 +11,7 @@ def test_home_logged_out_contains_welcome_title(client, monkeypatch):
 
     response = client.get("/")
     assert response.status_code == 200
-    assert "Welcome to ElbieFit" in response.text
+    assert "Welcome to GymByte" in response.text
     assert "Log in" in response.text
     assert "Recent workouts" not in response.text
 
@@ -37,6 +37,6 @@ def test_meta_endpoint_returns_basic_info(client):
     body = response.json()
 
     assert response.status_code == 200
-    assert body["app_name"] == "ElbieFit"
+    assert body["app_name"] == "GymByte"
     assert isinstance(body["version"], str)
     assert body["version"]

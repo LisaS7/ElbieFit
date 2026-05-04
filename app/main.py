@@ -9,7 +9,7 @@ from .error_handlers import register_error_handlers
 from .routes import auth, data, exercise, home, profile, progress, template, workout
 from .settings import settings
 
-app = FastAPI(title="ElbieFit")
+app = FastAPI(title="GymByte")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 

@@ -8,7 +8,7 @@ from app.routes import auth
 
 
 class FakeSettings:
-    PROJECT_NAME = "elbiefit"
+    PROJECT_NAME = "gymbyte"
     REGION = "eu-west-2"
     ENV = "test"
     COGNITO_AUDIENCE = "fake-aud"
@@ -44,7 +44,7 @@ def assert_error_page(response, status_code: int) -> None:
     assert response.status_code == status_code
     body = response.text
     assert f"Error {status_code}" in body
-    assert "ElbieFit" in body
+    assert "GymByte" in body
 
 
 # ─────────────────────────────────────────────────────────────

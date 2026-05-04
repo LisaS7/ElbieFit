@@ -77,7 +77,7 @@ def export_data(
     json_str = serialise_export(payload_dict)
 
     today = DateType.today().isoformat()
-    filename = f"elbiefit-export-{today}.json"
+    filename = f"gymbyte-export-{today}.json"
 
     return Response(
         content=json_str,

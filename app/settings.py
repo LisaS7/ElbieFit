@@ -9,10 +9,10 @@ load_dotenv(f".env.{env}", override=False)
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "elbiefit"
+    PROJECT_NAME: str = "gymbyte"
     REGION: str = "eu-west-2"
     ENV: str = "dev"
-    DDB_TABLE_NAME: str = "elbiefit-dev-table"
+    DDB_TABLE_NAME: str = "gymbyte-dev-table"
     DDB_ENDPOINT_URL: str | None = None
     model_config = SettingsConfigDict(env_file=None)
 

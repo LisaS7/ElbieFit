@@ -129,7 +129,7 @@ def parse_import_file(content: bytes) -> ExportPayload:
     if schema_version not in SUPPORTED_SCHEMA_VERSIONS:
         raise ValueError(
             f"Unsupported export version: {schema_version!r}. "
-            "Please re-export from a current version of ElbieFit."
+            "Please re-export from a current version of GymByte."
         )
 
     try:

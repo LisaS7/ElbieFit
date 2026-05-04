@@ -4,7 +4,7 @@ Description: AWS CloudFormation Template for IAM Roles
 Parameters:
   ProjectName:
     Type: String
-    Default: elbiefit
+    Default: gymbyte
   EnvName:
     Type: String
     AllowedValues: [dev, prod]
@@ -28,7 +28,7 @@ Resources:
     Condition: IsDev
     Type: AWS::IAM::Role
     Properties:
-      RoleName: elbiefit-github-actions-deploy-role
+      RoleName: gymbyte-github-actions-deploy-role
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -38,7 +38,7 @@ Resources:
             Action: sts:AssumeRoleWithWebIdentity
             Condition:
               StringLike:
-                'token.actions.githubusercontent.com:sub': 'repo:LisaS7/ElbieFit:*'
+                'token.actions.githubusercontent.com:sub': 'repo:LisaS7/GymByte:*'
               StringEquals:
                 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com'
       Policies:
@@ -58,7 +58,7 @@ Resources:
                 Resource:
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/apigwv2/access-logs/*'
                   - !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*'
-        - PolicyName: elbiefit-github-actions-deploy-policy
+        - PolicyName: gymbyte-github-actions-deploy-policy
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
@@ -126,7 +126,7 @@ Resources:
 
       Tags:
         - Key: ProjectName
-          Value: ElbieFit
+          Value: GymByte
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -165,7 +165,7 @@ Resources:
 
       Tags:
         - Key: ProjectName
-          Value: ElbieFit
+          Value: GymByte
 
 Outputs:
   LambdaExecutionRoleArn:

@@ -4,7 +4,7 @@ Description: AWS CloudFormation Template for Cognito User Pool
 Parameters:
   ProjectName:
     Type: String
-    Default: elbiefit
+    Default: gymbyte
     Description: Base name of the project (used for exports)
 
   EnvName:
@@ -45,7 +45,7 @@ Resources:
             Priority: 1
 
       UserPoolTags:
-        ProjectName: ElbieFit
+        ProjectName: GymByte
         Env: !Ref EnvName
 
   CognitoUserPoolClient:

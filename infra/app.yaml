@@ -4,7 +4,7 @@ Description: AWS CloudFormation Template for Lambda Function
 Parameters:
   ProjectName:
     Type: String
-    Default: elbiefit
+    Default: gymbyte
   EnvName:
     Type: String
     AllowedValues: [dev, prod]
@@ -32,7 +32,7 @@ Resources:
         S3Key: !Sub 'app-${GitSha}.zip'
       Tags:
         - Key: ProjectName
-          Value: ElbieFit
+          Value: GymByte
 
   APIGateway:
     Type: AWS::ApiGatewayV2::Api
@@ -45,7 +45,7 @@ Resources:
         AllowMethods: [GET, POST, PUT, DELETE, OPTIONS, HEAD]
         AllowHeaders: ['*']
       Tags:
-        ProjectName: ElbieFit
+        ProjectName: GymByte
 
   APIGatewayIntegration:
     Type: AWS::ApiGatewayV2::Integration

@@ -15,7 +15,7 @@ from app.utils.export import build_export_payload, serialise_export
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Export ElbieFit user data to JSON")
+    parser = argparse.ArgumentParser(description="Export GymByte user data to JSON")
     parser.add_argument("--sub", required=True, help="Cognito user sub to export")
     parser.add_argument(
         "--output",

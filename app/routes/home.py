@@ -67,7 +67,7 @@ def healthz():
 @router.get("/meta")
 async def get_meta():
     return {
-        "app_name": "ElbieFit",
+        "app_name": "GymByte",
         "version": "0.1.0",
         "build_time": BUILD_TIME,
         "python_version": platform.python_version(),

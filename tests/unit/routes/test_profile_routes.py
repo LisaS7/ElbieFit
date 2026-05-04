@@ -75,7 +75,7 @@ def test_profile_db_error_returns_500(authenticated_client, fake_profile_repo):
     assert response.status_code == 500
     text = response.text
     assert "Error 500" in text or "Something went wrong" in text
-    assert "ElbieFit" in text
+    assert "GymByte" in text
 
 
 # --------------------- Update --------------------

@@ -20,6 +20,9 @@ def get_dynamo_resource():
 
 def get_table():
     resource = get_dynamo_resource()
+    logger.debug(
+        f"DynamoDB table config table_name={TABLE_NAME} endpoint_url={settings.DDB_ENDPOINT_URL}"
+    )
     return resource.Table(TABLE_NAME)  # type: ignore
 
 

@@ -1,7 +1,7 @@
 services:
   dynamodb-local:
     image: amazon/dynamodb-local:latest
-    container_name: elbiefit-dynamodb-local
+    container_name: gymbyte-dynamodb-local
     ports:
       - "8001:8000"
     command: "-jar DynamoDBLocal.jar -dbPath /data -sharedDb"

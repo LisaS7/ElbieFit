@@ -4,7 +4,7 @@ Description: AWS CloudFormation Template for DynamoDB
 Parameters:
   ProjectName:
     Type: String
-    Default: elbiefit
+    Default: gymbyte
     Description: Base name of the project (used for exports)
   EnvName:
     Description: Environment name for the application dev/prod
@@ -30,7 +30,7 @@ Resources:
 
       Tags:
         - Key: ProjectName
-          Value: ElbieFit
+          Value: GymByte
         - Key: Env
           Value: !Ref EnvName
 

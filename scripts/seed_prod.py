@@ -122,6 +122,17 @@ def main():
             created_at=ts,
             updated_at=ts,
         ),
+        Exercise(
+            PK=PK,
+            SK=f"EXERCISE#{uuid.uuid4()}",
+            type="exercise",
+            name="Single-Leg Deadlift",
+            muscles=["glutes", "hamstrings", "core"],
+            equipment="dumbbells",
+            category="legs",
+            created_at=ts,
+            updated_at=ts,
+        ),
     ]
 
     for ex in exercises:
